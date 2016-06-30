@@ -1,2 +1,1 @@
-# Keep Talking and Nobody Explodes ModKit
-[ModKit Wiki](../../wiki)
+#[ModKit Wiki](../../wiki)
