@@ -11,17 +11,20 @@ public class ExampleWebService : MonoBehaviour
     string modules;
     string solvableModules;
     string solvedModules;
-
-    bool shouldStartMission = false;
-    string missionId;
-    string seed;
+    string bombState;
 
     Thread workerThread;
 
+    Queue<Action> actions;
+
     void Awake()
     {
+        actions = new Queue<Action>();
         bombInfo = GetComponent<KMBombInfo>();
+        bombInfo.OnBombExploded += OnBombExplodes;
+        bombInfo.OnBombSolved += OnBombDefused;
         gameCommands = GetComponent<KMGameCommands>();
+        bombState = "NA";
         // Create the thread object. This does not start the thread.
         Worker workerObject = new Worker(this);
         workerThread = new Thread(workerObject.DoWork);
@@ -31,10 +34,10 @@ public class ExampleWebService : MonoBehaviour
 
     void Update()
     {
-        if(shouldStartMission)
+        if(actions.Count > 0)
         {
-            shouldStartMission = false;
-            gameCommands.StartMission(missionId, seed);
+            Action action = actions.Dequeue();
+            action();
         }
     }
 
@@ -54,7 +57,7 @@ public class ExampleWebService : MonoBehaviour
             listener.Prefixes.Add(s);
         }
         listener.Start();
-        while(true)
+        while (true)
         {
             // Note: The GetContext method blocks while waiting for a request. 
             HttpListenerContext context = listener.GetContext();
@@ -64,16 +67,29 @@ public class ExampleWebService : MonoBehaviour
             // Construct a response.
             string responseString = "";
 
-            if(request.Url.OriginalString.Contains("bombInfo"))
+            if (request.Url.OriginalString.Contains("bombInfo"))
             {
                 responseString = GetBombInfo();
             }
 
-            if(request.Url.OriginalString.Contains("startMission"))
+            if (request.Url.OriginalString.Contains("startMission"))
             {
                 string missionId = request.QueryString.Get("missionId");
                 string seed = request.QueryString.Get("seed");
                 responseString = StartMission(missionId, seed);
+            }
+
+            if (request.Url.OriginalString.Contains("causeStrike"))
+            {
+                string reason = request.QueryString.Get("reason");
+                responseString = CauseStrike(reason);
+            }
+
+            if (request.Url.OriginalString.Contains("triggerDistraction"))
+            {
+                string distractionId = request.QueryString.Get("distractionId");
+                string options = request.QueryString.Get("options");
+                responseString = TriggerDistraction(distractionId, options);
             }
 
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
@@ -88,32 +104,66 @@ public class ExampleWebService : MonoBehaviour
 
     protected string StartMission(string missionId, string seed)
     {
-        this.missionId = missionId;
-        this.seed = seed;
-        shouldStartMission = true;
+        actions.Enqueue(delegate () { gameCommands.StartMission(missionId, seed); });
 
         return missionId + " " + seed;
     }
 
+    protected string CauseStrike(string reason)
+    {
+        actions.Enqueue(delegate () { gameCommands.CauseStrike(reason); });
+
+        return reason;
+    }
+
+    protected string TriggerDistraction(string distractionId, string options)
+    {
+        actions.Enqueue(delegate () { gameCommands.TriggerDistraction(distractionId, options); });
+
+        return distractionId + " " + options;
+    }
+
     protected string GetBombInfo()
     {
+        if(bombInfo.IsBombPresent())
+        {
+            if(bombState == "NA")
+            {
+                bombState = "Active";
+            }
+        }
+        else if(bombState == "Active")
+        {
+            bombState = "NA";
+        }
+
         string time = bombInfo.GetFormattedTime();
         int strikes = bombInfo.GetStrikes();
         modules = GetListAsHTML(bombInfo.GetModuleNames());
         solvableModules = GetListAsHTML(bombInfo.GetSolvableModuleNames());
         solvedModules = GetListAsHTML(bombInfo.GetSolvedModuleNames());
-
-
+        
         string responseString = string.Format(
             "<HTML><BODY>"
             + "<span>Time: {0}</span><br>"
             + "<span>Strikes: {1}</span><br>"
             + "<span>Modules: {2}</span><br>"
             + "<span>Solvable Modules: {3}</span><br>"
-            + "<span>Solved Modules: {4}</span>"
-            + "</BODY></HTML>", time, strikes, modules, solvableModules, solvedModules);
+            + "<span>Solved Modules: {4}</span><br>"
+            + "<span>State: {5}</span><br>"
+            + "</BODY></HTML>", time, strikes, modules, solvableModules, solvedModules, bombState);
 
         return responseString;
+    }
+
+    protected void OnBombExplodes()
+    {
+        bombState = "Exploded";
+    }
+
+    protected void OnBombDefused()
+    {
+        bombState = "Defused";
     }
 
     protected string GetListAsHTML(List<string> list)
