@@ -59,13 +59,13 @@ public class AssetBundler
     private List<string> scriptPathsToRestore = new List<string>();
     #endregion
 
-    [MenuItem("Keep Talking ModKit/Build AssetBundle")]
+    [MenuItem("Keep Talking ModKit/Build AssetBundle", priority = 10)]
     public static void BuildAllAssetBundles_WithEditorUtility()
     {
         BuildModBundle(false);
     }
 
-    [MenuItem("Keep Talking ModKit/Build AssetBundle (with MSBuild)")]
+    [MenuItem("Keep Talking ModKit/Build AssetBundle (with MSBuild)", priority = 11)]
     public static void BuildAllAssetBundles_MSBuild()
     {
         BuildModBundle(true);

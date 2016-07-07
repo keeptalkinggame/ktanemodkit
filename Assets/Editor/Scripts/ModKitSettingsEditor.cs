@@ -9,7 +9,7 @@ using UnityEngine;
 [CustomEditor(typeof(ModConfig))]
 public class ModKitSettingsEditor : Editor
 {
-    [UnityEditor.MenuItem("Keep Talking ModKit/Configure Mod")]
+    [MenuItem("Keep Talking ModKit/Configure Mod", priority = 1)]
     public static void ConfigureMod()
     {
         var modConfig = ModConfig.Instance;
