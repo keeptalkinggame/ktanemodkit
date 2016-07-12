@@ -1,16 +1,23 @@
 fileFormatVersion: 2
-guid: 5ab6c3be308beaa47b558e81d501cf7c
+guid: de2ecf7201de1d347bce8844cca92160
 ModelImporter:
   serializedVersion: 16
   fileIDToRecycleName:
-    100000: //RootNode
-    400000: //RootNode
-    2300000: //RootNode
-    3300000: //RootNode
-    4300000: Component_Highlight
+    100000: Background
+    100002: //RootNode
+    100004: Screen
+    400000: Background
+    400002: //RootNode
+    400004: Screen
+    2300000: Background
+    2300002: Screen
+    3300000: Background
+    3300002: Screen
+    4300000: Screen
+    4300002: Background
     9500000: //RootNode
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
   animations:
@@ -46,7 +53,7 @@ ModelImporter:
     splitTangentsAcrossUV: 1
     normalImportMode: 0
     tangentImportMode: 2
-  importAnimation: 0
+  importAnimation: 1
   copyAvatar: 0
   humanDescription:
     human: []
