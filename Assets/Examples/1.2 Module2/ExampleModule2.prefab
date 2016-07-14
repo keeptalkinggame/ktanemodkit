@@ -2089,7 +2089,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModuleType: examplemodule2
-  ModuleDisplayName: 
+  ModuleDisplayName: Example Module 2
 --- !u!114 &11448482
 MonoBehaviour:
   m_ObjectHideFlags: 1
