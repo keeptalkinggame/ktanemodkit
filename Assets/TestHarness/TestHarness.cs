@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class TestHarness : MonoBehaviour
 {
     public GameObject HighlightPrefab;
-    public KMBombModule ModuleToTest;
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
 
@@ -18,13 +17,19 @@ public class TestHarness : MonoBehaviour
     void Start()
     {
         currentSelectable = GetComponent<TestSelectable>();
-        currentSelectable.Children = new TestSelectable[1];
-        currentSelectable.Children[0] = ModuleToTest.GetComponent<TestSelectable>();
-        ModuleToTest.GetComponent<TestSelectable>().Parent = currentSelectable;
-        currentSelectable.ActivateChildSelectableAreas();
+        
+        KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
+        currentSelectable.Children = new TestSelectable[modules.Length];
+        for (int i=0; i < modules.Length; i++)
+        {
+            currentSelectable.Children[i] = modules[i].GetComponent<TestSelectable>();
+            modules[i].GetComponent<TestSelectable>().Parent = currentSelectable;
 
-        ModuleToTest.OnPass = delegate () { Debug.Log("Module Passed"); return false; };
-        ModuleToTest.OnStrike = delegate () { Debug.Log("Strike"); return false; };
+            modules[i].OnPass = delegate () { Debug.Log("Module Passed"); return false; };
+            modules[i].OnStrike = delegate () { Debug.Log("Strike"); return false; };
+        }
+
+        currentSelectable.ActivateChildSelectableAreas();
     }
 
     void Update()
@@ -111,8 +116,13 @@ public class TestHarness : MonoBehaviour
         {
             TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
             testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
+        }
+
+        foreach (KMSelectable selectable in selectables)
+        {
+            TestSelectable testSelectable = selectable.gameObject.GetComponent<TestSelectable>();
             testSelectable.Children = new TestSelectable[selectable.Children.Length];
-            for(int i=0; i < selectable.Children.Length; i++)
+            for (int i = 0; i < selectable.Children.Length; i++)
             {
                 testSelectable.Children[i] = selectable.Children[i].GetComponent<TestSelectable>();
             }
