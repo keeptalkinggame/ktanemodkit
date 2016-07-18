@@ -184,7 +184,6 @@ public class KMMissionEditor : Editor
             }
 
             EditorGUILayout.LabelField(componentTypeNames);
-            EditorStyles.label.wordWrap = false;
         }
         else
         {
