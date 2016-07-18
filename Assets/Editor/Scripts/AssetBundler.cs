@@ -39,7 +39,7 @@ public class AssetBundler
     /// <summary>
     /// Name of the bundle file produced. This relies on the AssetBundle tag used, which is set to mod.bundle by default.
     /// </summary>
-    static string BUNDLE_FILENAME = "mod.bundle";
+    public static string BUNDLE_FILENAME = "mod.bundle";
 
 
     #region Internal bundler Variables
@@ -357,7 +357,15 @@ public class AssetBundler
             Directory.CreateDirectory(TEMP_BUILD_FOLDER);
         }
 
-        BuildPipeline.BuildAssetBundles(TEMP_BUILD_FOLDER, BuildAssetBundleOptions.DeterministicAssetBundle, BuildTarget.StandaloneWindows);
+#pragma warning disable 618
+        //Build the asset bundle with the CollectDependencies flag. This is necessary or else ScriptableObjects like Missions will
+        //not be accessible within the asset bundle. Unity has deprecated this flag claiming it is now always active, but due to a bug
+        //we must still include it (and ignore the warning).
+        BuildPipeline.BuildAssetBundles(
+            TEMP_BUILD_FOLDER, 
+            BuildAssetBundleOptions.DeterministicAssetBundle | BuildAssetBundleOptions.CollectDependencies, 
+            BuildTarget.StandaloneWindows);
+#pragma warning restore 618
 
         //We are only interested in the BUNDLE_FILENAME bundle (and not the extra AssetBundle or the manifest files
         //that Unity makes), so just copy that to the final output folder

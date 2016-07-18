@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>KMFramework</name>
+    </assembly>
+    <members>
+        <member name="T:KMComponentPool">
+            <summary>
+            A ComponentPool is a collection of Module Types.
+            The generator will pick Count times from this list and instantiate a component of the chosen type.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.Count">
+            <summary>
+            How many components from this pool should be selected
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.AllowedSources">
+            <summary>
+            Controls where components can come from (either the base game, mods, or both)
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.ComponentTypes">
+            <summary>
+            The list of component types, not including any calculated at runtime special
+            types, like ALL_SOLVABLE. Use GetComponentTypes to get the calculated list.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.SpecialComponentType">
+            <summary>
+            Special types which are calculated at runtime, such as ALL_SOLVABLE
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.ModTypes">
+            <summary>
+            A list of mod types to be included in the pool, if they exist.
+            </summary>
+        </member>
+        <member name="T:KMGeneratorSetting">
+            <summary>
+            Everything needed to generate a single bomb.
+            </summary>
+        </member>
+        <member name="T:KMMission">
+            <summary>
+            Meta-data describing everything for a mission.
+            </summary>
+        </member>
+        <member name="P:KMMission.ID">
+            <summary>
+            Unique identifier for this mission.
+            </summary>
+        </member>
+        <member name="F:KMMission.DisplayName">
+            <summary>
+            The mission name as it appears in the bomb binder.
+            </summary>
+        </member>
+        <member name="F:KMMission.Description">
+            <summary>
+            The description shown in the bomb binder.
+            </summary>
+        </member>
+        <member name="F:KMMission.GeneratorSetting">
+            <summary>
+            Details about how the bomb should be generated for this mission.
+            </summary>
+        </member>
+        <member name="F:KMMission.PacingEventsEnabled">
+            <summary>
+            Controls whether or not all pacing events are enabled.
+            </summary>
+        </member>
+        <member name="T:KMMissionTableOfContents">
+            <summary>
+            Meta-data that controls how custom missions are listed in the bomb binder.
+            </summary>
+        </member>
+        <member name="T:KMMissionTableOfContents.Section">
+            <summary>
+            Describes a list of missions along with an appropriate header.
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Section.Title">
+            <summary>
+            The section header used in the bomb binder. Example: "Challenging", "Exotic".
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Section.MissionIDs">
+            <summary>
+            Custom missions from this mod to be included in the section.
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Title">
+            <summary>
+            Title of the entire table of contents. Example: "Gary's Missions".
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Sections">
+            <summary>
+            An ordered list of sections to include in the bomb binder.
+            </summary>
+        </member>
+        <member name="T:KMNeedyModule">
+            <summary>
+            This class acts as a proxy for the game's needy bomb module. Don't subclass but instead add it as a component.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnNeedyActivation">
+            <summary>
+            Do not have your needy module start counting down until this activation happens.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnNeedyDeactivation">
+            <summary>
+            This is usually when the bomb has been solved or has exploded. You will need to stop your countdown.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnTimerExpired">
+            <summary>
+            Handle when timer runs out, usually by giving a strike.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.ModuleType">
+            <summary>
+            The identifier for the module as referenced in missions. e.g. "BigButton"
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.ModuleDisplayName">
+            <summary>
+            The nice display name shown to players. e.g. "The Button"
+            </summary>
+        </member>
+        <member name="M:KMBombInfo.GetFormattedTime">
+            <summary>
+            Get the text currently displayed on the bomb's timer.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:KMBombModule">
+            <summary>
+            This class acts as a proxy for the game's needy bomb module. Don't subclass but instead add it as a component.
+            </summary>
+        </member>
+        <member name="F:KMBombModule.ModuleType">
+            <summary>
+            The identifier for the module as referenced in missions. e.g. "BigButton"
+            </summary>
+        </member>
+        <member name="F:KMBombModule.ModuleDisplayName">
+            <summary>
+            The nice display name shown to players. e.g. "The Button"
+            </summary>
+        </member>
+        <member name="F:KMGameplayRoom.BombPrefabOverride">
+            <summary>
+            Use this if you want to specify a particular bomb to use in this room.
+            </summary>
+        </member>
+    </members>
+</doc>
