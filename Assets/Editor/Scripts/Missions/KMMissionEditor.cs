@@ -78,6 +78,7 @@ public class KMMissionEditor : Editor
         element.FindPropertyRelative("Count").intValue = 1;
         element.FindPropertyRelative("ComponentTypes").arraySize = 0;
         element.FindPropertyRelative("SpecialComponentType").intValue = (int)KMComponentPool.SpecialComponentTypeEnum.None;
+        element.FindPropertyRelative("ModTypes").arraySize = 0;
     }
 
     protected void RemoveComponentPool(int index)
@@ -96,11 +97,11 @@ public class KMMissionEditor : Editor
     {
         SerializedProperty componentPoolProperty = componentPoolListProperty.GetArrayElementAtIndex(index);
 
-        bool isExpanded = (expandedComponentPoolIndex == index);
-
         //Draw the summary line and control buttons
         bool isOnlyComponentPool = (componentPoolListProperty.arraySize == 1);
         DrawComponentPoolEntry(index, componentPoolProperty, isOnlyComponentPool);
+
+        bool isExpanded = (expandedComponentPoolIndex == index);
 
         //Expandable section showing component type check boxes
         if (isExpanded)

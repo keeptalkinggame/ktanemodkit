@@ -430,7 +430,7 @@ public class AssetBundler
     /// </summary>
     protected void CheckForAssets()
     {
-        string[] assetsInBundle = AssetDatabase.FindAssets(string.Format("t:prefab,t:audioclip,b:", BUNDLE_FILENAME));
+        string[] assetsInBundle = AssetDatabase.FindAssets(string.Format("t:prefab,t:audioclip,t:scriptableobject,b:", BUNDLE_FILENAME));
         if (assetsInBundle.Length == 0)
         {
             throw new Exception(string.Format("No assets have been tagged for inclusion in the {0} AssetBundle.", BUNDLE_FILENAME));
