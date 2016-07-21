@@ -135,7 +135,7 @@ public class AssetBundler
 
         if (success)
         {
-            Debug.LogFormat("Build complete! Output: {0}", bundler.outputFolder);
+            Debug.LogFormat("{0} Build complete! Output: {1}", System.DateTime.Now.ToLocalTime(), bundler.outputFolder);
         }
     }
 
