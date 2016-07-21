@@ -5,8 +5,6 @@ public class ExampleNeedyModule : MonoBehaviour
 {
     public KMSelectable Button;
 
-    float timeRemaining;
-
     void Awake()
     {
         GetComponent<KMNeedyModule>().OnNeedyActivation += OnNeedyActivation;

@@ -32,13 +32,15 @@ public class KMMissionEditor : Editor
             //Generator Settings
             EditorGUILayout.Separator();
             EditorGUILayout.LabelField("Generator Settings:");
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.TimeLimit"), true);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.NumStrikes"), true);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.TimeBeforeNeedyActivation"), true);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.TimeLimit"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.NumStrikes"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.TimeBeforeNeedyActivation"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.FrontFaceOnly"));
 
             //Component Pools
             EditorGUILayout.Separator();
             EditorGUILayout.LabelField("Component Pools:");
+            DrawModuleCountWarning();
 
             SerializedProperty componentPoolListProperty = serializedObject.FindProperty("GeneratorSetting.ComponentPools");
             EditorGUI.indentLevel++;
@@ -65,6 +67,30 @@ public class KMMissionEditor : Editor
         }
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    protected void DrawModuleCountWarning()
+    {
+        KMMission mission = (KMMission)serializedObject.targetObject;
+
+        if (mission != null && mission.GeneratorSetting != null)
+        {
+            int moduleCount = 0;
+            foreach (KMComponentPool pool in mission.GeneratorSetting.ComponentPools)
+            {
+                moduleCount += pool.Count;
+            }
+
+            int limit = mission.GeneratorSetting.FrontFaceOnly ? 5 : 11;
+
+            if (moduleCount > limit)
+            {
+                EditorGUILayout.HelpBox(
+                    string.Format("Total module count is {0} (default limit is {1}). Mission may not work as you intend!", moduleCount,
+                    mission.GeneratorSetting.FrontFaceOnly ? limit + " when FrontFaceOnly=true" : limit.ToString()),
+                    MessageType.Error);
+            }
+        }
     }
 
     protected void AddComponentPool()

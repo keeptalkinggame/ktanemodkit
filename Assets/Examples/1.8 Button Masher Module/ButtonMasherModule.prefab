@@ -563,6 +563,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ModuleType: buttonMasher
   ModuleDisplayName: Button Masher
+  RequiresTimerVisibility: 1
 --- !u!114 &11427036
 MonoBehaviour:
   m_ObjectHideFlags: 1
