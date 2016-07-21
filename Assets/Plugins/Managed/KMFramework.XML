@@ -174,6 +174,11 @@
             as it limits generation possibilities.
             </summary>
         </member>
+        <member name="F:KMNeedyModule.WarnAtFiveSeconds">
+            <summary>
+            Set to true if you want the needy module to make audio warnings when time goes below 5 seconds
+            </summary>
+        </member>
         <member name="F:KMNeedyModule.OnNeedyActivation">
             <summary>
             Do not have your needy module start counting down until this activation happens.
@@ -210,6 +215,18 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:KMNeedyModule.SetNeedyTimeRemaining(System.Single)">
+            <summary>
+            Sets the time remaining, this will have no effect if timer isn't active
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KMNeedyModule.GetNeedyTimeRemaining">
+            <summary>
+            Gets the time remaining, this will return -1f if not active
+            </summary>
+            <returns></returns>
+        </member>
         <member name="F:KMNeedyModule.OnStrike">
             <summary>
             DO NOT USE IN MOD. Used by the game to hook into the bomb.
@@ -221,6 +238,16 @@
             </summary>
         </member>
         <member name="F:KMNeedyModule.GetRuleGenerationSeedHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.GetNeedyTimeRemainingHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.SetNeedyTimeRemainingHandler">
             <summary>
             DO NOT USE IN MOD. Used by the game to hook into the bomb.
             </summary>
