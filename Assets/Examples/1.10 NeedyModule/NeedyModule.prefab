@@ -607,7 +607,7 @@ MonoBehaviour:
   m_Script: {fileID: 1718998123, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CountdownTime: 10
+  CountdownTime: 40
   ModuleType: ExampleNeedy
   ModuleDisplayName: Example Needy Module
   RequiresTimerVisibility: 0
