@@ -1,0 +1,566 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>KMFramework</name>
+    </assembly>
+    <members>
+        <member name="T:KMComponentPool">
+            <summary>
+            A ComponentPool is a collection of Module Types.
+            The generator will pick Count times from this list and instantiate a component of the chosen type.
+            </summary>
+        </member>
+        <member name="T:KMComponentPool.ComponentSource">
+            <summary>
+            Controls where this pool will draw from (e.g. the base game modules, modules from mods, or both).
+            </summary>
+        </member>
+        <member name="T:KMComponentPool.SpecialComponentTypeEnum">
+            <summary>
+            Controls whether the modules will be chosen dynamically at runtime from whatever modules are loaded (based on the ComponentSource). 
+            Set to "None" to select specific module types.
+            </summary>
+        </member>
+        <member name="T:KMComponentPool.ComponentTypeEnum">
+            <summary>
+            The module types in the base game.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.Count">
+            <summary>
+            How many components from this pool should be selected.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.AllowedSources">
+            <summary>
+            Controls where components can come from (either the base game, mods, or both).
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.ComponentTypes">
+            <summary>
+            The list of component types, not including any calculated at runtime special
+            types, like ALL_SOLVABLE. Use GetComponentTypes to get the calculated list.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.SpecialComponentType">
+            <summary>
+            Special types which are calculated at runtime, such as ALL_SOLVABLE.
+            </summary>
+        </member>
+        <member name="F:KMComponentPool.ModTypes">
+            <summary>
+            A list of mod types to be included in the pool, if they exist.
+            </summary>
+        </member>
+        <member name="T:KMGeneratorSetting">
+            <summary>
+            Everything needed to generate a single bomb.
+            </summary>
+        </member>
+        <member name="F:KMGeneratorSetting.TimeLimit">
+            <summary>
+            Initial value for the timer when the bomb is activated, in seconds.
+            </summary>
+        </member>
+        <member name="F:KMGeneratorSetting.NumStrikes">
+            <summary>
+            The number of strikes at which the bomb explodes. Hardcore is 1. More forgiving is 3.
+            </summary>
+        </member>
+        <member name="F:KMGeneratorSetting.TimeBeforeNeedyActivation">
+            <summary>
+            Time, in seconds, which must elapse before any unactivated Needy modules are automatically activated.
+            </summary>
+        </member>
+        <member name="F:KMGeneratorSetting.FrontFaceOnly">
+            <summary>
+            Force modules to be placed only on the front face. By default this will limit the module count to 5 (+1 for the timer).
+            Useful in rare circumstances where you wish to generate a bomb with a few modules and guarantee that they will all
+            be visibile simultaneously.
+            </summary>
+        </member>
+        <member name="F:KMGeneratorSetting.ComponentPools">
+            <summary>
+            The pools of modules that will be used when generating a bomb.
+            </summary>
+        </member>
+        <member name="M:KMGeneratorSetting.GetComponentCount">
+            <returns>The total count of modules that will be added according to the component pools.</returns>
+        </member>
+        <member name="T:KMMission">
+            <summary>
+            Meta-data describing everything for a mission.
+            </summary>
+        </member>
+        <member name="P:KMMission.ID">
+            <summary>
+            Unique identifier for this mission.
+            </summary>
+        </member>
+        <member name="F:KMMission.DisplayName">
+            <summary>
+            The mission name as it appears in the bomb binder.
+            </summary>
+        </member>
+        <member name="F:KMMission.Description">
+            <summary>
+            The description shown in the bomb binder.
+            </summary>
+        </member>
+        <member name="F:KMMission.GeneratorSetting">
+            <summary>
+            Details about how the bomb should be generated for this mission.
+            </summary>
+        </member>
+        <member name="F:KMMission.PacingEventsEnabled">
+            <summary>
+            Controls whether or not all pacing events are enabled.
+            </summary>
+        </member>
+        <member name="T:KMMissionTableOfContents">
+            <summary>
+            Meta-data that controls how custom missions are listed in the bomb binder.
+            </summary>
+        </member>
+        <member name="T:KMMissionTableOfContents.Section">
+            <summary>
+            Describes a list of missions along with an appropriate header.
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Section.Title">
+            <summary>
+            The section header used in the bomb binder. Example: "Challenging", "Exotic".
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Section.MissionIDs">
+            <summary>
+            Custom missions from this mod to be included in the section.
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Title">
+            <summary>
+            Title of the entire table of contents. Example: "Gary's Missions".
+            </summary>
+        </member>
+        <member name="F:KMMissionTableOfContents.Sections">
+            <summary>
+            An ordered list of sections to include in the bomb binder.
+            </summary>
+        </member>
+        <member name="T:KMNeedyModule">
+            <summary>
+            This class acts as a proxy for the game's needy bomb module. Don't subclass but instead add it as a component.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.CountdownTime">
+            <summary>
+            The amount of time on the needy timer whenever this module is activated.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.ModuleType">
+            <summary>
+            The identifier for the module as referenced in missions. e.g. "BigButton"
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.ModuleDisplayName">
+            <summary>
+            The nice display name shown to players. e.g. "The Button"
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.RequiresTimerVisibility">
+            <summary>
+            Set to true to only allow this module to be placed on the same face as the timer. 
+            Useful when the rules involve the timer in some way (like the Big Button), but should be used sparingly
+            as it limits generation possibilities.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.WarnAtFiveSeconds">
+            <summary>
+            Set to true if you want the needy module to make audio warnings when time goes below 5 seconds
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnNeedyActivation">
+            <summary>
+            Do not have your needy module start counting down until this activation happens.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnNeedyDeactivation">
+            <summary>
+            This is usually when the bomb has been solved or has exploded. You will need to stop your countdown.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnTimerExpired">
+            <summary>
+            Handle when timer runs out, usually by giving a strike.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnActivate">
+            <summary>
+            Event is fired when the bomb has been activated and the timer has started.
+            </summary>
+        </member>
+        <member name="M:KMNeedyModule.HandlePass">
+            <summary>
+            Call this when the needy module has been correctly satisified and should be temporarily put to rest.
+            </summary>
+        </member>
+        <member name="M:KMNeedyModule.HandleStrike">
+            <summary>
+            Call this on any mistake that you want to cause a bomb strike.
+            </summary>
+        </member>
+        <member name="M:KMNeedyModule.GetRuleGenerationSeed">
+            <summary>
+            Returns the random seed used to generate the rules for this game. Not currently used.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KMNeedyModule.SetNeedyTimeRemaining(System.Single)">
+            <summary>
+            Sets the time remaining, this will have no effect if timer isn't active
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KMNeedyModule.GetNeedyTimeRemaining">
+            <summary>
+            Gets the time remaining, this will return -1f if not active
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:KMNeedyModule.OnStrike">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.OnPass">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.GetRuleGenerationSeedHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.GetNeedyTimeRemainingHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.SetNeedyTimeRemainingHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="T:KMWidget">
+            <summary>
+            A proxy for the game's Widget class, which is a non-interactive, but queryable, element that can be added around the bombs. Don't subclass but instead add it as a component.
+            E.g. serial number, indicator light, ports. 
+            </summary>
+        </member>
+        <member name="F:KMWidget.SizeX">
+            <summary>
+            The horizontal size of the widget. Usually 1 or 2 units.
+            </summary>
+        </member>
+        <member name="F:KMWidget.SizeZ">
+            <summary>
+            The vertical size of the widget. Usually 1 or 2 units.
+            </summary>
+        </member>
+        <member name="T:KMAudio">
+            <summary>
+            Component that provides an interface to the game's audio system. Allows playing of sounds in a way that will
+            respect volume settings and gameplay events. Can be used to play existing sounds or sounds added in this mod.
+            </summary>
+        </member>
+        <member name="M:KMAudio.PlaySoundAtTransform(System.String,UnityEngine.Transform)">
+            <summary>
+            Play a sound from this mod at the given transform.
+            </summary>
+            <param name="name"></param>
+            <param name="transform"></param>
+        </member>
+        <member name="M:KMAudio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect,UnityEngine.Transform)">
+            <summary>
+            Play an existing game sound (or its override) at the given transform.
+            </summary>
+            <param name="sound"></param>
+            <param name="transform"></param>
+        </member>
+        <member name="T:KMBomb">
+            <summary>
+            Component representing the bomb visual, including the faces upon which modules are placed as well
+            as the areas for spawning widgets.
+            </summary>
+        </member>
+        <member name="T:KMBombFace">
+            <summary>
+            A collection of transforms where modules can be instantiated along with their backings.
+            </summary>
+        </member>
+        <member name="F:KMBombFace.Anchors">
+            <summary>
+            Module spawn points.
+            </summary>
+        </member>
+        <member name="F:KMBombFace.Backings">
+            <summary>
+            Visual models of the backing (e.g. foam) spawned behind modules, in the same order as Anchors.
+            </summary>
+        </member>
+        <member name="T:KMBombInfo">
+            <summary>
+            Interface to information about the bomb and its widgets. 
+            Add this component to a module to query properties of the bomb for use in rules.
+            </summary>
+        </member>
+        <member name="M:KMBombInfo.GetTime">
+            <returns>Time remaining on the bomb, in seconds.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetFormattedTime">
+            <summary>
+            Get the text currently displayed on the bomb's timer.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KMBombInfo.GetStrikes">
+            <returns>The number of strikes received by the player this round.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetModuleNames">
+            <returns>A list of the module names on the current bomb.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetSolvableModuleNames">
+            <returns>A list of the solvable module names on the current bomb.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetSolvedModuleNames">
+            <returns>A list of the solved module names on the current bomb.</returns>
+        </member>
+        <member name="M:KMBombInfo.QueryWidgets(System.String,System.String)">
+            <summary>
+            Query all widgets on the bomb using the given queryKey. Use this to get information about things like battery count, indicator labels, or
+            custom information from mod widgets.
+            
+            Be sure to consider all responses when using this information in your rules, as there may be more than one instance of a widget and thus
+            more than one valid response.
+            </summary>
+            <param name="queryKey"></param>
+            <param name="queryInfo"></param>
+            <returns>A list of response strings from all widgets.</returns>
+        </member>
+        <member name="M:KMBombInfo.IsBombPresent">
+            <returns>True if there is a bomb present. This will not be the case during non-gameplay scenes.</returns>
+        </member>
+        <member name="T:KMBombModule">
+            <summary>
+            This class acts as a proxy for the game's needy bomb module. Don't subclass but instead add it as a component.
+            </summary>
+        </member>
+        <member name="F:KMBombModule.ModuleType">
+            <summary>
+            The identifier for the module as referenced in missions. e.g. "BigButton"
+            </summary>
+        </member>
+        <member name="F:KMBombModule.ModuleDisplayName">
+            <summary>
+            The nice display name shown to players. e.g. "The Button"
+            </summary>
+        </member>
+        <member name="F:KMBombModule.RequiresTimerVisibility">
+            <summary>
+            Set to true to only allow this module to be placed on the same face as the timer. 
+            Useful when the rules involve the timer in some way (like the Big Button), but should be used sparingly
+            as it limits generation possibilities.
+            </summary>
+        </member>
+        <member name="F:KMBombModule.OnActivate">
+            <summary>
+            Event is fired when the bomb has been activated and the timer has started.
+            </summary>
+        </member>
+        <member name="M:KMBombModule.HandlePass">
+            <summary>
+            Call this when the entire module has been solved.
+            </summary>
+        </member>
+        <member name="M:KMBombModule.HandleStrike">
+            <summary>
+            Call this on any mistake that you want to cause a bomb strike.
+            </summary>
+        </member>
+        <member name="M:KMBombModule.GetRuleGenerationSeed">
+            <summary>
+            Returns the random seed used to generate the rules for this game. Not currently used.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:KMBombModule.OnStrike">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMBombModule.OnPass">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="F:KMBombModule.GetRuleGenerationSeedHandler">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the bomb.
+            </summary>
+        </member>
+        <member name="T:KMGameCommands">
+            <summary>
+            Interface to directly execute actions related to the game or controlling game flow.
+            </summary>
+        </member>
+        <member name="M:KMGameCommands.StartMission(System.String,System.String)">
+            <summary>
+            Launches a mission using the given mission id as well as the random seed provided. Useful for triggering deterministic rounds (e.g. for a tournament).
+            </summary>
+            <param name="id"></param>
+            <param name="seed"></param>
+        </member>
+        <member name="M:KMGameCommands.CauseStrike(System.String)">
+            <summary>
+            Cause a strike on the bomb for whatever reason you deem is appropriate.
+            </summary>
+            <param name="reason"></param>
+        </member>
+        <member name="T:KMGameInfo">
+            <summary>
+            Interface to get notified of game state changes.
+            </summary>
+        </member>
+        <member name="T:KMGameplayRoom">
+            <summary>
+            Add this component to a prefab to allow it to be used as a room during gameplay (i.e. bomb defusal).
+            </summary>
+        </member>
+        <member name="F:KMGameplayRoom.AlarmClockSpawnNonVR">
+            <summary>
+            Transform to spawn the alarm clock at when not in VR mod. Best to ensure this is in view of the camera at all times.
+            </summary>
+        </member>
+        <member name="F:KMGameplayRoom.AlarmClockSpawn">
+            <summary>
+            Transform to spawn the alarm clock at when in VR.
+            </summary>
+        </member>
+        <member name="F:KMGameplayRoom.BombPrefabOverride">
+            <summary>
+            Use this if you want to specify a particular bomb to use in this room.
+            </summary>
+        </member>
+        <member name="T:KMHighlightable">
+            <summary>
+            Add this component to create a highlight at runtime based on this object's renderer.
+            </summary>
+        </member>
+        <member name="F:KMHighlightable.HighlightScale">
+            <summary>
+            Set this to non-zero to use a custom highlight scale. Otherwise, leave it at Vector3.zero for default scaling.
+            </summary>
+        </member>
+        <member name="T:KMModSettings">
+            <summary>
+            Interface to access the contents of the user settings stored in modSettings.json in the mod's directory.
+            Useful for user-specific settings in a mod, such as configuring a Twitch account or anything else a user
+            may tweak about a mod.
+            </summary>
+        </member>
+        <member name="F:KMModSettings.Settings">
+            <summary>
+            The contents of modSettings.json in this mod's directory, containing any user-specific data they may have put there.
+            </summary>
+        </member>
+        <member name="T:KMModuleBacking">
+            <summary>
+            Visual models of the foam behind modules. Modules that have holes or recesses can have parts of this
+            visible.
+            </summary>
+        </member>
+        <member name="F:KMModuleBacking.BackingDeep">
+            <summary>
+            The visual model spawned when a module in this position has RequiresDeepBacking = true
+            </summary>
+        </member>
+        <member name="F:KMModuleBacking.BackingNormal">
+            <summary>
+            The visual model spawned when a module in this position has RequiresDeepBacking = false
+            </summary>
+        </member>
+        <member name="T:KMRoom">
+            <summary>
+            Generic room behaviour - use KMGameplayRoom or KMSetupRoom instead.
+            </summary>
+        </member>
+        <member name="F:KMRoom.BombSpawnPosition">
+            <summary>
+            Transform to spawn the bomb at.
+            </summary>
+        </member>
+        <member name="F:KMRoom.PlayerSpawnPosition">
+            <summary>
+            Transform to spawn the player at.
+            </summary>
+        </member>
+        <member name="F:KMRoom.DossierSpawn">
+            <summary>
+            Transform to spawn the Menu dossier at.
+            </summary>
+        </member>
+        <member name="F:KMRoom.CameraAnimator">
+            <summary>
+            The Animator used to move the camera from object to object when not using VR.
+            </summary>
+        </member>
+        <member name="F:KMRoom.UseModQualitySettings">
+            <summary>
+            Set this to true to enable realtime shadows at high quality.
+            </summary>
+        </member>
+        <member name="T:KMSelectable">
+            <summary>
+            The interface to all interactive elements in the game. Set this up to allow an object to be
+            selected, interacted with, and handle input.
+            </summary>
+        </member>
+        <member name="T:KMService">
+            <summary>
+            The base class for any mod behaviour you wish to have activated immediately and run indefinitely.
+            </summary>
+        </member>
+        <member name="T:KMSetupRoom">
+            <summary>
+            Add this component to a prefab to allow it to be used as a room during setup (e.g. the office with the bomb binder and freeplay device).
+            </summary>
+        </member>
+        <member name="F:KMSetupRoom.FreeplayDeviceSpawn">
+            <summary>
+            Transform at which the Freeplay Device should be spawned.
+            </summary>
+        </member>
+        <member name="F:KMSetupRoom.BombBinderSpawn">
+            <summary>
+            Transform at which the Bomb Binder should be spawned.
+            </summary>
+        </member>
+        <member name="T:KMSoundOverride">
+            <summary>
+            Add this component to a prefab to specify an AudioClip that should be played whenever the
+            given sound effect is triggered instead of the original game's audio.
+            </summary>
+        </member>
+        <member name="F:KMSoundOverride.OverrideEffect">
+            <summary>
+            The sound effect in the base game to replace.
+            </summary>
+        </member>
+        <member name="F:KMSoundOverride.AudioClip">
+            <summary>
+            The AudioClip to be played instead of the base game's sound.
+            </summary>
+        </member>
+    </members>
+</doc>

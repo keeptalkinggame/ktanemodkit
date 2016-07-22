@@ -3,7 +3,8 @@ using System.Collections;
 
 public class ExampleNeedyModule : MonoBehaviour
 {
-    public KMSelectable Button;
+    public KMSelectable SolveButton;
+    public KMSelectable AddTimeButton;
 
     float timeRemaining;
 
@@ -11,7 +12,8 @@ public class ExampleNeedyModule : MonoBehaviour
     {
         GetComponent<KMNeedyModule>().OnNeedyActivation += OnNeedyActivation;
         GetComponent<KMNeedyModule>().OnNeedyDeactivation += OnNeedyDeactivation;
-        Button.OnInteract += Solve;
+        SolveButton.OnInteract += Solve;
+        AddTimeButton.OnInteract += AddTime;
         GetComponent<KMNeedyModule>().OnTimerExpired += OnTimerExpired;
     }
 
@@ -31,9 +33,20 @@ public class ExampleNeedyModule : MonoBehaviour
     {
 
     }
-    
+
     protected void OnTimerExpired()
     {
         GetComponent<KMNeedyModule>().OnStrike();
+    }
+
+    protected bool AddTime()
+    {
+        float time = GetComponent<KMNeedyModule>().GetNeedyTimeRemaining();
+        if (time > 0)
+        {
+            GetComponent<KMNeedyModule>().SetNeedyTimeRemaining(time + 5f);
+        }
+
+        return false;
     }
 }

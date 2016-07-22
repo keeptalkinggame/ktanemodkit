@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -548183353, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: example_mission_2
+  m_EditorClassIdentifier: 
+  DisplayName: Slightly More Difficult
+  Description: This mission has a shorter time limit, a needy module, and can select
+    from any solvable module in the base game.
+  GeneratorSetting:
+    TimeLimit: 240
+    NumStrikes: 1
+    TimeBeforeNeedyActivation: 5
+    ComponentPools:
+    - Count: 5
+      AllowedSources: 1
+      ComponentTypes: 
+      SpecialComponentType: 1
+      ModTypes: []
+    - Count: 2
+      AllowedSources: 2
+      ComponentTypes: 0d000000
+      SpecialComponentType: 0
+      ModTypes: []
+  PacingEventsEnabled: 1

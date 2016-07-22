@@ -561,8 +561,9 @@ MonoBehaviour:
   m_Script: {fileID: -119419473, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ModuleType: Button Masher
-  ModuleDisplayName: 
+  ModuleType: buttonMasher
+  ModuleDisplayName: Button Masher
+  RequiresTimerVisibility: 1
 --- !u!114 &11427036
 MonoBehaviour:
   m_ObjectHideFlags: 1

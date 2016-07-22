@@ -85,13 +85,6 @@ public class ExampleWebService : MonoBehaviour
                 responseString = CauseStrike(reason);
             }
 
-            if (request.Url.OriginalString.Contains("triggerDistraction"))
-            {
-                string distractionId = request.QueryString.Get("distractionId");
-                string options = request.QueryString.Get("options");
-                responseString = TriggerDistraction(distractionId, options);
-            }
-
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
             // Get a response stream and write the response to it.
             response.ContentLength64 = buffer.Length;
@@ -114,13 +107,6 @@ public class ExampleWebService : MonoBehaviour
         actions.Enqueue(delegate () { gameCommands.CauseStrike(reason); });
 
         return reason;
-    }
-
-    protected string TriggerDistraction(string distractionId, string options)
-    {
-        actions.Enqueue(delegate () { gameCommands.TriggerDistraction(distractionId, options); });
-
-        return distractionId + " " + options;
     }
 
     protected string GetBombInfo()
