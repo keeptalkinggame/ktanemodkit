@@ -175,7 +175,7 @@ public class AssetBundler
         }
 
         //modify the csproj (if needed)
-        var csproj = File.ReadAllText("ktanemods.CSharp.csproj");
+        var csproj = File.ReadAllText("ktanemodkit.CSharp.csproj");
         csproj = csproj.Replace("<AssemblyName>Assembly-CSharp</AssemblyName>", "<AssemblyName>"+ assemblyName + "</AssemblyName>");
         File.WriteAllText("modkithelper.CSharp.csproj", csproj);
 
