@@ -1,0 +1,3 @@
+The Assets/TestHarness/ folder is for testing and its contents will NOT be included in the built asset bundle (i.e. your mod). 
+
+Don't place things here that you want included in the mod.

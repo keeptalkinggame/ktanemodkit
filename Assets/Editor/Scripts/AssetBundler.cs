@@ -41,6 +41,11 @@ public class AssetBundler
     /// </summary>
     public static string BUNDLE_FILENAME = "mod.bundle";
 
+    /// <summary>
+    /// Folders which should not be included in the asset bundling process.
+    /// </summary>
+    public static string[] EXCLUDED_FOLDERS = new string[] { "Assets/Editor", "Assets/TestHarness" };
+
 
     #region Internal bundler Variables
     /// <summary>
@@ -161,7 +166,7 @@ public class AssetBundler
     {
         Debug.Log("Compiling scripts with MSBuild...");
 
-        IEnumerable<string> scriptAssetPaths = AssetDatabase.GetAllAssetPaths().Where(assetPath => assetPath.EndsWith(".cs") && !assetPath.StartsWith("Assets/Editor"));
+        IEnumerable<string> scriptAssetPaths = AssetDatabase.GetAllAssetPaths().Where(assetPath => assetPath.EndsWith(".cs") && IsIncludedAssetPath(assetPath));
 
         if (scriptAssetPaths.Count() == 0)
         {
@@ -201,7 +206,7 @@ public class AssetBundler
     void CompileAssemblyWithEditor()
     {
         Debug.Log("Compiling scripts with EditorUtility.CompileCSharp...");
-        IEnumerable<string> scriptAssetPaths = AssetDatabase.GetAllAssetPaths().Where(assetPath => assetPath.EndsWith(".cs") && !assetPath.StartsWith("Assets/Editor"));
+        IEnumerable<string> scriptAssetPaths = AssetDatabase.GetAllAssetPaths().Where(assetPath => assetPath.EndsWith(".cs") && IsIncludedAssetPath(assetPath));
 
         if (scriptAssetPaths.Count() == 0)
         {
@@ -255,7 +260,7 @@ public class AssetBundler
     {
         Debug.Log("Adjusting scripts...");
 
-        IEnumerable<string> assetFolderPaths = AssetDatabase.GetAllAssetPaths().Where(path => path.EndsWith(".cs") && !path.StartsWith("Assets/Editor"));
+        IEnumerable<string> assetFolderPaths = AssetDatabase.GetAllAssetPaths().Where(path => path.EndsWith(".cs") && IsIncludedAssetPath(path));
 
         scriptPathsToRestore = new List<string>();
 
@@ -413,7 +418,7 @@ public class AssetBundler
         {
             string path = AssetDatabase.GUIDToAssetPath(assetGUID);
 
-            if (!path.StartsWith("Assets/Examples"))
+            if (!path.StartsWith("Assets/Examples") && IsIncludedAssetPath(path))
             {
                 var importer = AssetImporter.GetAtPath(path);
                 if (!importer.assetBundleName.Equals(BUNDLE_FILENAME))
@@ -435,5 +440,19 @@ public class AssetBundler
         {
             throw new Exception(string.Format("No assets have been tagged for inclusion in the {0} AssetBundle.", BUNDLE_FILENAME));
         }
+    }
+
+    /// <returns>true if the given path does not start with any of the paths in EXCLUDED_FOLDERS</returns>
+    protected bool IsIncludedAssetPath(string path)
+    {
+        foreach (string excludedPath in EXCLUDED_FOLDERS)
+        {
+            if (path.StartsWith(excludedPath))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
