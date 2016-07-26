@@ -1,12 +1,16 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
 
 public class TestHarness : MonoBehaviour
 {
     public GameObject HighlightPrefab;
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
+
+    AudioSource audioSource;
+    List<AudioClip> audioClips;
 
     void Awake()
     {
@@ -17,10 +21,10 @@ public class TestHarness : MonoBehaviour
     void Start()
     {
         currentSelectable = GetComponent<TestSelectable>();
-        
+
         KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
         currentSelectable.Children = new TestSelectable[modules.Length];
-        for (int i=0; i < modules.Length; i++)
+        for (int i = 0; i < modules.Length; i++)
         {
             currentSelectable.Children[i] = modules[i].GetComponent<TestSelectable>();
             modules[i].GetComponent<TestSelectable>().Parent = currentSelectable;
@@ -30,6 +34,42 @@ public class TestHarness : MonoBehaviour
         }
 
         currentSelectable.ActivateChildSelectableAreas();
+
+
+        //Load all the audio clips in the asset database
+        audioClips = new List<AudioClip>();
+        string[] audioClipAssetGUIDs = AssetDatabase.FindAssets("t:AudioClip");
+
+        foreach (var guid in audioClipAssetGUIDs)
+        {
+            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(AssetDatabase.GUIDToAssetPath(guid));
+
+            if (clip != null)
+            {
+                audioClips.Add(clip);
+            }
+        }
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
+        foreach (KMAudio kmAudio in kmAudios)
+        {
+            kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
+        }
+    }
+
+    protected void PlaySoundHandler(string clipName, Transform t)
+    {
+        if (audioClips.Count > 0)
+        {
+            AudioClip clip = audioClips.Where(a => a.name == clipName).First();
+
+            if (clip != null)
+            {
+                audioSource.transform.position = t.position;
+                audioSource.PlayOneShot(clip);
+            }
+        }
     }
 
     void Update()
@@ -39,25 +79,25 @@ public class TestHarness : MonoBehaviour
         RaycastHit hit;
         int layerMask = 1 << 11;
         bool rayCastHitSomething = Physics.Raycast(ray, out hit, 1000, layerMask);
-        if(rayCastHitSomething)
+        if (rayCastHitSomething)
         {
             TestSelectableArea hitArea = hit.collider.GetComponent<TestSelectableArea>();
             if (hitArea != null)
             {
                 if (currentSelectableArea != hitArea)
                 {
-                    if(currentSelectableArea != null)
+                    if (currentSelectableArea != null)
                     {
                         currentSelectableArea.Selectable.Deselect();
                     }
-                    
+
                     hitArea.Selectable.Select();
                     currentSelectableArea = hitArea;
                 }
             }
             else
             {
-                if(currentSelectableArea != null)
+                if (currentSelectableArea != null)
                 {
                     currentSelectableArea.Selectable.Deselect();
                     currentSelectableArea = null;
@@ -73,9 +113,9 @@ public class TestHarness : MonoBehaviour
             }
         }
 
-        if(Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
-            if(currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
+            if (currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
             {
                 currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
                 currentSelectable = currentSelectableArea.Selectable;
@@ -83,9 +123,9 @@ public class TestHarness : MonoBehaviour
             }
         }
 
-        if(Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1))
         {
-            if(currentSelectable.Parent != null)
+            if (currentSelectable.Parent != null)
             {
                 currentSelectable.DeactivateChildSelectableAreas(currentSelectable.Parent);
                 currentSelectable = currentSelectable.Parent;
@@ -98,7 +138,7 @@ public class TestHarness : MonoBehaviour
     {
         List<KMHighlightable> highlightables = new List<KMHighlightable>(GameObject.FindObjectsOfType<KMHighlightable>());
 
-        foreach(KMHighlightable highlightable in highlightables)
+        foreach (KMHighlightable highlightable in highlightables)
         {
             TestHighlightable highlight = highlightable.gameObject.AddComponent<TestHighlightable>();
 
@@ -124,7 +164,24 @@ public class TestHarness : MonoBehaviour
             testSelectable.Children = new TestSelectable[selectable.Children.Length];
             for (int i = 0; i < selectable.Children.Length; i++)
             {
-                testSelectable.Children[i] = selectable.Children[i].GetComponent<TestSelectable>();
+                if (selectable.Children[i] != null)
+                {
+                    testSelectable.Children[i] = selectable.Children[i].GetComponent<TestSelectable>();
+                }
+            }
+        }
+    }
+
+    void OnGUI()
+    {
+        if (GUILayout.Button("Activate Module"))
+        {
+            foreach (KMBombModule module in GameObject.FindObjectsOfType<KMBombModule>())
+            {
+                if (module.OnActivate != null)
+                {
+                    module.OnActivate();
+                }
             }
         }
     }
