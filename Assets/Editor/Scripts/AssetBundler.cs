@@ -231,15 +231,47 @@ public class AssetBundler
 
         managedReferences.Add("Library/UnityAssemblies/UnityEngine");
 
-        var compilerOutput = EditorUtility.CompileCSharp(
-            scriptAssetPaths.ToArray(),
-            managedReferences.ToArray(),
-            allDefines.Split(';'),
-            outputFilename);
+        //Next we need to grab some type references and use reflection to build things the way Unity does.
+        //Note that EditorUtility.CompileCSharp will do *almost* exactly the same thing, but it unfortunately
+        //defaults to "unity" rather than "2.0" when selecting the .NET support for the classlib_profile.
 
-        foreach (var log in compilerOutput)
+        string[] scriptArray = scriptAssetPaths.ToArray();
+        string[] referenceArray = managedReferences.ToArray();
+        string[] defineArray = allDefines.Split(';');
+
+        //MonoIsland to compile
+        string classlib_profile = "2.0";
+        Assembly assembly = Assembly.GetAssembly(typeof(MonoScript));
+        var monoIslandType = assembly.GetType("UnityEditor.Scripting.MonoIsland");
+        object monoIsland = Activator.CreateInstance(monoIslandType, BuildTarget.StandaloneWindows, classlib_profile, scriptArray, referenceArray, defineArray, outputFilename);
+
+        //MonoCompiler itself
+        var monoCompilerType = assembly.GetType("UnityEditor.Scripting.Compilers.MonoCSharpCompiler");
+        object monoCompiler = Activator.CreateInstance(monoCompilerType, monoIsland, false);
+
+        MethodInfo beginCompilingMethod = monoCompilerType.GetMethod("BeginCompiling");
+        MethodInfo pollMethod = monoCompilerType.GetMethod("Poll");
+        MethodInfo getMessagesMethod = monoCompilerType.GetMethod("GetCompilerMessages");
+
+        //CompilerMessage
+        var compilerMessageType = assembly.GetType("UnityEditor.Scripting.Compilers.CompilerMessage");
+        FieldInfo messageField = compilerMessageType.GetField("message"); 
+
+        //Start compiling
+        beginCompilingMethod.Invoke(monoCompiler, null);
+        while (!(bool)pollMethod.Invoke(monoCompiler, null))
         {
-            Debug.LogFormat("Compiler: {0}", log);
+            System.Threading.Thread.Sleep(50);
+        }
+
+        //Now check and output any messages returned by the compiler
+        object returnedObj = getMessagesMethod.Invoke(monoCompiler, null);
+        object[] cmArray = ((Array)returnedObj).Cast<object>().ToArray();
+
+        foreach (object cm in cmArray)
+        {
+            string str = (string)messageField.GetValue(cm);
+            Debug.LogFormat("Compiler: {0}", str);
         }
 
         if (!File.Exists(outputFilename))
