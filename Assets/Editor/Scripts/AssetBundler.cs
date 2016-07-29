@@ -454,10 +454,11 @@ public class AssetBundler
             foreach (DirectoryInfo subdir in dirs)
             {
                 string temppath = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                DirectoryCopyPDFs(subdir.FullName, temppath, copySubDirs);
             }
         }
     }
+
 
     /// <summary>
     /// All assets tagged with "mod.bundle" will be included in the build, including the Example assets. Print out a 
