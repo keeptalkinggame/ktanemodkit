@@ -201,6 +201,13 @@ public class TestHarness : MonoBehaviour
                     module.OnActivate();
                 }
             }
+            foreach (KMNeedyModule module in GameObject.FindObjectsOfType<KMNeedyModule>())
+            {
+            	if (module.OnActivate != null)
+            	{
+            		module.OnActivate();
+            	}
+            }
         }
 
         if (GUILayout.Button("Activate Needy Modules"))
