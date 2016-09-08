@@ -57,14 +57,44 @@ public class TestSelectable : MonoBehaviour
         return shouldDrill;
     }
 
+    public void InteractEnded()
+    {
+        if (GetComponent<KMSelectable>().OnInteractEnded != null)
+        {
+            GetComponent<KMSelectable>().OnInteractEnded();
+        }
+    }
+
     public void Select()
     {
         Highlight.On();
+        if (GetComponent<KMSelectable>().OnSelect != null)
+        {
+            GetComponent<KMSelectable>().OnSelect();
+        }
+        if (GetComponent<KMSelectable>().OnHighlight != null)
+        {
+            GetComponent<KMSelectable>().OnHighlight();
+        }
+    }
+
+    public bool Cancel()
+    {
+        if (GetComponent<KMSelectable>().OnCancel != null)
+        {
+            return GetComponent<KMSelectable>().OnCancel();
+        }
+
+        return true;
     }
 
     public void Deselect()
     {
         Highlight.Off();
+        if (GetComponent<KMSelectable>().OnDeselect != null)
+        {
+            GetComponent<KMSelectable>().OnDeselect();
+        }
     }
 
     public void OnDrillAway(TestSelectable newParent)
