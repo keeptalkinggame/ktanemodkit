@@ -86,8 +86,7 @@ public class ExampleModule2 : MonoBehaviour
 
     bool OnCancel()
     {
-        Debug.Log("ExampleModule2 defocused.");
-        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Stamp, transform);
+        Debug.Log("ExampleModule2 cancel.");
 
         return true;
     }
@@ -109,6 +108,5 @@ public class ExampleModule2 : MonoBehaviour
     void OnRelease()
     {
         Debug.Log("OnInteractEnded Released");
-        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
     }
 }

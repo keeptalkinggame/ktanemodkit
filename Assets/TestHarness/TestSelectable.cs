@@ -13,7 +13,25 @@ public class TestSelectable : MonoBehaviour
         {
             if(_selectableArea == null)
             {
-                if (Highlight != null)
+                if (GetComponent<KMSelectable>() != null && GetComponent<KMSelectable>().SelectableColliders.Length > 0)
+                {
+                    _selectableArea = new GameObject("SelectableArea").AddComponent<TestSelectableArea>();
+                    _selectableArea.Selectable = this;
+                    _selectableArea.transform.parent = transform;
+
+                    foreach(Collider collider in GetComponent<KMSelectable>().SelectableColliders)
+                    {
+                        TestSelectableArea colSelectableArea = collider.gameObject.AddComponent<TestSelectableArea>();
+                        collider.isTrigger = false;
+                        collider.gameObject.layer = 11;
+                        colSelectableArea.Selectable = this;
+                        _selectableArea.Colliders.Add(collider);
+                    }
+                    
+                    _selectableArea.DeactivateSelectableArea();
+                }
+
+                else if (Highlight != null)
                 {
                     MeshRenderer meshRenderer = Highlight.gameObject.GetComponent<MeshRenderer>();
                     if (meshRenderer == null)
@@ -24,13 +42,13 @@ public class TestSelectable : MonoBehaviour
                         meshRenderer = Highlight.gameObject.AddComponent<MeshRenderer>();
                         meshRenderer.enabled = false;
                     }
-
+                    
                     BoxCollider collider = Highlight.gameObject.AddComponent<BoxCollider>();
                     collider.isTrigger = true;
                     _selectableArea = Highlight.gameObject.AddComponent<TestSelectableArea>();
                     _selectableArea.Selectable = this;
                     _selectableArea.gameObject.layer = 11;
-                    _selectableArea.DeactivateSelectableArea();
+                    _selectableArea.DeactivateSelectableArea();      
                 }
             }
 
