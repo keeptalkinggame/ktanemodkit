@@ -235,7 +235,17 @@ public class AssetBundler
             .Select(path => "Assets/Plugins/Managed/" + Path.GetFileNameWithoutExtension(path))
             .ToList();
 
-        string unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.exe", "Data/Managed/");
+        string unityAssembliesLocation;
+        switch (System.Environment.OSVersion.Platform)
+        {
+            case PlatformID.MacOSX:
+                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.app", "Unity.app/Contents/Frameworks/Managed/");
+                break;
+            case PlatformID.Win32NT:
+            default:
+                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.exe", "Data/Managed/");
+                break;
+        }
 
         managedReferences.Add(unityAssembliesLocation + "UnityEngine");
 
