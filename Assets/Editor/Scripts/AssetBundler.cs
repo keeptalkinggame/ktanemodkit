@@ -107,6 +107,9 @@ public class AssetBundler
             //Change all non-Editor scripts to reference ASSEMBLY_NAME instead of Assembly-CSharp
             bundler.AdjustMonoScripts();
 
+            //Update material info components for future compatibility checks
+            bundler.UpdateMaterialInfo();
+
             //Build the assembly using either MSBuild or Unity EditorUtility methods
             if (useMSBuild)
             {
@@ -561,5 +564,34 @@ public class AssetBundler
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Sets material info for gameobjects that have a material to prevent possible future incompatibility
+    /// </summary>
+    protected void UpdateMaterialInfo()
+    {
+        string[] prefabsGUIDs = AssetDatabase.FindAssets("t: prefab");
+        foreach(string prefabGUID in prefabsGUIDs)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(prefabGUID);
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            foreach(Renderer renderer in go.GetComponentsInChildren<Renderer>())
+            {
+                if(renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0)
+                {
+                    if(renderer.gameObject.GetComponent<KMMaterialInfo>() == null)
+                    {
+                        renderer.gameObject.AddComponent<KMMaterialInfo>();
+                    }
+                    KMMaterialInfo materialInfo = renderer.gameObject.GetComponent<KMMaterialInfo>();
+                    materialInfo.ShaderNames = new List<string>();
+                    foreach(Material material in renderer.sharedMaterials)
+                    {
+                        materialInfo.ShaderNames.Add(material.shader.name);
+                    }
+                }
+            }
+        }
     }
 }
