@@ -66,7 +66,8 @@ public sealed class ModConfig : ScriptableObject
         dict.Add("id", id);
         dict.Add("title", title);
         dict.Add("version", version);
-        
+        dict.Add("unityVersion", Application.unityVersion);
+
         return JsonConvert.SerializeObject(dict); ;
     }
 }
