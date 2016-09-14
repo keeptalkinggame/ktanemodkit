@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 public class ExampleModule2 : MonoBehaviour
 {
     public KMSelectable[] buttons;
-
+    KMAudio.KMAudioRef audioRef;
     int correctIndex;
 
     void Start()
@@ -94,19 +94,25 @@ public class ExampleModule2 : MonoBehaviour
     void OnPress(bool correctButton)
     {
         Debug.Log("Pressed " + correctButton + " button");
-        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+
         if (correctButton)
         {
+            audioRef = GetComponent<KMAudio>().PlayGameSoundAtTransformWithRef(KMSoundOverride.SoundEffect.AlarmClockBeep, transform);
             GetComponent<KMBombModule>().HandlePass();
         }
         else
         {
-            GetComponent<KMBombModule>().HandleStrike();
+            audioRef = GetComponent<KMAudio>().PlaySoundAtTransformWithRef("doublebeep125loop", transform);
+            //GetComponent<KMBombModule>().HandleStrike();
         }
     }
 
     void OnRelease()
     {
         Debug.Log("OnInteractEnded Released");
+        if(audioRef != null && audioRef.StopSound != null)
+        {
+            audioRef.StopSound();
+        }
     }
 }
