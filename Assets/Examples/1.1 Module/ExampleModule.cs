@@ -37,6 +37,7 @@ public class ExampleModule : MonoBehaviour
     void OnPress(bool correctButton)
     {
         GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        GetComponent<KMSelectable>().AddInteractionPunch();
 
         if (!isActivated)
         {
