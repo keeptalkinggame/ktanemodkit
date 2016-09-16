@@ -587,6 +587,10 @@ public class AssetBundler
         {
             string path = AssetDatabase.GUIDToAssetPath(prefabGUID);
             GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if(go == null)
+            {
+                continue;
+            }
             foreach(Renderer renderer in go.GetComponentsInChildren<Renderer>())
             {
                 if(renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0)

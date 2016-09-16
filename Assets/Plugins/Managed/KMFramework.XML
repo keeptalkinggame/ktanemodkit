@@ -4,6 +4,72 @@
         <name>KMFramework</name>
     </assembly>
     <members>
+        <member name="T:KMGamepad.ButtonEnum">
+            <summary>
+            Enumeration of gamepad buttons using XBox gamepad naming conventions
+            </summary>
+        </member>
+        <member name="T:KMGamepad.AxisEnum">
+            <summary>
+            Enumeration of gamepad axes using XBox gamepad naming conventions
+            </summary>
+        </member>
+        <member name="M:KMGamepad.GetAxisValue(KMGamepad.AxisEnum,System.Int32)">
+            <summary>
+            Get a specified axis value 
+            </summary>
+        </member>
+        <member name="M:KMGamepad.GetButtonDown(KMGamepad.ButtonEnum,System.Int32)">
+            <summary>
+            Get whether a specified button received a buttondown event this frame 
+            </summary>
+        </member>
+        <member name="M:KMGamepad.GetButtonUp(KMGamepad.ButtonEnum,System.Int32)">
+            <summary>
+            Get whether a specified button received a buttonup event this frame 
+            </summary>
+        </member>
+        <member name="T:KMGamepad.KMOnGetAxisValueDelegate">
+            <summary>
+            Delegate type for checking axis value
+            </summary>
+        </member>
+        <member name="T:KMGamepad.KMOnGetButtonDownDelegate">
+            <summary>
+            Delegate type for checking buttonup event
+            </summary>
+        </member>
+        <member name="T:KMGamepad.KMOnGetButtonUpDelegate">
+            <summary>
+            Delegate type for checking buttonup event
+            </summary>
+        </member>
+        <member name="F:KMGamepad.OnGetAxisValue">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the controller.
+            </summary>
+        </member>
+        <member name="F:KMGamepad.OnGetButtonDown">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the controller.
+            </summary>
+        </member>
+        <member name="F:KMGamepad.OnGetButtonUp">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the controller.
+            </summary>
+        </member>
+        <member name="T:KMMaterialInfo">
+            <summary>
+            This component is added during assetbundle build to any game objects that have material components
+            This should not be used by modders but is instead used to mitigate potential future incompatibilities in Unity
+            </summary>
+        </member>
+        <member name="F:KMMaterialInfo.ShaderNames">
+            <summary>
+            The name of the shader used by the material on this game object
+            </summary>
+        </member>
         <member name="T:KMComponentPool">
             <summary>
             A ComponentPool is a collection of Module Types.
@@ -288,6 +354,22 @@
             <param name="sound"></param>
             <param name="transform"></param>
         </member>
+        <member name="M:KMAudio.PlaySoundAtTransformWithRef(System.String,UnityEngine.Transform)">
+            <summary>
+            Play a sound from this mod at the given transform.
+            </summary>
+            <param name="name"></param>
+            <param name="transform"></param>
+            <returns>A KMAudioRef that can be used to stop sounds early</returns>
+        </member>
+        <member name="M:KMAudio.PlayGameSoundAtTransformWithRef(KMSoundOverride.SoundEffect,UnityEngine.Transform)">
+            <summary>
+            Play an existing game sound (or its override) at the given transform.
+            </summary>
+            <param name="sound"></param>
+            <param name="transform"></param>
+            <returns>A KMAudioRef that can be used to stop sounds early</returns>
+        </member>
         <member name="T:KMBomb">
             <summary>
             Component representing the bomb visual, including the faces upon which modules are placed as well
@@ -432,6 +514,36 @@
             Interface to get notified of game state changes.
             </summary>
         </member>
+        <member name="T:KMGameInfo.KMStateChangeDelegate">
+            <summary>
+            Delegate type for state changes
+            </summary>
+        </member>
+        <member name="T:KMGameInfo.KMAlarmClockChangeDelegate">
+            <summary>
+            Delegate type for alarm clock state change
+            </summary>
+        </member>
+        <member name="T:KMGameInfo.KMLightsChangeDelegate">
+            <summary>
+            Delegate type for change in lights
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnStateChange">
+            <summary>
+            Called when game state changes between gameplay, setup, postgame and loading
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnAlarmClockChange">
+            <summary>
+            Called when alarm clock turns on or off
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnLightsChange">
+            <summary>
+            Called when in game lights change state
+            </summary>
+        </member>
         <member name="T:KMGameplayRoom">
             <summary>
             Add this component to a prefab to allow it to be used as a room during gameplay (i.e. bomb defusal).
@@ -526,6 +638,119 @@
             selected, interacted with, and handle input.
             </summary>
         </member>
+        <member name="T:KMSelectable.OnInteractHandler">
+            <summary>
+            Delegate type for interactions, return is whether it should drill in to children
+            </summary>
+        </member>
+        <member name="T:KMSelectable.OnCancelHandler">
+            <summary>
+            Delegate type for cancelling, return is whether it should drill out to parent
+            </summary>
+        </member>
+        <member name="F:KMSelectable.Parent">
+            <summary>
+            The parent of this selectable
+            </summary>
+        </member>
+        <member name="F:KMSelectable.Children">
+            <summary>
+            This is the list of child selectables. 
+            Order is important as it is treated as a grid with row length defined by ChildRowLength.
+            </summary>
+        </member>
+        <member name="F:KMSelectable.IsPassThrough">
+            <summary>
+            Determines if this selectable is essentially a container, currently used for bomb faces
+            </summary>
+        </member>
+        <member name="F:KMSelectable.ChildRowLength">
+            <summary>
+            This is the number of selectables per row for gamepad controls
+            </summary>
+        </member>
+        <member name="F:KMSelectable.Highlight">
+            <summary>
+            Sets the object with a highlight mesh for this selectable
+            </summary>
+        </member>
+        <member name="F:KMSelectable.SelectableColliders">
+            <summary>
+            If you want to set the interaction colliders for mouse to something other than the highlight
+            you can set them here.
+            </summary>
+        </member>
+        <member name="F:KMSelectable.DefaultSelectableIndex">
+            <summary>
+            Allows you to set a particular child as the default index for gamepad controls
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnSelect">
+            <summary>
+            Called whenever this selectable becomes the current selection
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnDeselect">
+            <summary>
+            Called whenever this selectable stops being the current selectable
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnCancel">
+            <summary>
+            Called when player backs out of this selectable, an example would be zooming out of a module
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnInteract">
+            <summary>
+            Called when player interacts with this selectable. Done on button down
+            Returns whether or not it should try to drill to children
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnInteractEnded">
+            <summary>
+            Called when a player is interacting with this selectable and releases the mouse or controller button
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnHighlight">
+            <summary>
+            Called when the highlight is turned on, OnSelect is probably more appropriate for most things
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnLeft">
+            <summary>
+            Called when player pulls selection stick left while this selectable is focused
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnRight">
+            <summary>
+            Called when player pulls selection stick right while this selectable is focused
+            </summary>
+        </member>
+        <member name="F:KMSelectable.AllowSelectionWrapX">
+            <summary>
+            Determines whether gamepad selection should wrap around left/right
+            </summary>
+        </member>
+        <member name="F:KMSelectable.AllowSelectionWrapY">
+            <summary>
+            Determines whether gamepad selection should wrap around up/down
+            </summary>
+        </member>
+        <member name="M:KMSelectable.AddInteractionPunch(System.Single)">
+            <summary>
+            Adds bomb movement and controller vibration on interaction, amount is based on the modifier
+            </summary>
+        </member>
+        <member name="T:KMSelectable.KMOnAddInteractionPunchDelegate">
+            <summary>
+            Delegate type for adding bomb movement and controller vibration on interaction
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnInteractionPunch">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the selectable.
+            </summary>
+        </member>
         <member name="T:KMService">
             <summary>
             The base class for any mod behaviour you wish to have activated immediately and run indefinitely.
@@ -560,6 +785,11 @@
         <member name="F:KMSoundOverride.AudioClip">
             <summary>
             The AudioClip to be played instead of the base game's sound.
+            </summary>
+        </member>
+        <member name="F:KMSoundOverride.AdditionalVariants">
+            <summary>
+            If you want to provide additional variants that will be chosen randomly to play for this override
             </summary>
         </member>
     </members>
