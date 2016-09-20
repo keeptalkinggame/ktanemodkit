@@ -4,7 +4,6 @@
 // Mobile/Diffuse:
 // Simplified Diffuse shader. Differences from regular Diffuse one:
 // - no Main Color
-// - fully supports only 1 directional light. Other lights can affect it, but it will be per-vertex/SH.
 
 Shader "KT/Blend Lit and Unlit Vertex Color" {
 Properties {
@@ -16,7 +15,10 @@ SubShader {
 	LOD 150
 
 CGPROGRAM
-#pragma surface surf BlendLitUnlit noforwardadd
+// Mobile improvement: noforwardadd
+// http://answers.unity3d.com/questions/1200437/how-to-make-a-conditional-pragma-surface-noforward.html
+// http://gamedev.stackexchange.com/questions/123669/unity-surface-shader-conditinally-noforwardadd
+#pragma surface surf BlendLitUnlit
 
 sampler2D _MainTex;
 sampler2D _UnlitTex;
