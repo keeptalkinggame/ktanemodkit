@@ -741,6 +741,18 @@
             Adds bomb movement and controller vibration on interaction, amount is based on the modifier
             </summary>
         </member>
+        <member name="F:KMSelectable.ForceSelectionHighlight">
+            <summary>
+            Forces highlight to be selection highlight, this is yellow in game
+            Should be used when interaction will drill down to child selectables
+            </summary>
+        </member>
+        <member name="F:KMSelectable.ForceInteractionHighlight">
+            <summary>
+            Forces highlight to be interaction highlight, this is red in game
+            Should be used when interaction will trigger a behavior
+            </summary>
+        </member>
         <member name="T:KMSelectable.KMOnAddInteractionPunchDelegate">
             <summary>
             Delegate type for adding bomb movement and controller vibration on interaction
