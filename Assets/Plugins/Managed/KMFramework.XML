@@ -386,6 +386,13 @@
             Module spawn points.
             </summary>
         </member>
+        <member name="F:KMBombFace.TimerAnchors">
+            <summary>
+            The set of anchors that can be used for the timer
+            All anchors in TimerAnchors must also be in the Anchors list
+            If not TimerAnchors are found a random Anchor from the Anchors list will be chosen
+            </summary>
+        </member>
         <member name="F:KMBombFace.Backings">
             <summary>
             Visual models of the backing (e.g. foam) spawned behind modules, in the same order as Anchors.
@@ -741,6 +748,12 @@
             Adds bomb movement and controller vibration on interaction, amount is based on the modifier
             </summary>
         </member>
+        <member name="M:KMSelectable.UpdateChildren(KMSelectable)">
+            <summary>
+            Notifies the game that the children list has been updated
+            Selects the child specified as the current selectable
+            </summary>
+        </member>
         <member name="F:KMSelectable.ForceSelectionHighlight">
             <summary>
             Forces highlight to be selection highlight, this is yellow in game
@@ -756,6 +769,11 @@
         <member name="T:KMSelectable.KMOnAddInteractionPunchDelegate">
             <summary>
             Delegate type for adding bomb movement and controller vibration on interaction
+            </summary>
+        </member>
+        <member name="T:KMSelectable.KMOnUpdateChildrenDelegate">
+            <summary>
+            Delegate type for updating the children map
             </summary>
         </member>
         <member name="F:KMSelectable.OnInteractionPunch">
