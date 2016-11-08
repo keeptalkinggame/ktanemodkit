@@ -582,6 +582,16 @@ public class AssetBundler
     /// </summary>
     protected void UpdateMaterialInfo()
     {
+        List<string> supportedShaders = new List<string>
+            {
+                "Legacy Shaders/Diffuse", "Hidden/CubeBlur", "Hidden/CubeCopy", "Hidden/CubeBlend",
+                "UI/Default", "UI/Default Font", "Mobile/Diffuse", "Unlit/Transparent",
+                "Unlit/Transparent Cutout", "Unlit/Color", "Mobile/Unlit (Supports Lightmap)", "Unlit/Texture",
+                "KT/Blend Lit and Unlit", "KT/Blend Lit and Unlit Vertex Color", "KT/Blend Unlit", "GUI/KT 3D Text",
+                "KT/Mobile/Diffuse", "KT/Mobile/DiffuseTint", "KT/Transparent/Mobile Diffuse Underlay200", "KT/Unlit/TexturedLightmap",
+                "KT/Unlit/TransparentVertexColorUnderlay30"
+            };
+
         string[] prefabsGUIDs = AssetDatabase.FindAssets("t: prefab");
         foreach(string prefabGUID in prefabsGUIDs)
         {
@@ -604,6 +614,15 @@ public class AssetBundler
                     foreach(Material material in renderer.sharedMaterials)
                     {
                         materialInfo.ShaderNames.Add(material.shader.name);
+
+                        if(material.shader.name == "Standard")
+                        {
+                            Debug.LogWarning(string.Format("Use of Standard shader in object {0}. Standard shader should be avoided as it will cause your mod to break in future versions of the game.", renderer.gameObject));
+                        }
+                        else if(!supportedShaders.Contains(material.shader.name))
+                        {
+                            Debug.LogWarning(string.Format("Use of custom shader {0} in object {1}. Use of custom shaders will break mod compatibility on game update requiring rebuild. Recommend using only supported shaders.", material.shader.name, renderer.gameObject));
+                        }
                     }
                 }
             }
