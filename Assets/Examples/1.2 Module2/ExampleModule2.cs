@@ -91,6 +91,7 @@ public class ExampleModule2 : MonoBehaviour
         return true;
     }
 
+    //On pressing button a looped sound will play
     void OnPress(bool correctButton)
     {
         Debug.Log("Pressed " + correctButton + " button");
@@ -103,10 +104,10 @@ public class ExampleModule2 : MonoBehaviour
         else
         {
             audioRef = GetComponent<KMAudio>().PlaySoundAtTransformWithRef("doublebeep125loop", transform);
-            //GetComponent<KMBombModule>().HandleStrike();
         }
     }
 
+    //On releasing a button a looped sound will stop
     void OnRelease()
     {
         Debug.Log("OnInteractEnded Released");
