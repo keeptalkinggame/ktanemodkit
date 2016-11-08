@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: ButtonMasherMaterial
+  m_Name: ButtonMasherButton
   m_Shader: {fileID: 4800000, guid: 3f0d4a2e325f9c24f8251b7b8534a096, type: 3}
   m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
@@ -121,7 +121,7 @@ Material:
     m_Colors:
     - first:
         name: _Color
-      second: {r: 0, g: 0, b: 0, a: 1}
+      second: {r: 1, g: 1, b: 1, a: 1}
     - first:
         name: _EmissionColor
       second: {r: 0, g: 0, b: 0, a: 1}
