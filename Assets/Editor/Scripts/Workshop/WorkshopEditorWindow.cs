@@ -7,6 +7,8 @@ using System.Collections.Generic;
 
 public class WorkshopEditorWindow : EditorWindow
 {
+    private Vector2 scrollPosition;
+
     protected static readonly AppId_t KTANE_APP_ID = new AppId_t(341800);
     protected static readonly AppId_t EDITOR_APP_ID = new AppId_t(341800); //For now, the same AppID
 
@@ -85,6 +87,7 @@ public class WorkshopEditorWindow : EditorWindow
                 }
             }
 
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             workshopItemEditor.OnInspectorGUI();
 
             //Publishing Tools
@@ -168,6 +171,7 @@ public class WorkshopEditorWindow : EditorWindow
                 GUI.enabled = true;
             }
             EditorGUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
         }
     }
 
