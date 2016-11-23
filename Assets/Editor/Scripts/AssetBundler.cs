@@ -243,7 +243,7 @@ public class AssetBundler
         {
             case PlatformID.MacOSX:
             case PlatformID.Unix:
-                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.app", "Unity.app/Contents/Frameworks/Managed/");
+                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.app", "Unity.app/Contents/Managed/");
                 break;
             case PlatformID.Win32NT:
             default:
