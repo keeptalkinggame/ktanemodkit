@@ -371,6 +371,8 @@ public class TestHarness : MonoBehaviour
 
     void Awake()
     {
+        PrepareLights();
+
         fakeInfo = gameObject.AddComponent<FakeBombInfo>();
         fakeInfo.ActivateLights += delegate()
         {
@@ -681,25 +683,37 @@ public class TestHarness : MonoBehaviour
         GUILayout.Label("Time remaining: " + fakeInfo.GetFormattedTime());
     }
 
+    private Light light;
+
+    public void PrepareLights()
+    {
+        foreach (Light l in FindObjectsOfType<Light>())
+        {
+            if (l.transform.parent == null) Destroy(l.gameObject);
+        }
+
+        GameObject o = new GameObject("Light");
+        o.transform.localPosition = new Vector3(0, 3, 0);
+        o.transform.localRotation = Quaternion.Euler(new Vector3(50, -30, 0));
+        light = o.AddComponent<Light>();
+        light.type = LightType.Directional;
+    }
+
     public void TurnLightsOn()
     {
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
         RenderSettings.ambientIntensity = 1f;
         DynamicGI.UpdateEnvironment();
 
-        foreach (Light l in FindObjectsOfType<Light>())
-        {
-            l.enabled = true;
-        }
+        light.enabled = true;
     }
 
     public void TurnLightsOff()
     {
-        RenderSettings.ambientIntensity = 0.2f;
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
+        RenderSettings.ambientIntensity = 0.1f;
         DynamicGI.UpdateEnvironment();
 
-        foreach (Light l in FindObjectsOfType<Light>())
-        {
-            l.enabled = false;
-        }
+        light.enabled = false;
     }
 }
