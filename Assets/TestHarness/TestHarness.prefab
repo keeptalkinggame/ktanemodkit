@@ -26,6 +26,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.0035797693, y: 0.041477196, z: -0.0068158545}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -41,7 +42,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
-  ModuleToTest: {fileID: 0}
 --- !u!114 &11497068
 MonoBehaviour:
   m_ObjectHideFlags: 1
