@@ -317,10 +317,12 @@ public class FakeBombInfo : MonoBehaviour
     {
         strikes++;
         Debug.Log(strikes + "/" + numStrikes);
-        if (strikes == numStrikes)
+        if (strikes >= numStrikes)
         {
             if (Detonate != null) Detonate();
-            Debug.Log("KABOOM!");
+            Debug.Log(strikes == numStrikes
+                ? "KABOOM!"
+                : "This bomb has already exploded!");
         }
     }
 
@@ -737,6 +739,22 @@ public class TestHarness : MonoBehaviour
                 else if (currentObject is Quaternion)
                 {
                     moduleTransform.localRotation = (Quaternion) currentObject;
+                }
+                else if (currentObject is KMSelectable[])
+                {
+                    KMSelectable[] selectables = (KMSelectable[]) currentObject;
+                    int initalStrikes = fakeInfo.strikes;
+                    foreach (var selectable in selectables)
+                    {
+                        DoInteractionStart(selectable);
+                        yield return new WaitForSeconds(0.1f);
+                        DoInteractionEnd(selectable);
+
+                        if (fakeInfo.strikes != initalStrikes)
+                        {
+                            break;
+                        }
+                    }
                 }
                 yield return currentObject;
             }
