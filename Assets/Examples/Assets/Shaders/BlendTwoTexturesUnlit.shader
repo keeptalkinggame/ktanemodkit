@@ -1,4 +1,6 @@
-﻿Shader "KT/Blend Unlit"{
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "KT/Blend Unlit"{
 	Properties {
 		_Blend("Blend", Range(0,1)) = 0
 		_MainTex("Main Tex (Blend 0) (RGB)", 2D) = "white" {}
@@ -36,7 +38,7 @@
 			v2f vert(appdata_t v)
 			{
 				v2f o;
-				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 				return o;
 			}

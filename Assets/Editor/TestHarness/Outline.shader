@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "KT/Outline" { // Based on http://wiki.unity3d.com/index.php?title=Outlined_Diffuse_3
 	Properties {
 		_OutlineColor ("Outline Color", Color) = (0,0,0,1)
@@ -42,7 +44,7 @@ v2f vert(appdata v) {
 	}
 	else
 	{
-		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 	}
 	
 	o.color = _OutlineColor;
