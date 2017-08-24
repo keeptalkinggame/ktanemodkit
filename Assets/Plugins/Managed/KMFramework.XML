@@ -593,6 +593,27 @@
             The contents of modSettings.json in this mod's directory, containing any user-specific data they may have put there.
             </summary>
         </member>
+        <member name="F:KMModSettings.SettingsPath">
+            <summary>
+            The location of the ModSettings file that can be used to refresh Settings without reloading the mod
+            Set automatically by game overwriting anything that you put here
+            </summary>
+        </member>
+        <member name="M:KMModSettings.RefreshSettings">
+            <summary>
+            Refreshes settings from file, requires file access so good to use sparingly
+            </summary>
+        </member>
+        <member name="T:KMModSettings.KMOnRefreshSettingsDelegate">
+            <summary>
+            Delegate type for refreshing settings
+            </summary>
+        </member>
+        <member name="F:KMModSettings.OnRefreshSettings">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to refresh settings
+            </summary>
+        </member>
         <member name="T:KMModuleBacking">
             <summary>
             Visual models of the foam behind modules. Modules that have holes or recesses can have parts of this
