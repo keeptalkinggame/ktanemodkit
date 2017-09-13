@@ -14,7 +14,7 @@ public class ExampleWebService : MonoBehaviour
     string bombState;
 
     Thread workerThread;
-
+    Worker workerObject;
     Queue<Action> actions;
 
     void Awake()
@@ -26,7 +26,7 @@ public class ExampleWebService : MonoBehaviour
         gameCommands = GetComponent<KMGameCommands>();
         bombState = "NA";
         // Create the thread object. This does not start the thread.
-        Worker workerObject = new Worker(this);
+        workerObject = new Worker(this);
         workerThread = new Thread(workerObject.DoWork);
         // Start the worker thread.
         workerThread.Start(this);
@@ -44,19 +44,12 @@ public class ExampleWebService : MonoBehaviour
     void OnDestroy()
     {
         workerThread.Abort();
+        workerObject.Stop();
     }
 
     // This example requires the System and System.Net namespaces.
-    public void SimpleListenerExample(string[] prefixes)
+    public void SimpleListenerExample(HttpListener listener)
     {
-        // Create a listener.
-        HttpListener listener = new HttpListener();
-        // Add the prefixes.
-        foreach (string s in prefixes)
-        {
-            listener.Prefixes.Add(s);
-        }
-        listener.Start();
         while (true)
         {
             // Note: The GetContext method blocks while waiting for a request. 
@@ -167,6 +160,7 @@ public class ExampleWebService : MonoBehaviour
     public class Worker
     {
         ExampleWebService service;
+        HttpListener listener;
 
         public Worker(ExampleWebService s)
         {
@@ -176,7 +170,21 @@ public class ExampleWebService : MonoBehaviour
         // This method will be called when the thread is started. 
         public void DoWork()
         {
-            service.SimpleListenerExample(new string[] { "http://localhost:8085/" });
+            // Create a listener.
+            listener = new HttpListener();
+            // Add the prefixes.
+            foreach (string s in new string[] { "http://localhost:8085/" })
+            {
+                listener.Prefixes.Add(s);
+            }
+            listener.Start();
+
+            service.SimpleListenerExample(listener);
+        }
+
+        public void Stop()
+        {
+            listener.Stop();
         }
     }
 }
