@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -367,7 +366,7 @@ public class TestHarness : MonoBehaviour
     TestSelectableArea currentSelectableArea;
 
     AudioSource audioSource;
-    List<AudioClip> audioClips;
+    public List<AudioClip> AudioClips;
 
     void Awake()
     {
@@ -499,21 +498,6 @@ public class TestHarness : MonoBehaviour
 
         currentSelectable.ActivateChildSelectableAreas();
 
-
-        //Load all the audio clips in the asset database
-        audioClips = new List<AudioClip>();
-        string[] audioClipAssetGUIDs = AssetDatabase.FindAssets("t:AudioClip");
-
-        foreach (var guid in audioClipAssetGUIDs)
-        {
-            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(AssetDatabase.GUIDToAssetPath(guid));
-
-            if (clip != null)
-            {
-                audioClips.Add(clip);
-            }
-        }
-
         audioSource = gameObject.AddComponent<AudioSource>();
         KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
         foreach (KMAudio kmAudio in kmAudios)
@@ -524,9 +508,9 @@ public class TestHarness : MonoBehaviour
 
     protected void PlaySoundHandler(string clipName, Transform t)
     {
-        if (audioClips.Count > 0)
+        if (AudioClips != null && AudioClips.Count > 0)
         {
-            AudioClip clip = audioClips.Where(a => a.name == clipName).First();
+            AudioClip clip = AudioClips.Where(a => a.name == clipName).First();
 
             if (clip != null)
             {
@@ -683,7 +667,7 @@ public class TestHarness : MonoBehaviour
         GUILayout.Label("Time remaining: " + fakeInfo.GetFormattedTime());
     }
 
-    private Light light;
+    private Light testLight;
 
     public void PrepareLights()
     {
@@ -695,8 +679,8 @@ public class TestHarness : MonoBehaviour
         GameObject o = new GameObject("Light");
         o.transform.localPosition = new Vector3(0, 3, 0);
         o.transform.localRotation = Quaternion.Euler(new Vector3(50, -30, 0));
-        light = o.AddComponent<Light>();
-        light.type = LightType.Directional;
+        testLight = o.AddComponent<Light>();
+        testLight.type = LightType.Directional;
     }
 
     public void TurnLightsOn()
@@ -705,7 +689,7 @@ public class TestHarness : MonoBehaviour
         RenderSettings.ambientIntensity = 1f;
         DynamicGI.UpdateEnvironment();
 
-        light.enabled = true;
+        testLight.enabled = true;
     }
 
     public void TurnLightsOff()
@@ -714,6 +698,6 @@ public class TestHarness : MonoBehaviour
         RenderSettings.ambientIntensity = 0.1f;
         DynamicGI.UpdateEnvironment();
 
-        light.enabled = false;
+        testLight.enabled = false;
     }
 }
