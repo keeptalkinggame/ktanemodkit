@@ -65,6 +65,16 @@
             Should add a rigidbody or a default one will be created
             </summary>
         </member>
+        <member name="F:KMHoldable.targetPosition">
+            <summary>
+            Position to hold object when picked up
+            </summary>
+        </member>
+        <member name="F:KMHoldable.targetRotation">
+            <summary>
+            Default rotation of object when held
+            </summary>
+        </member>
         <member name="T:KMHoldable.ButtonEnum">
             <summary>
             Enumeration of controller buttons
@@ -73,6 +83,16 @@
         <member name="T:KMHoldable.AxisEnum">
             <summary>
             Enumeration of controller axes
+            </summary>
+        </member>
+        <member name="T:KMHoldable.HoldableAvailabilityEnum">
+            <summary>
+            Enumeration of holdable availibilities
+            </summary>
+        </member>
+        <member name="F:KMHoldable.HoldableAvailability">
+            <summary>
+            Indicates in which room the holdable will be available
             </summary>
         </member>
         <member name="M:KMHoldable.GetAxisValue(KMHoldable.AxisEnum,System.Int32)">
@@ -571,11 +591,97 @@
             <param name="id"></param>
             <param name="seed"></param>
         </member>
+        <member name="M:KMGameCommands.StartMission(KMGeneratorSetting,System.String)">
+            <summary>
+            Launches a mission using the given generator settings id as well as the random seed provided.
+            </summary>
+            <param name="generatorSettings"></param>
+            <param name="seed"></param>
+        </member>
         <member name="M:KMGameCommands.CauseStrike(System.String)">
             <summary>
             Cause a strike on the bomb for whatever reason you deem is appropriate.
             </summary>
             <param name="reason"></param>
+        </member>
+        <member name="M:KMGameCommands.GetBombs">
+            <summary>
+            Gets the list of all bombs currently available
+            </summary>
+        </member>
+        <member name="M:KMGameCommands.CreateBomb(System.String,KMGeneratorSetting,UnityEngine.GameObject,System.String)">
+            <summary>
+            Creates and returns a new bomb with 
+            </summary>
+            <param name="missionId">The mission id to spawn the bomb based on</param>
+            <param name="generatorSettings">Generator seetings that will be used if missionId is empty or null </param>
+            <param name="spawnPoint">A gameobject whose transform will determine where the bomb spawns </param>
+            <param name="seed">The seed used to generate the bomb, currently this must parse to an int </param>
+        </member>
+        <member name="M:KMGameCommands.RemoveSolvedBomb(KMBomb)">
+            <summary>
+            Attempts to remove a solved bomb from play, may fail if bomb not found or only one bomb remaining and not freeplay mode
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.KMStartMissionCommand">
+            <summary>
+            Delegate type starting mission with id
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.KMStartCustomMissionCommand">
+            <summary>
+            Delegate type starting mission with custom settings
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.KMCauseStrikeDelegate">
+            <summary>
+            Delegate type causing a strike
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.GetBombsDelegate">
+            <summary>
+            Delegate type for getting the list of all bombs
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.CreateBombDelegate">
+            <summary>
+            Delegate type for creating a bomb
+            </summary>
+        </member>
+        <member name="T:KMGameCommands.RemoveSolvedBombDelegate">
+            <summary>
+            Delegate type for removing a bomb
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnStartMission">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to start a mission.
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnStartCustomMission">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to start a mission.
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnCauseStrike">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to cause a strike.
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnGetBombs">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to retrieve the list of bombs
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnCreateBomb">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to create a bomb
+            </summary>
+        </member>
+        <member name="F:KMGameCommands.OnRemoveSolvedBomb">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to remove a bomb
+            </summary>
         </member>
         <member name="T:KMGameInfo">
             <summary>
