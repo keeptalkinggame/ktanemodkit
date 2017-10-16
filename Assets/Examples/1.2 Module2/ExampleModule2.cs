@@ -103,7 +103,7 @@ public class ExampleModule2 : MonoBehaviour
         }
         else
         {
-            audioRef = GetComponent<KMAudio>().PlaySoundAtTransformWithRef("doublebeep125loop", transform);
+            audioRef = GetComponent<KMAudio>().PlaySoundAtTransformWithRef("doublebeep125", transform);
         }
     }
 
