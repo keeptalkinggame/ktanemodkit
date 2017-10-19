@@ -591,11 +591,11 @@
             <param name="id"></param>
             <param name="seed"></param>
         </member>
-        <member name="M:KMGameCommands.StartMission(KMGeneratorSetting,System.String)">
+        <member name="M:KMGameCommands.StartMission(KMMission,System.String)">
             <summary>
-            Launches a mission using the given generator settings id as well as the random seed provided.
+            Launches a custom KMMission with the mission id set to 'custom'
             </summary>
-            <param name="generatorSettings"></param>
+            <param name="mission"></param>
             <param name="seed"></param>
         </member>
         <member name="M:KMGameCommands.CauseStrike(System.String)">
@@ -685,8 +685,69 @@
         </member>
         <member name="T:KMGameInfo">
             <summary>
-            Interface to get notified of game state changes.
+            Interface to get information about game and to get notified of game state changes.
             </summary>
+        </member>
+        <member name="T:KMGameInfo.State">
+            <summary>
+            An enumeration of game states
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.Gameplay">
+            <summary>
+            The gameplay state where defusing happens
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.Setup">
+            <summary>
+            The setup state in the office where options are chosen
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.PostGame">
+            <summary>
+            The state where results are shown
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.Transitioning">
+            <summary>
+            No current state, transitioning to a new state
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.Unlock">
+            <summary>
+            The unlock state where manual verification and tutorial take place
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.State.Quitting">
+            <summary>
+            Game is exiting
+            </summary>
+        </member>
+        <member name="T:KMGameInfo.ModuleInfo">
+            <summary>
+            A structure that contains a module's name and ID
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnStateChange">
+            <summary>
+            Called when game state changes between gameplay, setup, postgame and loading
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnAlarmClockChange">
+            <summary>
+            Called when alarm clock turns on or off
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnLightsChange">
+            <summary>
+            Called when in game lights change state
+            </summary>
+        </member>
+        <member name="M:KMGameInfo.GetAvailableModuleInfo">
+            <summary>
+            Gets information about all available modules that could be used in a bomb
+            </summary>
+            <returns>A list of information about available bomb modules</returns>
         </member>
         <member name="T:KMGameInfo.KMStateChangeDelegate">
             <summary>
@@ -703,19 +764,14 @@
             Delegate type for change in lights
             </summary>
         </member>
-        <member name="F:KMGameInfo.OnStateChange">
+        <member name="T:KMGameInfo.KMGetAvailableModuleInfoDelgate">
             <summary>
-            Called when game state changes between gameplay, setup, postgame and loading
+            Delegate type for change in lights
             </summary>
         </member>
-        <member name="F:KMGameInfo.OnAlarmClockChange">
+        <member name="F:KMGameInfo.OnGetAvailableModuleInfo">
             <summary>
-            Called when alarm clock turns on or off
-            </summary>
-        </member>
-        <member name="F:KMGameInfo.OnLightsChange">
-            <summary>
-            Called when in game lights change state
+            DO NOT USE IN MOD. Used by the game to get available module info
             </summary>
         </member>
         <member name="T:KMGameplayRoom">
