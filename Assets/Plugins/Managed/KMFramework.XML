@@ -226,6 +226,11 @@
             be visibile simultaneously.
             </summary>
         </member>
+        <member name="F:KMGeneratorSetting.OptionalWidgetCount">
+            <summary>
+            Set how many optional widgets (widgets other than serial number) that should be placed on the bomb
+            </summary>
+        </member>
         <member name="F:KMGeneratorSetting.ComponentPools">
             <summary>
             The pools of modules that will be used when generating a bomb.

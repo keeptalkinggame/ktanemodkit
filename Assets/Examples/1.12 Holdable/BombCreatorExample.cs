@@ -15,6 +15,11 @@ public class BombCreatorExample : MonoBehaviour
     public KMSelectable ModulesPlusButton;
     int modules = 3;
 
+    public TextMesh WidgetsText;
+    public KMSelectable WidgetsMinusButton;
+    public KMSelectable WidgetsPlusButton;
+    int widgets = 5;
+
     public TextMesh ModuleDisableText;
     public KMSelectable ModuleDisableMinusButton;
     public KMSelectable ModuleDisablePlusButton;
@@ -43,6 +48,8 @@ public class BombCreatorExample : MonoBehaviour
         TimePlusButton.OnInteract += delegate () { time += 30; UpdateDisplay(); return false; };
         ModulesMinusButton.OnInteract += delegate () { modules--; modules = Mathf.Clamp(modules, 1, maxModules); UpdateDisplay(); return false; };
         ModulesPlusButton.OnInteract += delegate () { modules++; modules = Mathf.Clamp(modules, 1, maxModules); UpdateDisplay(); return false; };
+        WidgetsMinusButton.OnInteract += delegate () { widgets--; widgets = Mathf.Clamp(widgets, 0, 20); UpdateDisplay(); return false; };
+        WidgetsPlusButton.OnInteract += delegate () { widgets++; widgets = Mathf.Clamp(widgets, 0, 20); UpdateDisplay(); return false; };
         ModuleDisableMinusButton.OnInteract += delegate () { ChangeModuleDisableIndex(-1); return false; };
         ModuleDisablePlusButton.OnInteract += delegate () { ChangeModuleDisableIndex(1); return false; };
         ModuleDisableButton.OnInteract += delegate () { ModuleDisableButtonPressed(); return false; };
@@ -71,6 +78,7 @@ public class BombCreatorExample : MonoBehaviour
     {
         TimeText.text = "" + time;
         ModulesText.text = "" + modules;
+        WidgetsText.text = "" + widgets;
     }
 
     void ChangeModuleDisableIndex(int diff)
@@ -130,6 +138,7 @@ public class BombCreatorExample : MonoBehaviour
         generatorSettings.TimeLimit = time;
         
         generatorSettings.ComponentPools = BuildComponentPools();
+        generatorSettings.OptionalWidgetCount = widgets;
 
         KMMission mission = ScriptableObject.CreateInstance<KMMission>() as KMMission;
         mission.DisplayName = "Custom Freeplay";

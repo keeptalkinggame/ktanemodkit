@@ -36,6 +36,7 @@ public class KMMissionEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.NumStrikes"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.TimeBeforeNeedyActivation"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.FrontFaceOnly"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("GeneratorSetting.OptionalWidgetCount"));
 
             //Component Pools
             EditorGUILayout.Separator();
