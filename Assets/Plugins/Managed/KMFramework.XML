@@ -723,9 +723,34 @@
             Game is exiting
             </summary>
         </member>
-        <member name="T:KMGameInfo.ModuleInfo">
+        <member name="T:KMGameInfo.KMModuleInfo">
             <summary>
             A structure that contains a module's name and ID
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.KMModuleInfo.DisplayName">
+            <summary>
+            The display name of the module
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.KMModuleInfo.ModuleId">
+            <summary>
+            The id of the module
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.KMModuleInfo.IsMod">
+            <summary>
+            True if this module is from a mod rather from the game
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.KMModuleInfo.IsNeedy">
+            <summary>
+            True if this module is needy and cannot be solved
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.KMModuleInfo.ModuleType">
+            <summary>
+            Returns the module type of built in modules or empty if this is a mod module
             </summary>
         </member>
         <member name="F:KMGameInfo.OnStateChange">
@@ -749,6 +774,12 @@
             </summary>
             <returns>A list of information about available bomb modules</returns>
         </member>
+        <member name="M:KMGameInfo.GetMaximumBombModules">
+            <summary>
+            Gets the maximum number of bomb modules that can be placed based on which cases are available
+            </summary>
+            <returns>The maximum number of bomb modules that can be placed</returns>
+        </member>
         <member name="T:KMGameInfo.KMStateChangeDelegate">
             <summary>
             Delegate type for state changes
@@ -766,12 +797,22 @@
         </member>
         <member name="T:KMGameInfo.KMGetAvailableModuleInfoDelgate">
             <summary>
-            Delegate type for change in lights
+            Delegate type for getting info on available modules
+            </summary>
+        </member>
+        <member name="T:KMGameInfo.KMGetMaximumBombModulesDelgate">
+            <summary>
+            Delegate type for getting the total number of modules that can be placed
             </summary>
         </member>
         <member name="F:KMGameInfo.OnGetAvailableModuleInfo">
             <summary>
             DO NOT USE IN MOD. Used by the game to get available module info
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnGetMaximumBombModules">
+            <summary>
+            DO NOT USE IN MOD. Used by the game for getting the total number of modules that can be placed
             </summary>
         </member>
         <member name="T:KMGameplayRoom">
