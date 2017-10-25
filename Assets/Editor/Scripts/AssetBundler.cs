@@ -123,7 +123,7 @@ public class AssetBundler
             //Copy any other non-Editor managed assemblies to the output folder
             bundler.CopyManagedAssemblies();
 
-            //Create the modInfo.json file
+            //Create the modInfo.json file and copy the preview image if available
             bundler.CreateModInfo();
 
             //Copy the modSettings.json file from Assets into the build
@@ -439,6 +439,12 @@ public class AssetBundler
     protected void CreateModInfo()
     {
         File.WriteAllText(outputFolder + "/modInfo.json", ModConfig.Instance.ToJson());
+
+        if(ModConfig.PreviewImage != null)
+        {
+            byte[] bytes = ModConfig.PreviewImage.EncodeToPNG();
+            File.WriteAllBytes(outputFolder + "/previewImage.png", bytes);
+        }
     }
 
     /// <summary>
