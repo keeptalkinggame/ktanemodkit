@@ -10,6 +10,8 @@ public class WorkshopItemEditor : Editor
 
     public override void OnInspectorGUI()
     {
+        var modConfigSO = new UnityEditor.SerializedObject(ModConfig.Instance);
+        modConfigSO.Update();
         serializedObject.Update();
 
         WorkshopItem item = (WorkshopItem)target;
@@ -18,7 +20,7 @@ public class WorkshopItemEditor : Editor
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("WorkshopPublishedFileID"), new GUIContent("Workshop File ID"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("Title"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("Description"));
+        EditorGUILayout.PropertyField(modConfigSO.FindProperty("description"));
         EditorGUILayout.EndVertical();
 
         //Preview Image
@@ -26,11 +28,11 @@ public class WorkshopItemEditor : Editor
         using (new EditorGUILayout.VerticalScope())
         {
             EditorGUILayout.LabelField("Preview Image:");
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("PreviewImage"), new GUIContent());
+            EditorGUILayout.PropertyField(modConfigSO.FindProperty("previewImage"), new GUIContent());
 
-            if (item.PreviewImage != null)
+            if (ModConfig.PreviewImage != null)
             {
-                FileInfo f = new FileInfo(AssetDatabase.GetAssetPath(item.PreviewImage));
+                FileInfo f = new FileInfo(AssetDatabase.GetAssetPath(ModConfig.PreviewImage));
                 if (f.Exists)
                 {
                     EditorGUILayout.LabelField(string.Format("File Size: {0}", WorkshopEditorWindow.FormatFileSize(f.Length)));
@@ -42,7 +44,7 @@ public class WorkshopItemEditor : Editor
                 }
             }
         }
-        GUILayout.Label(item.PreviewImage, GUILayout.MaxWidth(128), GUILayout.MaxHeight(128));
+        GUILayout.Label(ModConfig.PreviewImage, GUILayout.MaxWidth(128), GUILayout.MaxHeight(128));
         EditorGUILayout.EndHorizontal();
 
         //Tags
@@ -71,5 +73,6 @@ public class WorkshopItemEditor : Editor
         EditorGUILayout.EndVertical();
 
         serializedObject.ApplyModifiedProperties();
+        modConfigSO.ApplyModifiedProperties();
     }
 }

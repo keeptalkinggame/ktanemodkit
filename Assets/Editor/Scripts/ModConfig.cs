@@ -20,6 +20,12 @@ public sealed class ModConfig : ScriptableObject
         set { Instance.title = value; }
     }
 
+    public static string Description
+    {
+        get { return Instance.description; }
+        set { Instance.description = value; }
+    }
+
     public static string Version
     {
         get { return Instance.version; }
@@ -32,14 +38,25 @@ public sealed class ModConfig : ScriptableObject
         set { Instance.outputFolder = value; }
     }
 
+    public static Texture2D PreviewImage
+    {
+        get { return Instance.previewImage; }
+        set { Instance.previewImage = value; }
+    }
+
     [SerializeField]
     private string id = "";
     [SerializeField]
     private string title = "";
     [SerializeField]
+    [TextArea(5, 10)]
+    private string description = "";
+    [SerializeField]
     private string version = "";
     [SerializeField]
     private string outputFolder = "build";
+    [SerializeField]
+    private Texture2D previewImage = null;
 
 
     private static ModConfig instance;
@@ -65,6 +82,7 @@ public sealed class ModConfig : ScriptableObject
         Dictionary<string, object> dict = new Dictionary<string, object>();
         dict.Add("id", id);
         dict.Add("title", title);
+        dict.Add("description", description);
         dict.Add("version", version);
         dict.Add("unityVersion", Application.unityVersion);
 

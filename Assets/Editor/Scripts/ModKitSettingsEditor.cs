@@ -51,6 +51,12 @@ public class ModKitSettingsEditor : Editor
         SetDirtyOnGUIChange();
         EditorGUILayout.EndHorizontal();
 
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.Separator();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
+        SetDirtyOnGUIChange();
+        EditorGUILayout.EndHorizontal();
+
         EditorGUILayout.Separator();
         EditorGUILayout.BeginHorizontal();
         GUIContent versionLabel = new GUIContent("Mod Version", "Current version of the mod.");
@@ -68,6 +74,31 @@ public class ModKitSettingsEditor : Editor
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.HelpBox("This folder will be cleaned with each build.", MessageType.Warning);
 
+        //Preview Image
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+        using (new EditorGUILayout.VerticalScope())
+        {
+            EditorGUILayout.LabelField("Preview Image:");
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("previewImage"), new GUIContent());
+
+            if (ModConfig.PreviewImage != null)
+            {
+                FileInfo f = new FileInfo(AssetDatabase.GetAssetPath(ModConfig.PreviewImage));
+                if (f.Exists)
+                {
+                    EditorGUILayout.LabelField(string.Format("File Size: {0}", WorkshopEditorWindow.FormatFileSize(f.Length)));
+
+                    if (f.Length > 1024 * 1024)
+                    {
+                        EditorGUILayout.HelpBox("Max allowed size is 1MB", MessageType.Error);
+                    }
+                }
+            }
+        }
+        GUILayout.Label(ModConfig.PreviewImage, GUILayout.MaxWidth(128), GUILayout.MaxHeight(128));
+        EditorGUILayout.EndHorizontal();
+
+        serializedObject.ApplyModifiedProperties();
         GUI.enabled = true;
     }
 
