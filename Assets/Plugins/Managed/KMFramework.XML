@@ -929,6 +929,11 @@
             Set this to true to enable realtime shadows at high quality.
             </summary>
         </member>
+        <member name="F:KMRoom.HoldableSpawnPoints">
+            <summary>
+            A list of transforms where mod holdables can be spawned
+            </summary>
+        </member>
         <member name="T:KMSelectable">
             <summary>
             The interface to all interactive elements in the game. Set this up to allow an object to be
@@ -1089,6 +1094,11 @@
         <member name="F:KMSetupRoom.BombBinderSpawn">
             <summary>
             Transform at which the Bomb Binder should be spawned.
+            </summary>
+        </member>
+        <member name="F:KMSetupRoom.ModManagerHoldableSpawn">
+            <summary>
+            The spawn location for the mod manager holdable
             </summary>
         </member>
         <member name="T:KMSoundOverride">
