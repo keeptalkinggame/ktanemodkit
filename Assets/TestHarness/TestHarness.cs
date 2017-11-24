@@ -150,8 +150,9 @@ public class FakeBombInfo : MonoBehaviour
 
     void Awake()
     {
-        widgets = new Widget[5];
-        for (int a = 0; a < 5; a++)
+        const int numWidgets = 5;
+        widgets = new Widget[numWidgets];
+        for (int a = 0; a < numWidgets; a++)
         {
             int r = Random.Range(0, 3);
             if (r == 0) widgets[a] = new PortWidget();
@@ -171,14 +172,14 @@ public class FakeBombInfo : MonoBehaviour
         };
         string str1 = string.Empty;
         for (int index = 0; index < 2; ++index) str1 = str1 + possibleCharArray[Random.Range(0, possibleCharArray.Length)];
-        string str2 = str1 + (object) Random.Range(0, 9);
+        string str2 = str1 + (object) Random.Range(0, 10);
         for (int index = 3; index < 5; ++index) str2 = str2 + possibleCharArray[Random.Range(0, possibleCharArray.Length - 10)];
-        serial = str2 + Random.Range(0, 9);
+        serial = str2 + Random.Range(0, 10);
 
         Debug.Log("Serial: " + serial);
     }
 
-    float startupTime = 3f;
+    float startupTime = .5f;
 
     public delegate void LightsOn();
     public LightsOn ActivateLights;
@@ -306,6 +307,8 @@ public class FakeBombInfo : MonoBehaviour
             string r = w.GetResult(queryKey, queryInfo);
             if (r != null) responses.Add(r);
         }
+        if (queryKey == "Unity")
+            responses.Add(JsonConvert.SerializeObject(new Dictionary<string, bool>() { { "Unity", true } }));
         return responses;
     }
 
