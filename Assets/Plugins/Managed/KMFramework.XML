@@ -785,6 +785,12 @@
             </summary>
             <returns>The maximum number of bomb modules that can be placed</returns>
         </member>
+        <member name="M:KMGameInfo.GetMaximumModulesFrontFace">
+            <summary>
+            Gets the maximum number of bomb modules that can be placed based on which cases are available and only front face is available
+            </summary>
+            <returns>The maximum number of bomb modules that can be placed on the front face of any bomb</returns>
+        </member>
         <member name="T:KMGameInfo.KMStateChangeDelegate">
             <summary>
             Delegate type for state changes
@@ -810,6 +816,11 @@
             Delegate type for getting the total number of modules that can be placed
             </summary>
         </member>
+        <member name="T:KMGameInfo.KMGetMaximumModulesFrontFaceDelgate">
+            <summary>
+            Delegate type for getting the total number of modules that can be placed on a front face
+            </summary>
+        </member>
         <member name="F:KMGameInfo.OnGetAvailableModuleInfo">
             <summary>
             DO NOT USE IN MOD. Used by the game to get available module info
@@ -818,6 +829,11 @@
         <member name="F:KMGameInfo.OnGetMaximumBombModules">
             <summary>
             DO NOT USE IN MOD. Used by the game for getting the total number of modules that can be placed
+            </summary>
+        </member>
+        <member name="F:KMGameInfo.OnGetMaximumModulesFrontFace">
+            <summary>
+            DO NOT USE IN MOD. Used by the game for getting the total number of modules that can be placed on a front face
             </summary>
         </member>
         <member name="T:KMGameplayRoom">
