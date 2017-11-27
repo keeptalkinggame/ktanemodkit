@@ -34,45 +34,14 @@ public class ModKitSettingsEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        EditorGUILayout.Separator();
-        EditorGUILayout.BeginHorizontal();
-        
-        GUIContent idLabel = new GUIContent("Mod ID", "Identifier for the mod. Affects assembly name and output name.");
-        GUI.changed = false;
-        ModConfig.ID = EditorGUILayout.TextField(idLabel, ModConfig.ID);
-        SetDirtyOnGUIChange();
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Separator();
-        EditorGUILayout.BeginHorizontal();
-        GUIContent titleLabel = new GUIContent("Mod Title", "Name of the mod as it appears in game.");
-        GUI.changed = false;
-        ModConfig.Title = EditorGUILayout.TextField(titleLabel, ModConfig.Title);
-        SetDirtyOnGUIChange();
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.Separator();
+        //Basic Info
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("id"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("title"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
-        SetDirtyOnGUIChange();
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Separator();
-        EditorGUILayout.BeginHorizontal();
-        GUIContent versionLabel = new GUIContent("Mod Version", "Current version of the mod.");
-        GUI.changed = false;
-        ModConfig.Version = EditorGUILayout.TextField(versionLabel, ModConfig.Version);
-        SetDirtyOnGUIChange();
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Separator();
-        EditorGUILayout.BeginHorizontal();
-        GUIContent outputFolderLabel = new GUIContent("Mod Output Folder", "Folder relative to the project where the built mod bundle will be placed.");
-        GUI.changed = false;
-        ModConfig.OutputFolder = EditorGUILayout.TextField(outputFolderLabel, ModConfig.OutputFolder);
-        SetDirtyOnGUIChange();
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.HelpBox("This folder will be cleaned with each build.", MessageType.Warning);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("version"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFolder"));
+        EditorGUILayout.EndVertical();
 
         //Preview Image
         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
@@ -97,17 +66,5 @@ public class ModKitSettingsEditor : Editor
         }
         GUILayout.Label(ModConfig.PreviewImage, GUILayout.MaxWidth(128), GUILayout.MaxHeight(128));
         EditorGUILayout.EndHorizontal();
-
-        serializedObject.ApplyModifiedProperties();
-        GUI.enabled = true;
-    }
-
-    private void SetDirtyOnGUIChange()
-    {
-        if (GUI.changed)
-        {
-            EditorUtility.SetDirty(ModConfig.Instance);
-            GUI.changed = false;
-        }
     }
 }
