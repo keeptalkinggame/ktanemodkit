@@ -196,6 +196,7 @@ GameObject:
   - component: {fileID: 114870855221517036}
   - component: {fileID: 54949434922647206}
   - component: {fileID: 114311113180584652}
+  - component: {fileID: 65163832064320362}
   m_Layer: 0
   m_Name: BombCreator
   m_TagString: Untagged
@@ -2153,6 +2154,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65163832064320362
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1424693480313584}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.40864933, y: 0.034344733, z: 0.30604568}
+  m_Center: {x: -0.000000029802322, y: 0.0054632723, z: -0.000000044703484}
 --- !u!65 &65166776506065588
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2799,7 +2812,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPosition: {x: 0.3, y: 1.25, z: -1.25}
   targetRotation: {x: 13.5, y: 0, z: 0}
-  HoldableAvailability: 0
+  HoldableAvailability: 2
 --- !u!114 &114132036442853312
 MonoBehaviour:
   m_ObjectHideFlags: 1
