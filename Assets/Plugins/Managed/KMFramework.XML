@@ -1138,5 +1138,20 @@
             If you want to provide additional variants that will be chosen randomly to play for this override
             </summary>
         </member>
+        <member name="T:KMHoldableSpawnPoint">
+            <summary>
+            A class for specifying spawn points for holdable objects
+            </summary>
+        </member>
+        <member name="F:KMHoldableSpawnPoint.SelectableIndexX">
+            <summary>
+            The X position in the children map for the room, row lengths are 5
+            </summary>
+        </member>
+        <member name="F:KMHoldableSpawnPoint.SelectableIndexY">
+            <summary>
+            The Y position in the children map for this room, there are 4 rows in the selectable map
+            </summary>
+        </member>
     </members>
 </doc>
