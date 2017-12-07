@@ -66,5 +66,6 @@ public class ModKitSettingsEditor : Editor
         }
         GUILayout.Label(ModConfig.PreviewImage, GUILayout.MaxWidth(128), GUILayout.MaxHeight(128));
         EditorGUILayout.EndHorizontal();
+        serializedObject.ApplyModifiedProperties();
     }
 }
