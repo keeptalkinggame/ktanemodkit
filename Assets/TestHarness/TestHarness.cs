@@ -434,10 +434,9 @@ public class TestHarness : MonoBehaviour
             {
                 if (f.FieldType.Equals(typeof(KMBombInfo)))
                 {
-                    KMBombInfo component = (KMBombInfo)f.GetValue(s);
-                    if (component.OnBombExploded != null) fakeInfo.Detonate += new FakeBombInfo.OnDetonate(component.OnBombExploded);
-                    if (component.OnBombSolved != null) fakeInfo.HandleSolved += new FakeBombInfo.OnSolved(component.OnBombSolved);
-                    continue;
+                    KMBombInfo component = (KMBombInfo) f.GetValue(s);
+                    fakeInfo.Detonate += delegate { if (component.OnBombExploded != null) component.OnBombExploded(); };
+                    fakeInfo.HandleSolved += delegate { if (component.OnBombSolved != null) component.OnBombSolved(); };
                 }
             }
         }
