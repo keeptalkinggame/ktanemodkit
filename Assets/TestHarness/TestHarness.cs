@@ -797,10 +797,7 @@ public class TestHarness : MonoBehaviour
                     MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
                     if (method != null)
-                    {
-                        Debug.LogFormat("<> method: {0}", method);
                         StartCoroutine(SimulateModule(component, module.transform, method, command));
-                    }
                 }
             }
             command = "";
