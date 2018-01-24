@@ -19,7 +19,7 @@ public class ExampleModule2 : MonoBehaviour
         GetComponent<KMBombModule>().OnActivate += OnActivate;
         GetComponent<KMSelectable>().OnCancel += OnCancel;
         GetComponent<KMSelectable>().OnLeft += OnLeft;
-        GetComponent<KMSelectable>().OnLeft += OnRight;
+        GetComponent<KMSelectable>().OnRight += OnRight;
         GetComponent<KMSelectable>().OnSelect += OnSelect;
         GetComponent<KMSelectable>().OnDeselect += OnDeselect;
         GetComponent<KMSelectable>().OnHighlight += OnHighlight;
