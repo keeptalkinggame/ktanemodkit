@@ -46,7 +46,7 @@ PlayerSettings:
   defaultScreenHeight: 768
   defaultScreenWidthWeb: 960
   defaultScreenHeightWeb: 600
-  m_StereoRenderingPath: 0
+  m_StereoRenderingPath: 1
   m_ActiveColorSpace: 0
   m_MTRendering: 1
   m_MobileMTRendering: 0
@@ -279,7 +279,7 @@ PlayerSettings:
     m_Enabled: 0
     m_Devices: []
   - m_BuildTarget: Standalone
-    m_Enabled: 0
+    m_Enabled: 1
     m_Devices:
     - Oculus
   - m_BuildTarget: Tizen
