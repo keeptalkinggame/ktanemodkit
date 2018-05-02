@@ -654,6 +654,7 @@ public class TestHarness : MonoBehaviour
                 selectableSequence = (KMSelectable[]) method.Invoke(component, new object[] { command });
                 if (selectableSequence == null)
                 {
+                    Debug.LogFormat("Twitch Plays handler reports invalid command (by returning null).", method.DeclaringType.FullName, method.Name);
                     yield break;
                 }
             }
@@ -695,7 +696,10 @@ public class TestHarness : MonoBehaviour
             }
 
             if (responseCoroutine == null)
+            {
+                Debug.LogFormat("Twitch Plays handler reports invalid command (by returning null).", method.DeclaringType.FullName, method.Name);
                 yield break;
+            }
 
             if (!ComponentHelds.ContainsKey(component))
                 ComponentHelds[component] = new HashSet<KMSelectable>();
@@ -703,6 +707,20 @@ public class TestHarness : MonoBehaviour
 
             int initialStrikes = fakeInfo.strikes;
             int initialSolved = fakeInfo.GetSolvedModuleNames().Count;
+
+            if (!responseCoroutine.MoveNext())
+            {
+                Debug.LogFormat("Twitch Plays handler reports invalid command (by returning empty sequence).", method.DeclaringType.FullName, method.Name);
+                yield break;
+            }
+
+            if (responseCoroutine.Current is string)
+            {
+                var str = (string) responseCoroutine.Current;
+                if (str.StartsWith("sendtochat"))
+                    Debug.Log("Twitch handler sent: " + str);
+                yield break;
+            }
 
             while (responseCoroutine.MoveNext())
             {
@@ -721,6 +739,15 @@ public class TestHarness : MonoBehaviour
                     {
                         DoInteractionStart(selectable);
                         heldSelectables.Add(selectable);
+                    }
+                }
+                else if (currentObject is IEnumerable<KMSelectable>)
+                {
+                    foreach (var selectable in (IEnumerable<KMSelectable>) currentObject)
+                    {
+                        DoInteractionStart(selectable);
+                        yield return new WaitForSeconds(.1f);
+                        DoInteractionEnd(selectable);
                     }
                 }
                 else if (currentObject is string)
