@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -751,6 +752,14 @@ public class TestHarness : MonoBehaviour
                 }
                 else if (currentObject is string)
                 {
+                    string currentString = (string) currentObject;
+                    float waitTime;
+                    Match match = Regex.Match(currentString, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+                    if (match.Success && float.TryParse(match.Groups[1].Value, out waitTime))
+                    {
+                        yield return new WaitForSeconds(waitTime);
+                    }
+
                     Debug.Log("Twitch handler sent: " + currentObject);
                     yield return currentObject;
                 }
