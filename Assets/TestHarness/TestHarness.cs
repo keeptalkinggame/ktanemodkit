@@ -509,16 +509,15 @@ public class TestHarness : MonoBehaviour
 
     protected void PlaySoundHandler(string clipName, Transform t)
     {
-        if (AudioClips != null && AudioClips.Count > 0)
-        {
-            AudioClip clip = AudioClips.Where(a => a.name == clipName).First();
+        AudioClip clip = AudioClips == null ? null : AudioClips.Where(a => a.name == clipName).FirstOrDefault();
 
-            if (clip != null)
-            {
-                audioSource.transform.position = t.position;
-                audioSource.PlayOneShot(clip);
-            }
+        if (clip != null)
+        {
+            audioSource.transform.position = t.position;
+            audioSource.PlayOneShot(clip);
         }
+        else
+            Debug.Log("Audio clip not found: " + clipName);
     }
 
     void Update()
