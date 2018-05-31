@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Assets.Editor;
 using UnityEditor;
 using UnityEngine;
-using System.Linq;
 
-namespace EdgeworkConfigurator {
+namespace EdgeworkConfigurator
+{
     [CustomEditor(typeof(EdgeworkConfiguration))]
-    public class EdgeworkConfigurationEditor : Editor {
+    public class EdgeworkConfigurationEditor : Editor
+    {
         protected static string CONFIGURATIONS_FOLDER = "EdgeworkConfigurations";
 
         [MenuItem("Keep Talking ModKit/Create Edgework Configuration", false, 9999)]
-        public static void CreateNewEdgeworkConfiguration() {
-            if (!AssetDatabase.IsValidFolder("Assets/TestHarness/" + CONFIGURATIONS_FOLDER)) {
+        public static void CreateNewEdgeworkConfiguration()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/TestHarness/" + CONFIGURATIONS_FOLDER))
+            {
                 AssetDatabase.CreateFolder("Assets/TestHarness", CONFIGURATIONS_FOLDER);
             }
 
@@ -24,9 +24,11 @@ namespace EdgeworkConfigurator {
 
             EditorGUIUtility.PingObject(config);
         }
-
-        public override void OnInspectorGUI() {
-            if (target != null) {
+        
+        public override void OnInspectorGUI()
+        {
+            if (target != null)
+            {
                 serializedObject.Update();
 
                 SerialNumberType serialNumberType = DrawSerialNumberTypePicker();
@@ -37,7 +39,8 @@ namespace EdgeworkConfigurator {
 
                 SerializedProperty widgetListProperty = serializedObject.FindProperty("Widgets");
                 EditorGUI.indentLevel++;
-                for (int i = 0; i < widgetListProperty.arraySize; i++) {
+                for (int i = 0; i < widgetListProperty.arraySize; i++)
+                {
                     DrawWidget(widgetListProperty, i);
                     EditorGUILayout.Space();
                 }
@@ -47,7 +50,8 @@ namespace EdgeworkConfigurator {
                 EditorGUILayout.Separator();
                 EditorGUILayout.Separator();
 
-                if (GUILayout.Button("Add Widget")) {
+                if (GUILayout.Button("Add Widget"))
+                {
                     AddWidget();
                 }
             }
@@ -55,7 +59,8 @@ namespace EdgeworkConfigurator {
             serializedObject.ApplyModifiedProperties();
         }
 
-        protected void AddWidget() {
+        protected void AddWidget()
+        {
             SerializedProperty widgets = serializedObject.FindProperty("Widgets");
 
             int index = widgets.arraySize;
@@ -66,37 +71,63 @@ namespace EdgeworkConfigurator {
             element.FindPropertyRelative("BatteryType").enumValueIndex = 1;
         }
 
-        protected void RemoveWidget(int index) {
+        protected void RemoveWidget(int index)
+        {
             SerializedProperty widgets = serializedObject.FindProperty("Widgets");
 
             widgets.DeleteArrayElementAtIndex(index);
         }
 
-        protected void DrawWidget(SerializedProperty widgetListProperty, int index) {
+        /// <summary>
+        /// Draw a single Widget editor
+        /// </summary>
+        /// <param name="widgetListProperty"></param>
+        /// <param name="index"></param>
+        protected void DrawWidget(SerializedProperty widgetListProperty, int index)
+        {
             SerializedProperty widgetProperty = widgetListProperty.GetArrayElementAtIndex(index);
             EditorGUILayout.BeginHorizontal();
 
-            if (widgetProperty.FindPropertyRelative("Type").enumValueIndex == 2) {
+            //Count
+            if (widgetProperty.FindPropertyRelative("Type").enumValueIndex == 2)
+            {
                 widgetProperty.FindPropertyRelative("Count").intValue = 1;
                 EditorGUILayout.IntField(widgetProperty.FindPropertyRelative("Count").intValue, GUILayout.Width(45));
-            } else {
+            }
+            else
+            {
                 widgetProperty.FindPropertyRelative("Count").intValue = Math.Max(EditorGUILayout.IntField(widgetProperty.FindPropertyRelative("Count").intValue, GUILayout.Width(45)), 1);
             }
             
+            //Widget type dropdown
             GUILayout.Label("Widget Type:");
             WidgetType widgetType = DrawWidgetTypePicker(index);
 
-            if (GUILayout.Button("Delete", EditorStyles.miniButton, GUILayout.Width(60))) {
+            //Delete button
+            if (GUILayout.Button("Delete", EditorStyles.miniButton, GUILayout.Width(60)))
+            {
                 RemoveWidget(index);
                 return;
             }
 
             EditorGUILayout.EndHorizontal();
-            
+
+            //Draw widget options
+            DrawWidgetOptions(widgetType, widgetProperty, index);
+        }
+
+        /// <summary>
+        /// Draw the options for a Widget, depending on its type
+        /// </summary>
+        /// <param name="widgetType"></param>
+        /// <param name="widgetProperty"></param>
+        /// <param name="index"></param>
+        protected void DrawWidgetOptions(WidgetType widgetType, SerializedProperty widgetProperty, int index) {
             switch (widgetType) {
-                case WidgetType.BATTERY:
+                case WidgetType.BATTERY: //Batteries
                     BatteryType batteryType = DrawBatteryTypePicker(index);
                     EditorGUI.indentLevel++;
+
                     if (batteryType == BatteryType.CUSTOM) {
                         widgetProperty.FindPropertyRelative("BatteryCount").intValue = Math.Max(EditorGUILayout.IntField("Custom Count", widgetProperty.FindPropertyRelative("BatteryCount").intValue), 0);
                     } else if (batteryType == BatteryType.RANDOM) {
@@ -104,38 +135,44 @@ namespace EdgeworkConfigurator {
                         widgetProperty.FindPropertyRelative("MaxBatteries").intValue = Math.Max(EditorGUILayout.IntField("Maximum Batteries", widgetProperty.FindPropertyRelative("MaxBatteries").intValue), widgetProperty.FindPropertyRelative("MinBatteries").intValue);
                     }
                     break;
-                case WidgetType.INDICATOR:
+                case WidgetType.INDICATOR: //Indicators
                     IndicatorLabel indicatorLabel = DrawIndicatorLabelPicker(index);
                     EditorGUI.indentLevel++;
+
                     if (indicatorLabel == IndicatorLabel.CUSTOM) {
                         widgetProperty.FindPropertyRelative("CustomLabel").stringValue = EditorGUILayout.DelayedTextField("Custom Label", widgetProperty.FindPropertyRelative("CustomLabel").stringValue);
                     }
                     DrawIndicatorStatePicker(index);
                     break;
-                case WidgetType.PORT_PLATE:
+                case WidgetType.PORT_PLATE: //Port Plates
                     PortPlateType type = DrawPortPlateTypePicker(index);
                     if (type == PortPlateType.CUSTOM) {
                         EditorGUI.indentLevel++;
+
                         EditorGUILayout.BeginHorizontal();
+
                         EditorGUILayout.BeginVertical();
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("DVIPort"));
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("PS2Port"));
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("RJ45Port"));
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("StereoRCAPort"));
                         EditorGUILayout.EndVertical();
+
                         EditorGUILayout.BeginVertical();
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("ParallelPort"));
                         EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("SerialPort"));
                         EditorGUILayout.EndVertical();
+
                         EditorGUILayout.EndHorizontal();
                     }
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomPorts"), true);
                     break;
-                case WidgetType.RANDOM:
+                case WidgetType.RANDOM: //Random Widget
                     EditorGUI.indentLevel++;
                     break;
-                case WidgetType.CUSTOM:
+                case WidgetType.CUSTOM: //Custom Widget
                     EditorGUI.indentLevel++;
+
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomQueryKey"));
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomData"));
                     break;
@@ -143,42 +180,63 @@ namespace EdgeworkConfigurator {
             EditorGUI.indentLevel--;
         }
 
-        private WidgetType DrawWidgetTypePicker(int widgetIndex) {
+        /// <summary>
+        /// Draws and responds to an enum picker for the widget type
+        /// </summary>
+        private WidgetType DrawWidgetTypePicker(int widgetIndex)
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             THWidget widget = config.Widgets[widgetIndex];
             widget.Type = (WidgetType) EditorGUILayout.EnumPopup(widget.Type, GUILayout.MinWidth(120));
             return widget.Type;
         }
 
-        private BatteryType DrawBatteryTypePicker(int widgetIndex) {
+        /// <summary>
+        /// Draws and responds to an enum picker for the battery type
+        /// </summary>
+        private BatteryType DrawBatteryTypePicker(int widgetIndex)
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             THWidget widget = config.Widgets[widgetIndex];
             widget.BatteryType = (BatteryType) EditorGUILayout.EnumPopup("Battery Count", widget.BatteryType, GUILayout.MinWidth(200));
             return widget.BatteryType;
         }
 
-        private IndicatorLabel DrawIndicatorLabelPicker(int widgetIndex) {
+        /// <summary>
+        /// Draws and responds to an enum picker for the indicator label
+        /// </summary>
+        private IndicatorLabel DrawIndicatorLabelPicker(int widgetIndex)
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             THWidget widget = config.Widgets[widgetIndex];
             widget.IndicatorLabel = (IndicatorLabel) EditorGUILayout.EnumPopup("Indicator Label", widget.IndicatorLabel, GUILayout.MinWidth(200));
             return widget.IndicatorLabel;
         }
 
-        private IndicatorState DrawIndicatorStatePicker(int widgetIndex) {
+        /// <summary>
+        /// Draws and responds to an enum picker for the indicator state
+        /// </summary>
+        private IndicatorState DrawIndicatorStatePicker(int widgetIndex)
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             THWidget widget = config.Widgets[widgetIndex];
             widget.IndicatorState = (IndicatorState)EditorGUILayout.EnumPopup("Indicator State", widget.IndicatorState, GUILayout.MinWidth(200));
             return widget.IndicatorState;
         }
 
-        private PortPlateType DrawPortPlateTypePicker(int widgetIndex) {
+        /// <summary>
+        /// Draws and responds to an enum picker for the port plate type
+        /// </summary>
+        private PortPlateType DrawPortPlateTypePicker(int widgetIndex)
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             THWidget widget = config.Widgets[widgetIndex];
             widget.PortPlateType = (PortPlateType)EditorGUILayout.EnumPopup("Port Plate Type", widget.PortPlateType, GUILayout.MinWidth(200));
             return widget.PortPlateType;
         }
 
-        private SerialNumberType DrawSerialNumberTypePicker() {
+        private SerialNumberType DrawSerialNumberTypePicker()
+        {
             EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
             config.SerialNumberType = (SerialNumberType)EditorGUILayout.EnumPopup("Serial Number", config.SerialNumberType, GUILayout.MinWidth(200));
             return config.SerialNumberType;

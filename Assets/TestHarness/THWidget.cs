@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace EdgeworkConfigurator {
+﻿namespace EdgeworkConfigurator
+{
     [System.Serializable]
-    public class THWidget {
+    public class THWidget
+    {
         public WidgetType Type;
+        public int Count = 1;
 
+        // Port Plates
         public PortPlateType PortPlateType;
         public bool DVIPort;
         public bool ParallelPort;
@@ -14,22 +16,24 @@ namespace EdgeworkConfigurator {
         public bool StereoRCAPort;
         public string[] CustomPorts;
 
+        // Batteries
         public BatteryType BatteryType;
         public int BatteryCount;
         public int MinBatteries;
         public int MaxBatteries;
 
+        // Indicators
         public IndicatorLabel IndicatorLabel;
         public string CustomLabel;
         public IndicatorState IndicatorState;
 
+        // Custom
         public string CustomQueryKey;
         public string CustomData;
-
-        public int Count = 1;
     }
 
-    public enum WidgetType {
+    public enum WidgetType
+    {
         BATTERY,
         PORT_PLATE,
         INDICATOR,
@@ -37,7 +41,14 @@ namespace EdgeworkConfigurator {
         CUSTOM
     }
 
-    public enum BatteryType {
+    public enum PortPlateType {
+        CUSTOM,
+        RANDOM_NORMAL,
+        RANDOM_ANY
+    }
+
+    public enum BatteryType
+    {
         EMPTY = 0,
         ONE = 1,
         TWO = 2,
@@ -49,7 +60,8 @@ namespace EdgeworkConfigurator {
         CUSTOM = 20
     }
 
-    public enum IndicatorLabel {
+    public enum IndicatorLabel
+    {
         SND,
         CLR,
         CAR,
@@ -66,15 +78,10 @@ namespace EdgeworkConfigurator {
         CUSTOM
     }
 
-    public enum IndicatorState {
+    public enum IndicatorState
+    {
         ON,
         OFF,
         RANDOM
-    }
-
-    public enum PortPlateType {
-        CUSTOM,
-        RANDOM_NORMAL,
-        RANDOM_ANY
     }
 }

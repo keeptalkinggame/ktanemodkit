@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace EdgeworkConfigurator {
-    public class EdgeworkConfiguration : ScriptableObject {
+namespace EdgeworkConfigurator
+{
+    public class EdgeworkConfiguration : ScriptableObject
+    {
         public SerialNumberType SerialNumberType;
         public string CustomSerialNumber;
 
         public List<THWidget> Widgets;
     }
 
-    public enum SerialNumberType {
+    public enum SerialNumberType
+    {
         RANDOM_NORMAL,
         RANDOM_ANY,
         CUSTOM
