@@ -194,6 +194,7 @@ public class FakeBombInfo : MonoBehaviour
         }
         */
 
+        /*
         char[] possibleCharArray = new char[35]
         {
             'A','B','C','D','E',
@@ -211,6 +212,7 @@ public class FakeBombInfo : MonoBehaviour
         serial = str2 + Random.Range(0, 10);
 
         Debug.Log("Serial: " + serial);
+        */
     }
 
     float startupTime = .5f;
@@ -391,6 +393,17 @@ public class FakeBombInfo : MonoBehaviour
         if (OnLights != null) OnLights(false);
     }
 
+    readonly char[] SerialNumberPossibleCharArray = new char[35]
+    {
+        'A','B','C','D','E',
+        'F','G','H','I','J',
+        'K','L','M','N','E',
+        'P','Q','R','S','T',
+        'U','V','W','X','Z',
+        '0','1','2','3','4',
+        '5','6','7','8','9'
+    };
+
     public void SetupEdgework(EdgeworkConfiguration config) {
         if (config == null) {
             const int numWidgets = 5;
@@ -401,7 +414,29 @@ public class FakeBombInfo : MonoBehaviour
                 else if (r == 1) widgets[a] = new IndicatorWidget();
                 else widgets[a] = new BatteryWidget();
             }
+            string str1 = string.Empty;
+            for (int index = 0; index < 2; ++index) str1 = str1 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
+            string str2 = str1 + (object)Random.Range(0, 10);
+            for (int index = 3; index < 5; ++index) str2 = str2 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length - 10)];
+            serial = str2 + Random.Range(0, 10);
+
+            Debug.Log("Serial: " + serial);
         } else {
+            if (config.SerialNumberType == SerialNumberType.RANDOM_NORMAL) {
+                string str1 = string.Empty;
+                for (int index = 0; index < 2; ++index) str1 = str1 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
+                string str2 = str1 + (object)Random.Range(0, 10);
+                for (int index = 3; index < 5; ++index) str2 = str2 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length - 10)];
+                serial = str2 + Random.Range(0, 10);
+            } else if (config.SerialNumberType == SerialNumberType.RANDOM_ANY) {
+                string res = string.Empty;
+                for (int index = 0; index < 6; ++index) res = res + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
+                serial = res;
+            } else {
+                serial = config.CustomSerialNumber;
+            }
+            Debug.Log("Serial: " + serial);
+
             List<Widget> widgetsResult = new List<Widget>();
             List<THWidget> RandomIndicators = new List<THWidget>();
             List<THWidget> RandomWidgets = new List<THWidget>();

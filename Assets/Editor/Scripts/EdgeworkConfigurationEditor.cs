@@ -29,6 +29,9 @@ namespace EdgeworkConfigurator {
             if (target != null) {
                 serializedObject.Update();
 
+                SerialNumberType serialNumberType = DrawSerialNumberTypePicker();
+                if (serialNumberType == SerialNumberType.CUSTOM) EditorGUILayout.PropertyField(serializedObject.FindProperty("CustomSerialNumber"));
+
                 EditorGUILayout.Separator();
                 EditorGUILayout.LabelField("Widgets:");
 
@@ -173,6 +176,12 @@ namespace EdgeworkConfigurator {
             THWidget widget = config.Widgets[widgetIndex];
             widget.PortPlateType = (PortPlateType)EditorGUILayout.EnumPopup("Port Plate Type", widget.PortPlateType, GUILayout.MinWidth(200));
             return widget.PortPlateType;
+        }
+
+        private SerialNumberType DrawSerialNumberTypePicker() {
+            EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
+            config.SerialNumberType = (SerialNumberType)EditorGUILayout.EnumPopup("Serial Number", config.SerialNumberType, GUILayout.MinWidth(200));
+            return config.SerialNumberType;
         }
     }
 }
