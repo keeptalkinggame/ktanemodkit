@@ -21,8 +21,13 @@ public class KMMissionEditor : Editor
 
             //Basic mission meta-data
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel("ID:");
+            EditorGUILayout.PrefixLabel("ID");
             EditorGUILayout.SelectableLabel(serializedObject.targetObject.name);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("ID In-Game");
+            EditorGUILayout.SelectableLabel(string.Format("mod_{0}_{1}", ModConfig.ID, serializedObject.targetObject.name));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("DisplayName"));
