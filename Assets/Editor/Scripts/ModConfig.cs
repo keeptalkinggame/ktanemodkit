@@ -67,6 +67,10 @@ public sealed class ModConfig : ScriptableObject
             if (instance == null)
             {
                 instance = Resources.Load<ModConfig>("ModConfig");
+                if (instance == null)
+                {
+                    ModKitSettingsEditor.CreateModConfig(out instance);
+                }
             }
             return instance;
         }
