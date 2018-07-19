@@ -15,21 +15,26 @@ public class ModKitSettingsEditor : Editor
         var modConfig = ModConfig.Instance;
         if (modConfig == null)
         {
-            modConfig = ScriptableObject.CreateInstance<ModConfig>();
-            string properPath = Path.Combine(Path.Combine(Application.dataPath, "Editor"), "Resources");
-            if (!Directory.Exists(properPath))
-            {
-                AssetDatabase.CreateFolder("Assets/Editor", "Resources");
-            }
-
-            string fullPath = Path.Combine(
-                Path.Combine("Assets", "Editor"),
-                Path.Combine("Resources", "ModConfig.asset")
-            );
-            AssetDatabase.CreateAsset(modConfig, fullPath);
-            ModConfig.Instance = modConfig;
+            CreateModConfig(out modConfig);
         }
         UnityEditor.Selection.activeObject = modConfig;
+    }
+
+    public static void CreateModConfig(out ModConfig modConfig)
+    {
+        modConfig = ScriptableObject.CreateInstance<ModConfig>();
+        string properPath = Path.Combine(Path.Combine(Application.dataPath, "Editor"), "Resources");
+        if (!Directory.Exists(properPath))
+        {
+            AssetDatabase.CreateFolder("Assets/Editor", "Resources");
+        }
+
+        string fullPath = Path.Combine(
+            Path.Combine("Assets", "Editor"),
+            Path.Combine("Resources", "ModConfig.asset")
+        );
+        AssetDatabase.CreateAsset(modConfig, fullPath);
+        ModConfig.Instance = modConfig;
     }
 
     public override void OnInspectorGUI()
