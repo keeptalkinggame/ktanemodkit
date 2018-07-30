@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34a4fefeeafb9a5439cfbd83306ba467, type: 3}
-  m_Name: config
+  m_Name: Default
   m_EditorClassIdentifier: 
   SerialNumberType: 0
   CustomSerialNumber: 
