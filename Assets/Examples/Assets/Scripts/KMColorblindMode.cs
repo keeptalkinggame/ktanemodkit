@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -16,33 +17,36 @@ public class KMColorblindMode : MonoBehaviour
             if (Application.isEditor)
                 return _colorblindMode;
 
-            var settingsPath = Path.Combine(Path.Combine(Application.persistentDataPath, "Modsettings"), "ColorblindMode.json");
+            string key = null;
 
-            ColorblindModeSettings settings = new ColorblindModeSettings();
+            KMBombModule bombModule = GetComponent<KMBombModule>();
+            KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
+
+            if (bombModule != null)
+                key = bombModule.ModuleType;
+            else if (needyModule != null)
+                key = needyModule.ModuleType;
+            else
+                key = Regex.Replace(gameObject.name, @"\(Clone\)$", "");
+
             try
             {
+                var settingsPath = Path.Combine(Path.Combine(Application.persistentDataPath, "Modsettings"), "ColorblindMode.json");
+
+                ColorblindModeSettings settings = new ColorblindModeSettings();
                 if (File.Exists(settingsPath))
                     settings = JsonConvert.DeserializeObject<ColorblindModeSettings>(File.ReadAllText(settingsPath));
 
-                string moduleID = null;
-                bool? moduleEnabled = null;
-
-                KMBombModule bombModule = GetComponent<KMBombModule>();
-                KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
-                if (bombModule != null)
-                    moduleID = bombModule.ModuleType;
-                else if (needyModule != null)
-                    moduleID = needyModule.ModuleType;
-
-                if (moduleID != null && !settings.EnabledModules.TryGetValue(moduleID, out moduleEnabled))
-                    settings.EnabledModules[moduleID] = null;
+                bool? isEnabled = null;
+                if (!string.IsNullOrEmpty(key) && !settings.EnabledModules.TryGetValue(key, out isEnabled))
+                    settings.EnabledModules[key] = null;
 
                 File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
-                return moduleEnabled ?? settings.Enabled;
+                return isEnabled ?? settings.Enabled;
             }
             catch (Exception e)
             {
-                Debug.LogFormat(@"[Colorblind Mode] Error: {0} ({1})", e.Message, e.GetType().FullName);
+                Debug.LogFormat(@"[Colorblind Mode] Error in ""{0}"": {1} ({2})\n{3}", key ?? "<null>", e.Message, e.GetType().FullName, e.StackTrace);
                 return false;
             }
         }
