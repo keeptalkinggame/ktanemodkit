@@ -339,8 +339,6 @@ public class FakeBombInfo : MonoBehaviour
             string r = w.GetResult(queryKey, queryInfo);
             if (r != null) responses.Add(r);
         }
-        if (queryKey == "Unity")
-            responses.Add(JsonConvert.SerializeObject(new Dictionary<string, bool>() { { "Unity", true } }));
         return responses;
     }
 
