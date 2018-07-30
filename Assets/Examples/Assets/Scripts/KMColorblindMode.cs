@@ -1,15 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public class KMColorblindMode : MonoBehaviour
 {
-    void Awake()
-    {
-        settingsPath = Path.Combine(Path.Combine(Application.persistentDataPath, "Modsettings"), "ColorblindMode.json");
-    }
-
     [SerializeField]
     private bool _colorblindMode = false;
 
@@ -17,42 +13,39 @@ public class KMColorblindMode : MonoBehaviour
     {
         get
         {
-            if (Application.isEditor) return _colorblindMode;
+            if (Application.isEditor)
+                return _colorblindMode;
 
-            if (!File.Exists(settingsPath)) WriteSettings(new ColorblindModeSettings());
+            var settingsPath = Path.Combine(Path.Combine(Application.persistentDataPath, "Modsettings"), "ColorblindMode.json");
 
-            ColorblindModeSettings settings = JsonConvert.DeserializeObject<ColorblindModeSettings>(File.ReadAllText(settingsPath));
-            WriteSettings(settings);
-
-            string moduleID = null;
-            bool? moduleEnabled = null;
-
-            KMBombModule bombModule = GetComponent<KMBombModule>();
-            KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
-            if (bombModule)
+            ColorblindModeSettings settings = new ColorblindModeSettings();
+            try
             {
-                moduleID = bombModule.ModuleType;
-            }
-            else if (needyModule)
-            {
-                moduleID = needyModule.ModuleType;
-            }
+                if (File.Exists(settingsPath))
+                    settings = JsonConvert.DeserializeObject<ColorblindModeSettings>(File.ReadAllText(settingsPath));
 
-            if (moduleID != null && !settings.EnabledModules.TryGetValue(moduleID, out moduleEnabled))
-            {
-                settings.EnabledModules[moduleID] = null;
-                WriteSettings(settings);
-            }
+                string moduleID = null;
+                bool? moduleEnabled = null;
 
-            return moduleEnabled ?? settings.Enabled;
+                KMBombModule bombModule = GetComponent<KMBombModule>();
+                KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
+                if (bombModule != null)
+                    moduleID = bombModule.ModuleType;
+                else if (needyModule != null)
+                    moduleID = needyModule.ModuleType;
+
+                if (moduleID != null && !settings.EnabledModules.TryGetValue(moduleID, out moduleEnabled))
+                    settings.EnabledModules[moduleID] = null;
+
+                File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+                return moduleEnabled ?? settings.Enabled;
+            }
+            catch (Exception e)
+            {
+                Debug.LogFormat(@"[Colorblind Mode] Error: {0} ({1})", e.Message, e.GetType().FullName);
+                return false;
+            }
         }
-    }
-
-    static string settingsPath;
-
-    static void WriteSettings(ColorblindModeSettings settings)
-    {
-        File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
     }
 }
 
