@@ -1,5 +1,5 @@
 
-/* 
+/*
  *  Some useful numbers...
  *
  *  When font-size is 1em/12pt/16px/100%:
@@ -40,7 +40,7 @@ textarea {
 
 html {
     font-family: 'Special Elite', 'Courier New', monospace;
-    font-size: 1em;
+    font-size: 12pt;
     line-height: 1.4;
 }
 
@@ -114,12 +114,11 @@ html {
 body {
     margin: 0;
     padding: 0;
-    background: url('../img/web-background.jpg');
-    background-attachment: fixed;
 }
-@media print {
+@media screen and (min-width: 900px) {
     body {
-        background: none;
+        background: url('../img/web-background.jpg');
+        background-attachment: fixed;
     }
 }
 
@@ -140,7 +139,7 @@ h1 {
 
 h2 {
     font-size: 1.5em;
-    margin: 0.83em 0 0;
+    margin: 0;
 }
 
 h3 {
@@ -207,39 +206,55 @@ td, th {
 }
 
 .diagram {
-    width: 9em;
+    width: 5em;
     float: right;
-    margin-left: 1em;
-    margin-bottom: 1em;
+    margin-left: .5em;
+    margin-bottom: .5em;
+}
+
+@media screen and (min-width: 900px), print {
+    .diagram {
+        width: 9em;
+        margin-left: 1em;
+        margin-bottom: 1em;
+    }
 }
 
 .diagram-label {
-	text-align:center;
+    text-align: center;
 }
 
-.page {
-    margin: 1em auto;
-    padding: 0;
-    border: 1px solid #222; /* Safely using px because exists outside layout of page content */
-    box-shadow: #222 0.0em 0em 0.6em;
-    clear: both;
-    background-color: #FFF;
-    background-repeat: no-repeat;
-    background-position: center; 
-    background-size: 100%;
-    width: 51em; /* = 8.5in at 12pt (1em) */
-    min-height: 66em; /* = 11in at 12pt (1em) */
+@media screen and (min-width: 900px) {
+    .page {
+        margin: 1em auto;
+        padding: 0;
+        border: 1px solid #222; /* Safely using px because exists outside layout of page content */
+        box-shadow: #222 0.0em 0em 0.6em;
+        clear: both;
+        background-color: #FFF;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 100%;
+        width: 8.5in; /* = 8.5in at 12pt (1em) */
+        min-height: 11in; /* = 11in at 12pt (1em) */
+    }
 }
 @media print {
     .page {
         margin: 0;
+        padding: 0;
         border: none;
         box-shadow: none;
         max-width: none;
         min-height: initial;
 
-        width: 51em; /* = 8.5in at 12pt (1em) */
-        height: 66em; /* = 11in at 12pt (1em) */
+        background-color: #FFF;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 100%;
+
+        width: 8.5in; /* = 8.5in at 12pt (1em) */
+        height: 11in; /* = 11in at 12pt (1em) */
         page-break-before: always;
     }
 }
@@ -279,20 +294,35 @@ td, th {
 }
 
 .page-content {
-    margin: 4.5em 8.82% 0; /* = 0.75in ~0.75in 0 at 12pt (1em) */
-    min-height: 57em; /* Leaving 3em at the bottom for footer (0.75in) */
+    margin: 0 .75in; /* = 0.75in ~0.75in 0 at 12pt (1em) */
+    padding-top: 4em;
+}
+
+@media screen and (min-width: 900px), print {
+    .page-content {
+        margin: 0 8.82%;
+        padding-top: 4.5em;
+        min-height: 57em; /* Leaving 3em at the bottom for footer (0.75in) */
+    }
 }
 
 .page-header {
     display: block;
     position: relative;
     height: 0;
-    top: 1.5em; /* = 0.25in at 12pt (1em) */
-    margin: 0 5.88%; /* = ~0.5in at 12pt (1em) */
+    top: .25in; /* = 0.25in at 12pt (1em) */
+    margin: 0 .5in; /* = ~0.5in at 12pt (1em) */
 }
-/*.page-first .page-header {
-    display: none;
-}*/
+
+@media screen and (max-width: 900px) {
+    .page .page-header {
+        display: none;
+    }
+    .section {
+        margin-bottom: 3em;
+    }
+}
+
 .page-header-section-title {
     position: relative;
     height: 0;
@@ -310,25 +340,19 @@ td, th {
 }
 
 .relative-footer {
-    margin-top: 1.5em; /* = 0.25in */
-    height: 3em /* = 0.5in */
-}
-
-.absolute-footer {
-    position: relative;
-    height: 0;
-    top: 63em; /* = 10.5in at 12pt (1em) */
     display: none;
 }
 
-@media print {
+@media screen and (min-width: 900px) {
     .relative-footer {
-        display: none;
-    }
-
-    .absolute-footer {
+        margin-top: .25in; /* = 0.25in */
+        height: .5in; /* = 0.5in */
         display: block;
     }
+}
+
+.absolute-footer {
+    display: none;
 }
 
 .appendix-reference {
@@ -360,11 +384,11 @@ td, th {
 }
 
 .bomb-diagram-front {
-	width: 18.0020625em; /* Hardcoding for IE */
+    width: 18.0020625em; /* Hardcoding for IE */
 }
 
 .bomb-diagram-side {
-	width: 5.3895625em; /* Hardcoding for IE */
+    width: 5.3895625em; /* Hardcoding for IE */
 }
 
 .diagram-label {
@@ -431,17 +455,17 @@ td, th {
 }
 
 .repeaters-spacer {
-	border:none;
+    border:none;
 }
 
 .whos-on-first-step1-table, .whos-on-first-step1-table td  {
     margin-left: auto;
     margin-right: auto;
-	border:none;
+    border:none;
 }
 
 .whos-on-first-step1-table th, .whos-on-first-step1-table td {
-	font-size: 0.9em;
+    font-size: 0.9em;
     width: 6.5em;
     padding: 0.45em 0.45em .7em .7em;
 }
@@ -450,46 +474,46 @@ td, th {
     width: 95%;
     margin-left: auto;
     margin-right: auto;
-		
-}            
+
+}
 
 .whos-on-first-look-at-display  {
-	background-color: black;
-	color: white;
+    background-color: black;
+    color: white;
 }
-                            
+
 .whos-on-first-step1-table td table td
 {
-	font-size: 1em;
+    font-size: 1em;
     height: 1.5em;
-	width: 50%;
+    width: 50%;
     padding: 0;
-	text-align: center;
-	border: 1px solid black;
+    text-align: center;
+    border: 1px solid black;
 }
 
 .whos-on-first-step1-table td table th
 {
-	font-size: 1em;
-	height: 1.5em;
-	padding: 0.1em 0.1em;
-	text-align: center;
-	border: 1px solid black;
+    font-size: 1em;
+    height: 1.5em;
+    padding: 0.1em 0.1em;
+    text-align: center;
+    border: 1px solid black;
 }
 
 .whos-on-first-step1-table th {
-	border: 1px solid black;
+    border: 1px solid black;
 }
 
 .whos-on-first-step2-table {
-	width: 105%;
+    width: 105%;
 }
 
 .whos-on-first-step2-table th {
     padding-left: .2em;
-	padding-right: .2em;
-	padding-top: .15em;
-	padding-bottom: .15em;
+    padding-right: .2em;
+    padding-top: .15em;
+    padding-bottom: .15em;
 }
 
 .whos-on-first-step2-table td {
@@ -507,77 +531,77 @@ td, th {
 
 .keypad-table-column {
     background-color: #FFF; /*For ensuring photocopy noise doesn't affect symbols*/
-	padding: .1em;
+    padding: .1em;
 }
 
 .keypad-table-spacer {
-	border-style: none;
+    border-style: none;
 }
 
 .keypad-symbol-image {
-	height:1.9em;
+    height:1.9em;
 }
 
 .maze {
-	width:11em;
-	height:11em;
-	margin:.1em;
+    width:11em;
+    height:11em;
+    margin:.1em;
 }
 
 #morseCodeChart {
-	float: left;
-	margin-right: 1em;
+    float: left;
+    margin-right: 1em;
     height: 32em;
-	width: 24.8270625em; /* Hardcode for IE */
-	border:1px solid #021a40;
-	background-color:#ffffff;
+    width: 24.8270625em; /* Hardcode for IE */
+    border:1px solid #021a40;
+    background-color:#ffffff;
 }
 
 .morse-code table th {
-	font-size: 1.2em;
-	font-weight: bold;
-	width: 5em;
+    font-size: 1.2em;
+    font-weight: bold;
+    width: 5em;
 }
 
 .morse-code table td {
-	text-align: center;
+    text-align: center;
 }
 
 .venn-wires table th {
-	font-size: 1.2em;
-	font-weight: bold;
+    font-size: 1.2em;
+    font-weight: bold;
 }
 
 .venn-wires table td {
-	text-align: center;
+    text-align: center;
 }
 
 #venndiagram {
-	display: block;
-	width: 70%;
+    display: block;
+    width: 70%;
     position:relative;
     top: -2em;
-	margin-bottom: 0;
-	margin-left: auto;
-	margin-right: auto;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 
 #vennlegend {
-	width: 20em;
-	float: left;
+    width: 20em;
+    float: left;
     position:relative;
     top: -0.7em;
 }
 
 #venntable {
-	border-width: 0.2em;
+    border-width: 0.2em;
     position:relative;
     top: -0.7em;
 }
 
 #venntable td {
-	font-size: 0.75em;
+    font-size: 0.75em;
 }
 
 .venn-wires .appendix-reference {
@@ -590,16 +614,16 @@ td, th {
 }
 
 .appendix-ports img {
-	height: 5em;
+    height: 5em;
 }
 
 .appendix-ports table td {
-	text-align: center;
+    text-align: center;
 }
 
 .appendix-ports table th {
-	font-size: 1.2em;
-	font-weight: bold;
+    font-size: 1.2em;
+    font-weight: bold;
 }
 
 .needy-knob table {
@@ -613,14 +637,14 @@ td, th {
 }
 
 .needy-diagram-label {
-	text-align:left;
+    text-align:left;
 }
 
 .wire-sequence table {
     display: inline-table;
     margin-top: 1em;
     margin-bottom: 1em;
-    width: 15.3em;
+    width: 15.1em;
     font-size: 0.9em;
 }
 
@@ -673,8 +697,8 @@ td, th {
 
 .flavour-text
 {
-	font-style: italic;
-	font-size:75%;
+    font-style: italic;
+    font-size:75%;
     margin-top: .5em;
 }
 
@@ -805,23 +829,6 @@ td, th {
 }
 
 /* ==========================================================================
-   EXAMPLE Media Queries for Responsive Design.
-   These examples override the primary ('mobile first') styles.
-   Modify as content requires.
-   ========================================================================== */
-
-@media only screen and (min-width: 35em) {
-    /* Style adjustments for viewports that meet the condition */
-}
-
-@media print,
-       (-o-min-device-pixel-ratio: 5/4),
-       (-webkit-min-device-pixel-ratio: 1.25),
-       (min-resolution: 120dpi) {
-    /* Style adjustments for high resolution devices */
-}
-
-/* ==========================================================================
    Print styles.
    Inlined to avoid required HTTP connection: h5bp.com/r
    ========================================================================== */
@@ -876,7 +883,7 @@ td, th {
     img {
         max-width: 100% !important;
     }
-    
+
     @page {
         margin: 0;
     }
@@ -892,4 +899,21 @@ td, th {
     h3 {
         page-break-after: avoid;
     }
+}
+
+/* ==========================================================================
+   EXAMPLE Media Queries for Responsive Design.
+   These examples override the primary ('mobile first') styles.
+   Modify as content requires.
+   ========================================================================== */
+
+@media only screen and (min-width: 35em) {
+    /* Style adjustments for viewports that meet the condition */
+}
+
+@media print,
+       (-o-min-device-pixel-ratio: 5/4),
+       (-webkit-min-device-pixel-ratio: 1.25),
+       (min-resolution: 120dpi) {
+    /* Style adjustments for high resolution devices */
 }
