@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <title>Module Name — Keep Talking and Nobody Explodes Module</title>
+        <meta name="viewport" content="initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link href='https://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+        <script src="js/highlighter.js"></script>
+        <style>
+            table {
+                margin: 1em auto;
+            }
+
+            /* Example CSS; Remove what is not used.*/
+            .bold {
+                font-weight: bold;
+            }
+            .underline {
+                text-decoration: underline;
+            }
+            .italics {
+                font-style: italic;
+            }
+
+            img.center {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            img.example-image {
+                width: 60%;
+            }
+        </style>
+        <style>
+            /* Remove this <style> block in final manual! */
+            code {background-color: rgb(235, 235, 200);}
+            code.notcode {background-color: white;}
+            li ol {margin: 0;}
+            kbd {background-color: #f5f5f5;border-style: solid;border-width: 1px 2px 2px 1px;padding: 0 1px;}
+        </style>
+    </head>
+    <body>
+        <div id="ManualContent">
+            <div class="section">
+                <div class="page page-bg-01">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">Module Name</span>
+                    </div>
+                    <div class="page-content">
+                        <img src="img/Component/Module Name.svg" class="diagram">
+                        <h2>On the Subject of Module Name</h2>
+                        <p class="flavour-text">Your flavor text should go here.</p>
+                        
+                        <p>Here are templates for commonly used manual features. Make sure to always use closing tags (the ones with a <code>/</code> in them).</p>
+
+                        <h3>Bullet Points (Unordered Lists)</h3>
+                        <ul>
+                            <li>Bullet points should use the <code>&lt;ul&gt;&lt;/ul&gt;</code> and <code>&lt;li&gt;&lt;/li&gt;</code> tags.</li>
+                            <li>You can even have nested bullet points:
+                                <ul>
+                                    <li>Indented</li>
+                                    <li>Bullet Points</li>
+                                </ul>
+                            </li>
+                            <li>Or numbered lists:
+                                <ol>
+                                    <li>Indented</li>
+                                    <li>Bullet Points</li>
+                                </ol>
+                            </li>
+                        </ul>
+                        
+                        <h3>Numbered Lists (Ordered Lists)</h3>
+                        <ol>
+                            <li>Numbered lists should use the <code>&lt;ol&gt;&lt;/ol&gt;</code> and <code>&lt;li&gt;&lt;/li&gt;</code> tags.</li>
+                            <li>Nested lists work just like unordered lists (see above).</li>
+                        </ol>
+
+                        <h3>Text</h3>
+                        <p>Use paragraph tags (<code>&lt;p&gt;&lt;/p&gt;</code>) for text blocks. In addition, for text formatting, use:</p>
+                        <ul>
+                            <li>
+                                <strong>Bold</strong>: <code>&lt;strong&gt;&lt;/strong&gt;</code> (HTML) or <code>font-weight: bold;</code> (CSS).
+                                <ul><li>Bold in table headers should be achieved through the use of the <code>&lt;th&gt;&lt;/th&gt;</code> tag.</li></ul>
+                            </li>
+                            <li><em>Underline</em>: <code>&lt;em&gt;&lt;/em&gt;</code> (HTML) or <code>text-decoration: underline;</code> (CSS).</li>
+                            <li>Line<br />Break: <code>&lt;br /&gt;</code> (HTML)</li>
+                        </ul>
+                        <p>For the most part, HTML versions of bolding and underlining is recommended. Note that italics are not used in vanilla manuals besides flavor text and references to appendices, and therefore is not included above. Also, here are some sample headings:</p>
+                        <h3>Example Big Heading</h3>
+                        <h4>Example Small Heading</h4>
+                    </div>
+                   <div class="page-footer relative-footer">Page 1 of 2</div>
+                </div>
+                <div class="page page-bg-02">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">Module Name</span>
+                    </div>
+                    <div class="page-content">
+                        <h3>Example Tables</h3>
+                        <table>
+                            <tr>
+                                <th>Part of table</th>
+                                <th>How to make</th>
+                            </tr>
+                            <tr>
+                                <th>Rows and Columns</th>
+                                <td>
+                                    Use <code>&lt;tr&gt;&lt;/tr&gt;</code> for rows. 
+                                    Use <code>&lt;th&gt;&lt;/th&gt;</code> or <code>&lt;td&gt;&lt;/td&gt;</code> for columns within rows (see below).
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Headings (left column and top row, in most cases)</th>
+                                <td>Use <code>&lt;th&gt;&lt;/th&gt;</code></td>
+                            </tr>
+                            <tr>
+                                <th>Cells</th>
+                                <td>Use <code>&lt;td&gt;&lt;/td&gt;</code></td>
+                            </tr>
+                            <tr>
+                                <th rowspan="2">Merged Cells</th>
+                                <td>Use <code>rowspan="_"</code> for merging cells vertically.</td>
+                            </tr>
+                            <tr>
+                                <td>Use <code>colspan="_"</code> for merging cells horizontally.</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Note that merged cells created in other rows are skipped in affected rows (see HTML for above row).</td>
+                            </tr>
+                        </table>
+                        <p>If the table contents are not wide enough, tables are centered by default due to the <code>table</code> rule of the first <code>&lt;style&gt;</code> block (see above code).</p>
+                        <table class="center">
+                            <tr>
+                                <th>Cell 1</th>
+                                <td>Cell 2</td>
+                            </tr>
+                            <tr>
+                                <th>Cell 3</th>
+                                <td>Cell 4</td>
+                            </tr>
+                        </table>
+
+                        <h3>Images</h3>
+                        <p>Use the <code>&lt;img src="_" /&gt;</code> tag for images. Make sure to put your images into the <code class="notcode">/img/[Module Name]/</code> folder. Adjust the width with CSS, using <code>width: _%;</code> (recommended) or <code>width: _px;</code>. Example:</p>
+                        <img src="img/Example Image.png" class="center example-image" />
+
+                        <h3>Making the PDF</h3>
+                        <p>To make a PDF version of your manual, open the HTML file in Google Chrome and open the "Print" dialog (Usually <kbd>CTRL</kbd>+<kbd>P</kbd>) and choose "Save as PDF" as the destination.</p>
+                    </div>
+                   <div class="page-footer relative-footer">Page 2 of 2</div>
+                </div>
+                <div class="page page-bg-03">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">Appendix Name</span>
+                    </div>
+                    <div class="page-content">
+                        <h2>Appendix M: Additional Notes</h2>
+                        <p>Here other things to keep in mind when making a manual page:</p>
+                        <ul>
+                            <li><strong>There are comments <code>/* ... */</code> in the CSS code in the <code>&lt;style&gt;</code> blocks containing instructions. Follow those instructions before finishing your manual.</strong></li>
+                            <li>Normal and Needy module manual pages are formatted similarly. Widget manual pages are appendices and are formatted as such.</li>
+                            <li>Each manual or appendix page should have a <code>&lt;div class="page-footer...</code> at the bottom of the page, updated accordingly.</li>
+                            <li>Don't be afraid to ask for help if needed!</li>
+                            <li>A few things to reiterate:
+                                <ul>
+                                    <li>Make sure to never forget closing tags (the ones with a <code>/</code> in them).</li>
+                                    <li>For the most part, HTML versions of bolding and underlining is recommended.</li>
+                                    <li>Italics are not used in vanilla manuals besides flavor text and references to appendices, and therefore is not included above. </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="page-footer relative-footer">Page 1 of 1</div>
+                </div>
+
+            </div>
+        </div>
+    </body>
+</html>
