@@ -1337,7 +1337,7 @@ public class TestHarness : MonoBehaviour
     {
         if (GUILayout.Button("Activate Needy Modules"))
         {
-            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
+            foreach (KMNeedyModule needyModule in FindObjectsOfType<KMNeedyModule>())
             {
                 if (needyModule.OnNeedyActivation != null)
                 {
@@ -1348,7 +1348,7 @@ public class TestHarness : MonoBehaviour
 
         if (GUILayout.Button("Deactivate Needy Modules"))
         {
-            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
+            foreach (KMNeedyModule needyModule in FindObjectsOfType<KMNeedyModule>())
             {
                 if (needyModule.OnNeedyDeactivation != null)
                 {
