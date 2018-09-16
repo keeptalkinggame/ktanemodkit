@@ -998,8 +998,15 @@ public class TestHarness : MonoBehaviour
 
         foreach (KMSelectable selectable in selectables)
         {
-            TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
-            testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
+	        try
+	        {
+		        TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
+		        testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
+	        }
+	        catch (System.Exception ex)
+	        {
+		        Debug.LogException(ex);
+	        }
         }
 
         foreach (KMSelectable selectable in selectables)
