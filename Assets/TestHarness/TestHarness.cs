@@ -488,6 +488,23 @@ public class TestHarness : MonoBehaviour
         }
     }
 
+	WidgetZone CreateWidgetArea(Vector3 rot, Vector3 pos, Vector3 scale, Transform parent, string name)
+	{
+		Transform widgetBase = new GameObject().transform;
+		widgetBase.name = name;
+		widgetBase.localPosition = pos;
+		widgetBase.localEulerAngles = new Vector3(rot.x, rot.y, 0);
+		widgetBase.SetParent(parent, false);
+
+		Transform widgetInner = new GameObject().transform;
+		widgetInner.name = "Widget Area";
+		widgetInner.localEulerAngles = new Vector3(rot.z, 0, 0);
+		widgetInner.localScale = scale;
+		widgetInner.SetParent(widgetBase, false);
+
+		return WidgetZone.CreateZone(widgetInner.gameObject);
+	}
+
 	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, List<Widget> widgets)
 	{
 		Transform bombTransform;
@@ -552,26 +569,26 @@ public class TestHarness : MonoBehaviour
 			for (int bombFace = 0; bombFace < 2; bombFace++)
 			{
 				Transform bombFaceTransform = new GameObject().transform;
+				bombFaceTransform.name = bombFace == 0 ? "Bottom Face" : "Top Face";
 				
 				anchors.Add(new List<Transform>());
 				timerAnchors.Add(new List<Transform>());
 
 				for (float i = (-squaresize / 2) + 0.1f; i < squaresize / 2; i += 0.2f)
 				{
-					Transform rightwall = GameObject.CreatePrimitive(PrimitiveType.Quad).transform;
+					Transform rightwall = new GameObject().transform;
 					rightwall.localPosition = new Vector3((squaresize / 2), -0.1f, i);
-					rightwall.localEulerAngles = new Vector3(-180f, 90f, 0f);
+					rightwall.localEulerAngles = new Vector3(0f, -90f, 0f);
 					rightwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
 					rightwall.SetParent(bombFaceTransform, false);
+					GameObject.CreatePrimitive(PrimitiveType.Quad).transform.SetParent(rightwall, false);
 
-					Transform topwall = GameObject.CreatePrimitive(PrimitiveType.Quad).transform;
+					Transform topwall = new GameObject().transform;
 					topwall.localPosition = new Vector3(i, -0.1f, (squaresize / 2) - (squaresize * bombFace));
-					topwall.localEulerAngles = new Vector3(-180f + (180f * bombFace), 0f, 0f);
+					topwall.localEulerAngles = new Vector3(0f, -180f + (180f * bombFace), 0f);
 					topwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
 					topwall.SetParent(bombFaceTransform, false);
-
-					widgetZones.Add(WidgetZone.CreateZone(rightwall.gameObject));
-					widgetZones.Add(WidgetZone.CreateZone(topwall.gameObject));
+					GameObject.CreatePrimitive(PrimitiveType.Quad).transform.SetParent(topwall, false);
 
 					for (float j = (-squaresize / 2) + 0.1f; j < squaresize / 2; j += 0.2f)
 					{
@@ -586,6 +603,14 @@ public class TestHarness : MonoBehaviour
 				bombFaceTransform.localPosition = new Vector3(0, (bombFace * 0.2f) - 0.1f, 0);
 				bombFaceTransform.localEulerAngles = new Vector3(0, 0, 180f - (bombFace * 180f));
 				bombFaceTransform.SetParent(bombTransform, true);
+			}
+
+			for (int i = 0; i < square; i++)
+			{
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(0, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Bottom Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, 0), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Lef Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, 0), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Right Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(0, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Top Widget Area {0}", i)));
 			}
 		}
 		_bomb = bombTransform;
