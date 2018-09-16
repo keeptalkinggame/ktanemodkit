@@ -47,6 +47,7 @@
         BATTERY,
         PORT_PLATE,
         INDICATOR,
+		TWOFACTOR,
         RANDOM,
         CUSTOM
     }
