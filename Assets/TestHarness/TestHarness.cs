@@ -703,6 +703,7 @@ public class TestHarness : MonoBehaviour
 {
 	public StatusLight StatusLightPrefab;
 	public TimerModule TimerModulePrefab;
+	public Transform ModuleCoverPrefab;
 
 	private FakeBombInfo fakeInfo;
 
@@ -938,6 +939,16 @@ public class TestHarness : MonoBehaviour
 			}
 			anchors[timerFace].Remove(anchor);
 			module.SetParent(anchor, false);
+		}
+
+		foreach (Transform anchor in anchors.SelectMany(x => x))
+		{
+			Transform cover = Instantiate(ModuleCoverPrefab);
+			cover.transform.localPosition = Vector3.zero;
+			cover.transform.localRotation = Quaternion.identity;
+			cover.transform.localScale = Vector3.one;
+			cover.transform.SetParent(anchor, false);
+			cover.gameObject.SetActive(true);
 		}
 
 		foreach (KMWidget widget in widgets)
