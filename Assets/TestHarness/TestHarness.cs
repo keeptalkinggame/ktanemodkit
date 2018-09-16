@@ -704,6 +704,7 @@ public class TestHarness : MonoBehaviour
 	public StatusLight StatusLightPrefab;
 	public TimerModule TimerModulePrefab;
 	public Transform ModuleCoverPrefab;
+	public TwitchPlaysID TwitchIDPrefab;
 
 	private FakeBombInfo fakeInfo;
 
@@ -733,6 +734,7 @@ public class TestHarness : MonoBehaviour
 	private Transform _bomb;
 
 	private TimerModule _timer;
+	private readonly List<Transform> _twitchPlayModules = new List<Transform>();
 
 	void Awake()
     {
@@ -762,7 +764,7 @@ public class TestHarness : MonoBehaviour
 
     void ReplaceBombInfo()
     {
-        MonoBehaviour[] scripts = MonoBehaviour.FindObjectsOfType<MonoBehaviour>();
+        MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
         foreach (MonoBehaviour s in scripts)
         {
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
@@ -910,6 +912,7 @@ public class TestHarness : MonoBehaviour
 
 		foreach (Transform module in timerSideModules)
 		{
+			_twitchPlayModules.Add(module);
 			module.localPosition = Vector3.zero;
 			module.localRotation = Quaternion.identity;
 			module.localScale = Vector3.one;
@@ -922,10 +925,26 @@ public class TestHarness : MonoBehaviour
 			}
 			anchors[timerFace].Remove(anchor);
 			module.SetParent(anchor, false);
+
+			KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
+			TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
+			tpID.Module = module;
+			tpID.gameObject.SetActive(true);
+			if (statusLight == null)
+			{
+				tpID.transform.localPosition = new Vector3(0.075167f, 0.06316f, 0.076057f);
+				tpID.transform.SetParent(module, false);
+			}
+			else
+			{
+				tpID.transform.localPosition = new Vector3(0, 0.0432f, 0);
+				tpID.transform.SetParent(statusLight.transform, false);
+			}
 		}
 
 		foreach (Transform module in modules)
 		{
+			_twitchPlayModules.Add(module);
 			module.localPosition = Vector3.zero;
 			module.localRotation = Quaternion.identity;
 			module.localScale = Vector3.one;
@@ -939,6 +958,21 @@ public class TestHarness : MonoBehaviour
 			}
 			anchors[timerFace].Remove(anchor);
 			module.SetParent(anchor, false);
+
+			KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
+			TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
+			tpID.Module = module;
+			tpID.gameObject.SetActive(true);
+			if (statusLight == null)
+			{
+				tpID.transform.localPosition = new Vector3(0.075167f, 0.06316f, 0.076057f);
+				tpID.transform.SetParent(module, false);
+			}
+			else
+			{
+				tpID.transform.localPosition = new Vector3(0, 0.0432f, 0);
+				tpID.transform.SetParent(statusLight.transform, false);
+			}
 		}
 
 		foreach (Transform anchor in anchors.SelectMany(x => x))
@@ -957,7 +991,7 @@ public class TestHarness : MonoBehaviour
 
     void Start()
     {
-        MonoBehaviour[] scripts = MonoBehaviour.FindObjectsOfType<MonoBehaviour>();
+        MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
         foreach (MonoBehaviour s in scripts)
         {
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
@@ -1249,7 +1283,7 @@ public class TestHarness : MonoBehaviour
 
     void AddHighlightables()
     {
-        List<KMHighlightable> highlightables = new List<KMHighlightable>(GameObject.FindObjectsOfType<KMHighlightable>());
+        List<KMHighlightable> highlightables = new List<KMHighlightable>(FindObjectsOfType<KMHighlightable>());
 
         foreach (KMHighlightable highlightable in highlightables)
         {
@@ -1263,7 +1297,7 @@ public class TestHarness : MonoBehaviour
 
     void AddSelectables()
     {
-        List<KMSelectable> selectables = new List<KMSelectable>(GameObject.FindObjectsOfType<KMSelectable>());
+        List<KMSelectable> selectables = new List<KMSelectable>(FindObjectsOfType<KMSelectable>());
 
         foreach (KMSelectable selectable in selectables)
         {
@@ -1272,7 +1306,7 @@ public class TestHarness : MonoBehaviour
 		        TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
 		        testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
 	        }
-	        catch (System.Exception ex)
+	        catch (Exception ex)
 	        {
 		        Debug.LogException(ex);
 	        }
@@ -1293,153 +1327,10 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-    // TPK Methods
-    protected void DoInteractionStart(KMSelectable interactable)
-    {
-        interactable.OnInteract();
-    }
+    
+    
 
-    protected void DoInteractionEnd(KMSelectable interactable)
-    {
-        if (interactable.OnInteractEnded != null)
-        {
-            interactable.OnInteractEnded();
-        }
-    }
-
-    Dictionary<Component, HashSet<KMSelectable>> ComponentHelds = new Dictionary<Component, HashSet<KMSelectable>> { };
-    IEnumerator SimulateModule(Component component, Transform moduleTransform, MethodInfo method, string command)
-    {
-        // Simple Command
-        if (typeof(IEnumerable<KMSelectable>).IsAssignableFrom(method.ReturnType))
-        {
-            IEnumerable<KMSelectable> selectableSequence = null;
-            try
-            {
-                selectableSequence = (IEnumerable<KMSelectable>) method.Invoke(component, new object[] { command });
-                if (selectableSequence == null)
-                {
-                    Debug.LogFormat("Twitch Plays handler reports invalid command (by returning null).", method.DeclaringType.FullName, method.Name);
-                    yield break;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", method.DeclaringType.FullName, method.Name);
-                Debug.LogException(ex);
-                yield break;
-            }
-
-            int initialStrikes = fakeInfo.strikes;
-            int initialSolved = fakeInfo.GetSolvedModuleNames().Count;
-            foreach (KMSelectable selectable in selectableSequence)
-            {
-                DoInteractionStart(selectable);
-                yield return new WaitForSeconds(0.1f);
-                DoInteractionEnd(selectable);
-
-                if (fakeInfo.strikes != initialStrikes || fakeInfo.GetSolvedModuleNames().Count != initialSolved)
-                {
-                    break;
-                }
-            };
-        }
-
-        // Complex Commands
-        if (method.ReturnType == typeof(IEnumerator))
-        {
-            IEnumerator responseCoroutine = null;
-            try
-            {
-                responseCoroutine = (IEnumerator) method.Invoke(component, new object[] { command });
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", method.DeclaringType.FullName, method.Name);
-                Debug.LogException(ex);
-                yield break;
-            }
-
-            if (responseCoroutine == null)
-            {
-                Debug.LogFormat("Twitch Plays handler reports invalid command (by returning null).", method.DeclaringType.FullName, method.Name);
-                yield break;
-            }
-
-            if (!ComponentHelds.ContainsKey(component))
-                ComponentHelds[component] = new HashSet<KMSelectable>();
-            HashSet<KMSelectable> heldSelectables = ComponentHelds[component];
-
-            int initialStrikes = fakeInfo.strikes;
-            int initialSolved = fakeInfo.GetSolvedModuleNames().Count;
-
-            if (!responseCoroutine.MoveNext())
-            {
-                Debug.LogFormat("Twitch Plays handler reports invalid command (by returning empty sequence).", method.DeclaringType.FullName, method.Name);
-                yield break;
-            }
-
-            if (responseCoroutine.Current is string)
-            {
-                var str = (string) responseCoroutine.Current;
-                if (str.StartsWith("sendtochat"))
-                    Debug.Log("Twitch handler sent: " + str);
-                yield break;
-            }
-
-            while (responseCoroutine.MoveNext())
-            {
-                object currentObject = responseCoroutine.Current;
-                if (currentObject is KMSelectable)
-                {
-                    KMSelectable selectable = (KMSelectable) currentObject;
-                    if (heldSelectables.Contains(selectable))
-                    {
-                        DoInteractionEnd(selectable);
-                        heldSelectables.Remove(selectable);
-                        if (fakeInfo.strikes != initialStrikes || fakeInfo.GetSolvedModuleNames().Count != initialSolved)
-                            yield break;
-                    }
-                    else
-                    {
-                        DoInteractionStart(selectable);
-                        heldSelectables.Add(selectable);
-                    }
-                }
-                else if (currentObject is IEnumerable<KMSelectable>)
-                {
-                    foreach (var selectable in (IEnumerable<KMSelectable>) currentObject)
-                    {
-                        DoInteractionStart(selectable);
-                        yield return new WaitForSeconds(.1f);
-                        DoInteractionEnd(selectable);
-                    }
-                }
-                else if (currentObject is string)
-                {
-                    string currentString = (string) currentObject;
-                    float waitTime;
-                    Match match = Regex.Match(currentString, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-                    if (match.Success && float.TryParse(match.Groups[1].Value, out waitTime))
-                    {
-                        yield return new WaitForSeconds(waitTime);
-                    }
-
-                    Debug.Log("Twitch handler sent: " + currentObject);
-                    yield return currentObject;
-                }
-                else if (currentObject is Quaternion)
-                {
-                    moduleTransform.localRotation = (Quaternion) currentObject;
-                }
-                else
-                    yield return currentObject;
-
-                if (fakeInfo.strikes != initialStrikes || fakeInfo.GetSolvedModuleNames().Count != initialSolved)
-                    yield break;
-            }
-        }
-    }
+    
 
     string command = "";
     void OnGUI()
@@ -1490,25 +1381,31 @@ public class TestHarness : MonoBehaviour
         GUILayout.Label("Time remaining: " + fakeInfo.GetFormattedTime());
 
         GUILayout.Space(10);
+	    TwitchPlaysID.AntiTrollMode = GUILayout.Toggle(TwitchPlaysID.AntiTrollMode, "Troll Commands Disabled");
+	    TwitchPlaysID.AnarchyMode = GUILayout.Toggle(TwitchPlaysID.AnarchyMode, "Anarchy Mode Enabled");
 
         GUI.SetNextControlName("commandField");
         command = GUILayout.TextField(command);
         if ((GUILayout.Button("Simulate Twitch Command") || Event.current.keyCode == KeyCode.Return) && GUI.GetNameOfFocusedControl() == "commandField" && command != "")
         {
             Debug.Log("Twitch Command: " + command);
-
-            foreach (KMBombModule module in FindObjectsOfType<KMBombModule>())
+            foreach (Transform module in _twitchPlayModules)
             {
-                Component[] allComponents = module.gameObject.GetComponentsInChildren<Component>(true);
-                foreach (Component component in allComponents)
-                {
-                    System.Type type = component.GetType();
-                    MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-                    if (method != null)
-                        StartCoroutine(SimulateModule(component, module.transform, method, command));
-                }
+	            TwitchPlaysID tpID = module.GetComponentInChildren<TwitchPlaysID>();
+	            if (tpID == null) continue;
+	            tpID.ProcessCommand(command);
             }
+
+	        if (command.Equals("!cancel", StringComparison.InvariantCultureIgnoreCase))
+	        {
+		        Canceller.SetCancel();
+	        }
+			else if (command.Equals("!stop", StringComparison.InvariantCultureIgnoreCase))
+	        {
+		        Canceller.SetCancel();
+		        TwitchPlaysID.TPCoroutineQueue.CancelFutureSubcoroutines();
+	        }
+
             command = "";
         }
     }
