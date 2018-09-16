@@ -4,347 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using UnityEngine;
 using EdgeworkConfigurator;
 using Random = UnityEngine.Random;
 
 public class FakeBombInfo : MonoBehaviour
 {
-    public abstract class Widget : MonoBehaviour
-    {
-        public abstract string GetResult(string key, string data);
-    }
-
-	public class SerialNumber : Widget
-	{
-		public string serial;
-
-		static readonly char[] SerialNumberPossibleCharArray = new char[35]
-		{
-			'A','B','C','D','E',
-			'F','G','H','I','J',
-			'K','L','M','N','E',
-			'P','Q','R','S','T',
-			'U','V','W','X','Z',
-			'0','1','2','3','4',
-			'5','6','7','8','9'
-		};
-
-		public static SerialNumber CreateComponent(GameObject where, EdgeworkConfiguration config)
-		{
-			SerialNumberType sntype = config == null ? SerialNumberType.RANDOM_NORMAL : config.SerialNumberType;
-			string sn = config == null ? string.Empty : config.CustomSerialNumber;
-
-			SerialNumber widget = where.AddComponent<SerialNumber>();
-			if (string.IsNullOrEmpty(sn) && sntype == SerialNumberType.CUSTOM)
-				sntype = SerialNumberType.RANDOM_NORMAL;
-
-			if (sntype == SerialNumberType.RANDOM_NORMAL)
-			{
-				string str1 = string.Empty;
-				for (int index = 0; index < 2; ++index) str1 = str1 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
-				string str2 = str1 + (object)Random.Range(0, 10);
-				for (int index = 3; index < 5; ++index) str2 = str2 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length - 10)];
-				widget.serial = str2 + Random.Range(0, 10);
-			}
-			else if (sntype == SerialNumberType.RANDOM_ANY)
-			{
-				string res = string.Empty;
-				for (int index = 0; index < 6; ++index) res = res + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
-				widget.serial = res;
-			}
-			else
-			{
-				widget.serial = sn;
-			}
-
-			Debug.Log("Serial: " + widget.serial);
-			return widget;
-		}
-
-		public override string GetResult(string key, string data)
-		{
-			if (key == KMBombInfo.QUERYKEY_GET_SERIAL_NUMBER)
-			{
-				return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
-				{
-					{
-						"serial", serial
-					}
-				});
-			}
-			return null;
-		}
-	}
-
-    public class PortWidget : Widget
-    {
-		public List<string> ports;
-
-        public static PortWidget CreateComponent(GameObject where, List<string> portNames=null)
-        {
-	        PortWidget widget = where.AddComponent<PortWidget>();
-	        widget.ports = new List<string>();
-            string portList = "";
-            if (portNames == null)
-            {
-                if (Random.value > 0.5)
-                {
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("Parallel");
-                        portList += "Parallel";
-                    }
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("Serial");
-                        if (portList.Length > 0) portList += ", ";
-                        portList += "Serial";
-                    }
-                }
-                else
-                {
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("DVI");
-                        portList += "DVI";
-                    }
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("PS2");
-                        if (portList.Length > 0) portList += ", ";
-                        portList += "PS2";
-                    }
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("RJ45");
-                        if (portList.Length > 0) portList += ", ";
-                        portList += "RJ45";
-                    }
-                    if (Random.value > 0.5)
-                    {
-	                    widget.ports.Add("StereoRCA");
-                        if (portList.Length > 0) portList += ", ";
-                        portList += "StereoRCA";
-                    }
-                }
-            }
-            else
-            {
-	            widget.ports = portNames;
-                portList = string.Join(", ", portNames.ToArray());
-            }
-            if (portList.Length == 0) portList = "Empty plate";
-            Debug.Log("Added port widget: " + portList);
-	        return widget;
-        }
-
-        public override string GetResult(string key, string data)
-        {
-            if (key == KMBombInfo.QUERYKEY_GET_PORTS)
-            {
-                return JsonConvert.SerializeObject((object)new Dictionary<string, List<string>>()
-                {
-                    {
-                        "presentPorts", ports
-                    }
-                });
-            }
-            return null;
-        }
-    }
-
-    public class IndicatorWidget : Widget
-    {
-        static List<string> possibleValues = new List<string>()
-        {
-            "SND","CLR","CAR",
-            "IND","FRQ","SIG",
-            "NSA","MSA","TRN",
-            "BOB","FRK"
-        };
-
-	    public string val;
-	    public bool on;
-
-        public static IndicatorWidget CreateComponent(GameObject where, string label=null, IndicatorState state=IndicatorState.RANDOM)
-        {
-	        IndicatorWidget widget = where.AddComponent<IndicatorWidget>();
-
-            if (label == null)
-            {
-                int pos = Random.Range(0, possibleValues.Count);
-                widget.val = possibleValues[pos];
-                possibleValues.RemoveAt(pos);
-            }
-            else
-            {
-                if (possibleValues.Contains(label))
-                {
-	                widget.val = label;
-                    possibleValues.Remove(label);
-                }
-                else
-                {
-	                widget.val = "NLL";
-                }
-            }
-            if (state == IndicatorState.RANDOM)
-            {
-	            widget.on = Random.value > 0.4f;
-            }
-            else
-            {
-	            widget.on = state == IndicatorState.ON ? true : false;
-            }
-
-            Debug.Log("Added indicator widget: " + widget.val + " is " + (widget.on ? "ON" : "OFF"));
-	        return widget;
-        }
-
-        public override string GetResult(string key, string data)
-        {
-            if (key == KMBombInfo.QUERYKEY_GET_INDICATOR)
-            {
-                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
-                {
-                    {
-                        "label", val
-                    },
-                    {
-                        "on", on?bool.TrueString:bool.FalseString
-                    }
-                });
-            }
-            else return null;
-        }
-    }
-
-    public class BatteryWidget : Widget
-    {
-	    public int batt;
-
-        public static BatteryWidget CreateComponent(GameObject where, int battCount=-1)
-        {
-	        BatteryWidget widget = where.AddComponent<BatteryWidget>();
-            if (battCount == -1)
-            {
-	            widget.batt = Random.Range(1, 3);
-            }
-            else
-            {
-	            widget.batt = battCount;
-            }
-
-            Debug.Log("Added battery widget: " + widget.batt);
-	        return widget;
-        }
-
-        public override string GetResult(string key, string data)
-        {
-            if (key == KMBombInfo.QUERYKEY_GET_BATTERIES)
-            {
-                return JsonConvert.SerializeObject((object)new Dictionary<string, int>()
-                {
-                    {
-                        "numbatteries", batt
-                    }
-                });
-            }
-            else return null;
-        }
-    }
-
-	public class TwoFactorWidget : Widget
-	{
-		private static int counter = 1;
-		public int instance;
-		public int code;
-		private float newcodetime;
-		public float timeremaining;
-
-		public static TwoFactorWidget CreateComponent(GameObject where, float newcode = 30)
-		{
-			TwoFactorWidget widget = where.AddComponent<TwoFactorWidget>();
-			widget.instance = counter++;
-
-			if (newcode < 30)
-				newcode = 30;
-			if (newcode > 999)
-				newcode = 999;
-
-			widget.newcodetime = newcode;
-			widget.timeremaining = newcode;
-			widget.code = Random.Range(0, 1000000);
-
-			Debug.LogFormat("Added Two factor widget #{0}: {1,6}.", widget.instance, widget.code);
-			return widget;
-		}
-
-		public override string GetResult(string key, string data)
-		{
-			if (key == "twofactor")
-			{
-				return JsonConvert.SerializeObject((object) new Dictionary<string, int>()
-				{
-					{
-						"twofactor_key", code
-					}
-				});
-			}
-			else return null;
-		}
-
-		private void FixedUpdate()
-		{
-			timeremaining -= Time.fixedDeltaTime;
-			if (timeremaining < 0)
-			{
-				timeremaining = newcodetime;
-				code = Random.Range(0, 1000000);
-				Debug.LogFormat("[Two Factor #{0}] code is now {1,6}.",instance,code);
-			}
-		}
-	}
-
-    public class CustomWidget : Widget
-    {
-
-	    public string key;
-	    public string data;
-
-        public static CustomWidget CreateComponent(GameObject where, string queryKey, string dataString)
-        {
-	        CustomWidget widget = where.AddComponent<CustomWidget>();
-	        widget.key = queryKey;
-            widget.data = dataString;
-
-            Debug.Log("Added custom widget (" + widget.key + "): " + widget.data);
-	        return widget;
-        }
-
-        public override string GetResult(string query, string passedData)
-        {
-            if (query == key)
-            {
-                return data;
-            }
-            else
-            {
-                return null;
-            }
-        }
-    }
-
-
     float startupTime = .5f;
 
     public delegate void LightsOn();
     public LightsOn ActivateLights;
 	public TimerModule timerModule;
 
-    void FixedUpdate()
+	public SerialNumber SerialNumberWidget;
+	public BatteryWidget BatteryWidget;
+	public PortWidget PortWidget;
+	public IndicatorWidget IndicatorWidget;
+	public TwoFactorWidget TwoFactorWidget;
+	public CustomWidget CustomWidget;
+
+	void FixedUpdate()
     {
         if (solved || exploded) return;
 	    if (timerModule == null) return;
@@ -363,9 +42,9 @@ public class FakeBombInfo : MonoBehaviour
                     if (m.OnActivate != null) m.OnActivate();
                 }
 
-	            foreach (KMWidget w in widgets)
+	            foreach (Widget w in widgets)
 	            {
-		            if (w.OnWidgetActivate != null) w.OnWidgetActivate();
+		            w.Activate();
 	            }
 
 	            timerModule.TimerRunning = true;
@@ -427,7 +106,7 @@ public class FakeBombInfo : MonoBehaviour
 
     public List<KeyValuePair<KMBombModule, bool>> modules = new List<KeyValuePair<KMBombModule, bool>>();
     public List<KMNeedyModule> needyModules = new List<KMNeedyModule>();
-	public List<KMWidget> widgets = new List<KMWidget>();
+	public List<Widget> widgets = new List<Widget>();
 
     public List<string> GetModuleNames()
     {
@@ -466,18 +145,11 @@ public class FakeBombInfo : MonoBehaviour
     public List<string> GetWidgetQueryResponses(string queryKey, string queryInfo)
     {
         List<string> responses = new List<string>();
-        foreach (Widget w in transform.Find("Edgework").GetComponents<Widget>())
+        foreach (Widget w in widgets)
         {
             string r = w.GetResult(queryKey, queryInfo);
             if (r != null) responses.Add(r);
         }
-
-	    foreach (KMWidget w in widgets)
-	    {
-		    if (w.OnQueryRequest == null) continue;
-		    string r = w.OnQueryRequest(queryKey, queryInfo);
-		    if (r != null) responses.Add(r);
-	    }
 
         return responses;
     }
@@ -540,13 +212,15 @@ public class FakeBombInfo : MonoBehaviour
     /// <param name="config"></param>
     public void SetupEdgework(EdgeworkConfiguration config)
     {
-	    GameObject edgework = transform.Find("Edgework").gameObject;
-	    List<Widget> widgetsResult = new List<Widget>();
+	    widgets = new List<Widget>();
 	    List<THWidget> RandomIndicators = new List<THWidget>();
 	    List<THWidget> RandomWidgets = new List<THWidget>();
 
-		widgetsResult.Add(SerialNumber.CreateComponent(edgework, config));
-	    serial = ((SerialNumber) widgetsResult[0]).serial;
+		widgets.Add(SerialNumber.CreateComponent(SerialNumberWidget, config));
+	    serial = ((SerialNumber) widgets[0]).serial;
+
+	    foreach (KMWidget widget in FindObjectsOfType<KMWidget>())
+		    widgets.Add(widget.gameObject.AddComponent<ModWidget>());
 
 		if (config == null) 
         {
@@ -554,9 +228,9 @@ public class FakeBombInfo : MonoBehaviour
             for (int a = 0; a < numWidgets; a++) 
             {
                 int r = Random.Range(0, 3);
-	            if (r == 0)  widgetsResult.Add(PortWidget.CreateComponent(edgework));
-	            else if (r == 1) widgetsResult.Add(IndicatorWidget.CreateComponent(edgework));
-	            else widgetsResult.Add(BatteryWidget.CreateComponent(edgework));
+	            if (r == 0)  widgets.Add(PortWidget.CreateComponent(PortWidget));
+	            else if (r == 1) widgets.Add(IndicatorWidget.CreateComponent(IndicatorWidget));
+	            else widgets.Add(BatteryWidget.CreateComponent(BatteryWidget));
 			}
         } 
         else
@@ -580,26 +254,26 @@ public class FakeBombInfo : MonoBehaviour
                             {
                                 if (widgetConfig.BatteryType == BatteryType.CUSTOM)
                                 {
-                                    widgetsResult.Add(BatteryWidget.CreateComponent(edgework, widgetConfig.BatteryCount));
+                                    widgets.Add(BatteryWidget.CreateComponent(BatteryWidget, widgetConfig.BatteryCount));
                                 } 
                                 else if (widgetConfig.BatteryType == BatteryType.RANDOM)
                                 {
-                                    widgetsResult.Add(BatteryWidget.CreateComponent(edgework, Random.Range(widgetConfig.MinBatteries, widgetConfig.MaxBatteries + 1)));
+                                    widgets.Add(BatteryWidget.CreateComponent(BatteryWidget, Random.Range(widgetConfig.MinBatteries, widgetConfig.MaxBatteries + 1)));
                                 }
                                 else
                                 {
-                                    widgetsResult.Add(BatteryWidget.CreateComponent(edgework, (int)widgetConfig.BatteryType));
+                                    widgets.Add(BatteryWidget.CreateComponent(BatteryWidget, (int)widgetConfig.BatteryType));
                                 }
                             }
                             break;
                         case WidgetType.INDICATOR:
                             if (widgetConfig.IndicatorLabel == IndicatorLabel.CUSTOM)
                             {
-                                widgetsResult.Add(IndicatorWidget.CreateComponent(edgework, widgetConfig.CustomLabel, widgetConfig.IndicatorState));
+                                widgets.Add(IndicatorWidget.CreateComponent(IndicatorWidget, widgetConfig.CustomLabel, widgetConfig.IndicatorState));
                             }
                             else
                             {
-                                widgetsResult.Add(IndicatorWidget.CreateComponent(edgework, widgetConfig.IndicatorLabel.ToString(), widgetConfig.IndicatorState));
+                                widgets.Add(IndicatorWidget.CreateComponent(IndicatorWidget, widgetConfig.IndicatorLabel.ToString(), widgetConfig.IndicatorState));
                             }
                             break;
                         case WidgetType.PORT_PLATE:
@@ -663,19 +337,19 @@ public class FakeBombInfo : MonoBehaviour
                                         if (Random.value > 0.5f) ports.Add(port);
                                     }
                                 }
-                                widgetsResult.Add(PortWidget.CreateComponent(edgework, ports));
+                                widgets.Add(PortWidget.CreateComponent(PortWidget, ports));
                             }
                             break;
 						case WidgetType.TWOFACTOR:
 							for (int i = 0; i < widgetConfig.Count; i++)
 							{
-								widgetsResult.Add(TwoFactorWidget.CreateComponent(edgework, widgetConfig.TwoFactorResetTime));
+								widgets.Add(TwoFactorWidget.CreateComponent(TwoFactorWidget, widgetConfig.TwoFactorResetTime));
 							}
 							break;
                         case WidgetType.CUSTOM:
                             for (int i = 0; i < widgetConfig.Count; i++)
                             {
-                                widgetsResult.Add(CustomWidget.CreateComponent(edgework, widgetConfig.CustomQueryKey, widgetConfig.CustomData));
+                                widgets.Add(CustomWidget.CreateComponent(CustomWidget, widgetConfig.CustomQueryKey, widgetConfig.CustomData));
                             }
                             break;
                     }
@@ -683,20 +357,20 @@ public class FakeBombInfo : MonoBehaviour
             }
             foreach (THWidget randIndWidget in RandomIndicators)
             {
-                widgetsResult.Add(IndicatorWidget.CreateComponent(edgework));
+                widgets.Add(IndicatorWidget.CreateComponent(IndicatorWidget));
             }
             foreach (THWidget randIndWidget in RandomWidgets)
             {
                 for (int i = 0; i < randIndWidget.Count; i++)
                 {
                     int r = Random.Range(0, 3);
-                    if (r == 0) widgetsResult.Add(BatteryWidget.CreateComponent(edgework));
-                    else if (r == 1) widgetsResult.Add(IndicatorWidget.CreateComponent(edgework));
-                    else widgetsResult.Add(PortWidget.CreateComponent(edgework));
+                    if (r == 0) widgets.Add(BatteryWidget.CreateComponent(BatteryWidget));
+                    else if (r == 1) widgets.Add(IndicatorWidget.CreateComponent(IndicatorWidget));
+                    else widgets.Add(PortWidget.CreateComponent(PortWidget));
                 }
             }
         }
-    }
+	}
 }
 
 public class TestHarness : MonoBehaviour
@@ -705,6 +379,13 @@ public class TestHarness : MonoBehaviour
 	public TimerModule TimerModulePrefab;
 	public Transform ModuleCoverPrefab;
 	public TwitchPlaysID TwitchIDPrefab;
+
+	public SerialNumber SerialNumberWidget;
+	public BatteryWidget BatteryWidget;
+	public PortWidget PortWidget;
+	public IndicatorWidget IndicatorWidget;
+	public TwoFactorWidget TwoFactorWidget;
+	public CustomWidget CustomWidget;
 
 	private FakeBombInfo fakeInfo;
 
@@ -748,7 +429,14 @@ public class TestHarness : MonoBehaviour
 		PrepareLights();
 
         fakeInfo = gameObject.AddComponent<FakeBombInfo>();
-        fakeInfo.SetupEdgework(EdgeworkConfiguration);
+	    fakeInfo.SerialNumberWidget = SerialNumberWidget;
+	    fakeInfo.BatteryWidget = BatteryWidget;
+	    fakeInfo.PortWidget = PortWidget;
+	    fakeInfo.IndicatorWidget = IndicatorWidget;
+	    fakeInfo.TwoFactorWidget = TwoFactorWidget;
+	    fakeInfo.CustomWidget = CustomWidget;
+
+		fakeInfo.SetupEdgework(EdgeworkConfiguration);
 
         fakeInfo.ActivateLights += delegate()
         {
@@ -800,13 +488,14 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, KMWidget[] widgets)
+	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, List<Widget> widgets)
 	{
 		Transform bombTransform;
 		List<Transform> timerSideModules = new List<Transform>();
 		List<Transform> modules = new List<Transform>();
 		List<List<Transform>> anchors = new List<List<Transform>>();
 		List<List<Transform>> timerAnchors = new List<List<Transform>>();
+		List<WidgetZone> widgetZones = new List<WidgetZone>();
 
 		timerSideModules.AddRange(bombModules.Where(x => x.RequiresTimerVisibility).Select(x => x.transform));
 		timerSideModules.AddRange(needyModules.Where(x => x.RequiresTimerVisibility).Select(x => x.transform));
@@ -846,6 +535,9 @@ public class TestHarness : MonoBehaviour
 				needyModules.Remove(module.GetComponent<KMNeedyModule>());
 				Destroy(module.gameObject);
 			}
+
+			widgetZones.AddRange(bomb.WidgetAreas.Select(WidgetZone.CreateZone));
+
 		}
 		else
 		{
@@ -877,6 +569,9 @@ public class TestHarness : MonoBehaviour
 					topwall.localEulerAngles = new Vector3(-180f + (180f * bombFace), 0f, 0f);
 					topwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
 					topwall.SetParent(bombFaceTransform, false);
+
+					widgetZones.Add(WidgetZone.CreateZone(rightwall.gameObject));
+					widgetZones.Add(WidgetZone.CreateZone(topwall.gameObject));
 
 					for (float j = (-squaresize / 2) + 0.1f; j < squaresize / 2; j += 0.2f)
 					{
@@ -985,8 +680,41 @@ public class TestHarness : MonoBehaviour
 			cover.gameObject.SetActive(true);
 		}
 
-		foreach (KMWidget widget in widgets)
-			widget.transform.SetParent(bombTransform, true);
+		SerialNumber sn = widgets.FirstOrDefault(x => x.GetType() == typeof(SerialNumber)) as SerialNumber;
+		if(sn == null) throw new Exception("Could not locate the serial number widget. Cannot continue");
+		widgets = widgets.Where(x => x.GetType() != typeof(SerialNumber)).OrderBy(x => Random.value).ToList();
+		widgets.Insert(0, sn);
+
+		for (int i = 0; i < widgets.Count; i++)
+		{
+			//do things with each widget in the pool.  (If one widget won't fit on the bomb, discard it.)
+			Widget widget = widgets[i];
+			WidgetZone zone = WidgetZone.GetZone(widgetZones, widget);
+			if (zone != null)
+			{
+				widgetZones.Remove(zone);
+				List<WidgetZone> subZones = WidgetZone.SubdivideZoneForWidget(zone, widget);
+				if (subZones != null)
+				{
+					zone = subZones[0];
+					subZones.Remove(zone);
+					widgetZones.AddRange(subZones);
+				}
+
+				widget.transform.rotation = zone.WorldRotation;
+				widget.transform.parent = zone.Parent.transform;
+				widget.transform.localPosition = zone.LocalPosition;
+				//widget.transform.parent = zone.Parent.transform.parent;
+				continue;
+			}
+			if (i == 0)
+				continue;
+
+			widgets.Remove(widget);
+			Destroy(widget);
+			i--;
+		}
+
 	}
 
     void Start()
@@ -997,12 +725,11 @@ public class TestHarness : MonoBehaviour
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
             foreach (FieldInfo f in fields)
             {
-                if (f.FieldType.Equals(typeof(KMBombInfo)))
-                {
-                    KMBombInfo component = (KMBombInfo) f.GetValue(s);
-                    fakeInfo.Detonate += delegate { if (component.OnBombExploded != null) component.OnBombExploded(); };
-                    fakeInfo.HandleSolved += delegate { if (component.OnBombSolved != null) component.OnBombSolved(); };
-                }
+	            if (f.FieldType != typeof(KMBombInfo)) continue;
+
+	            KMBombInfo component = (KMBombInfo) f.GetValue(s);
+	            fakeInfo.Detonate += delegate { if (component.OnBombExploded != null) component.OnBombExploded(); };
+	            fakeInfo.HandleSolved += delegate { if (component.OnBombSolved != null) component.OnBombSolved(); };
             }
         }
 
@@ -1010,12 +737,10 @@ public class TestHarness : MonoBehaviour
 
 		List<KMBombModule> modules = FindObjectsOfType<KMBombModule>().ToList();
         List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
-	    KMWidget[] widgets = FindObjectsOfType<KMWidget>();
-	    PrepareBomb(modules, needyModules, widgets);
+	    PrepareBomb(modules, needyModules, fakeInfo.widgets);
 
 	    fakeInfo.timerModule = _timer;
         fakeInfo.needyModules = needyModules.ToList();
-	    fakeInfo.widgets = widgets.ToList();
         currentSelectable.Children = new TestSelectable[modules.Count + needyModules.Count];
         currentSelectable.ChildRowLength = currentSelectable.Children.Length;
         for (int i = 0; i < modules.Count; i++)
@@ -1444,3 +1169,4 @@ public class TestHarness : MonoBehaviour
         testLight.enabled = false;
     }
 }
+
