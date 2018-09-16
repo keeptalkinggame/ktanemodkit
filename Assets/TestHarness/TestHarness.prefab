@@ -99,6 +99,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e42de117a0e0fee45a734471e2694817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  StatusLightPrefab: {fileID: 114000010745654140, guid: 6565c8153fb4f3f4eaafc1381b3d6c79,
+    type: 2}
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
   AudioClips: []
   EdgeworkConfiguration: {fileID: 0}

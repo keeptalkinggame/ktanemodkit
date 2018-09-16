@@ -684,7 +684,9 @@ public class FakeBombInfo : MonoBehaviour
 
 public class TestHarness : MonoBehaviour
 {
-    private FakeBombInfo fakeInfo;
+	public StatusLight StatusLightPrefab;
+
+	private FakeBombInfo fakeInfo;
 
     public GameObject HighlightPrefab;
     TestSelectable currentSelectable;
@@ -785,6 +787,13 @@ public class TestHarness : MonoBehaviour
         {
             KMBombModule mod = modules[i];
 
+            KMStatusLightParent statuslightparent = modules[i].GetComponentInChildren<KMStatusLightParent>();
+            var statuslight = Instantiate<StatusLight>(StatusLightPrefab);
+	        statuslight.transform.SetParent(statuslightparent.transform, false);
+            statuslight.transform.localPosition = Vector3.zero;
+            statuslight.transform.localScale = Vector3.one;
+            statuslight.transform.localRotation = Quaternion.identity;
+            statuslight.SetInActive();
             TestSelectable testSelectable = modules[i].GetComponent<TestSelectable>();
             currentSelectable.Children[i] = testSelectable;
             testSelectable.Parent = currentSelectable;
@@ -794,6 +803,8 @@ public class TestHarness : MonoBehaviour
             modules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
+                statuslight.SetPass();
+
                 fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
                 fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
                 bool allSolved = true;
@@ -811,6 +822,7 @@ public class TestHarness : MonoBehaviour
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
+                statuslight.FlashStrike();
                 fakeInfo.HandleStrike();
                 return false;
             };
