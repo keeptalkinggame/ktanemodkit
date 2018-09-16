@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
 using EdgeworkConfigurator;
+using Random = UnityEngine.Random;
 
 public class FakeBombInfo : MonoBehaviour
 {
@@ -340,10 +342,12 @@ public class FakeBombInfo : MonoBehaviour
 
     public delegate void LightsOn();
     public LightsOn ActivateLights;
+	public TimerModule timerModule;
 
     void FixedUpdate()
     {
-        if (solved) return;
+        if (solved || exploded) return;
+	    if (timerModule == null) return;
         if (startupTime > 0)
         {
             startupTime -= Time.fixedDeltaTime;
@@ -363,18 +367,26 @@ public class FakeBombInfo : MonoBehaviour
 	            {
 		            if (w.OnWidgetActivate != null) w.OnWidgetActivate();
 	            }
+
+	            timerModule.TimerRunning = true;
             }
         }
         else
         {
-            timeLeft -= Time.fixedDeltaTime;
-            if (timeLeft < 0) timeLeft = 0;
+	        timeLeft = timerModule.TimeRemaining;
+	        if (timerModule.ExplodedToTime)
+	        {
+		        exploded = true;
+		        if (Detonate != null) Detonate();
+		        Debug.Log("KABOOM!");
+	        }
         }
     }
 
     public const int numStrikes = 3;
 
     public bool solved;
+	public bool exploded;
     public float timeLeft = 600f;
     public int strikes = 0;
     public string serial;
@@ -392,8 +404,8 @@ public class FakeBombInfo : MonoBehaviour
             if (timeLeft < 10) time += "0";
             time += (int)timeLeft;
             time += ".";
-            int s = (int)(timeLeft * 100);
-            if (s < 10) time += "0";
+			int s = ((int)(timeLeft * 100)) % 100;
+			if (s < 10) time += "0";
             time += s;
         }
         else
@@ -478,9 +490,12 @@ public class FakeBombInfo : MonoBehaviour
     public void HandleStrike()
     {
         strikes++;
+	    timerModule.StrikeCount++;
         Debug.Log(strikes + "/" + numStrikes);
         if (strikes == numStrikes)
         {
+	        exploded = true;
+	        timerModule.TimerRunning = false;
             if (Detonate != null) Detonate();
             Debug.Log("KABOOM!");
         }
@@ -500,7 +515,9 @@ public class FakeBombInfo : MonoBehaviour
 
     public void Solved()
     {
+	    if (exploded) return;
         solved = true;
+	    timerModule.TimerRunning = false;
         if (HandleSolved != null) HandleSolved();
         Debug.Log("Bomb defused!");
     }
@@ -685,6 +702,7 @@ public class FakeBombInfo : MonoBehaviour
 public class TestHarness : MonoBehaviour
 {
 	public StatusLight StatusLightPrefab;
+	public TimerModule TimerModulePrefab;
 
 	private FakeBombInfo fakeInfo;
 
@@ -700,9 +718,31 @@ public class TestHarness : MonoBehaviour
 
     public EdgeworkConfiguration EdgeworkConfiguration;
 
-    void Awake()
+	public float turnSpeed = 128.0f;      // Speed of camera turning when mouse moves in along an axis
+	public float panSpeed = 4.0f;       // Speed of the camera when being panned
+	public float zoomSpeed = 16.0f;      // Speed of the camera going back and forth
+
+	private Vector3 mouseOrigin;    // Position of cursor when mouse dragging starts
+	private bool isPanning;     // Is the camera being panned?
+	private bool isRotating;    // Is the camera being rotated?
+	private bool isZooming;     // Is the camera zooming?
+	private float mouseDownTIme;
+
+	private Transform _camera;
+	private Transform _bomb;
+
+	private TimerModule _timer;
+
+	void Awake()
     {
-        PrepareLights();
+	    _camera = Camera.main.transform;
+	    _camera.localPosition = new Vector3(0, 0.7f, 0);
+	    _camera.localEulerAngles = new Vector3(90, 0, 0);
+	    _camera.localScale = Vector3.one;
+	    Camera.main.nearClipPlane = 0.01f;
+	    Camera.main.farClipPlane = 3.0f;
+
+		PrepareLights();
 
         fakeInfo = gameObject.AddComponent<FakeBombInfo>();
         fakeInfo.SetupEdgework(EdgeworkConfiguration);
@@ -757,6 +797,153 @@ public class TestHarness : MonoBehaviour
         }
     }
 
+	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, KMWidget[] widgets)
+	{
+		Transform bombTransform;
+		List<Transform> timerSideModules = new List<Transform>();
+		List<Transform> modules = new List<Transform>();
+		List<List<Transform>> anchors = new List<List<Transform>>();
+		List<List<Transform>> timerAnchors = new List<List<Transform>>();
+
+		timerSideModules.AddRange(bombModules.Where(x => x.RequiresTimerVisibility).Select(x => x.transform));
+		timerSideModules.AddRange(needyModules.Where(x => x.RequiresTimerVisibility).Select(x => x.transform));
+
+		modules.AddRange(bombModules.Where(x => !x.RequiresTimerVisibility).Select(x => x.transform));
+		modules.AddRange(needyModules.Where(x => !x.RequiresTimerVisibility).Select(x => x.transform));
+
+		KMBomb bomb = FindObjectOfType<KMBomb>();
+		if (bomb != null)
+		{
+			bombTransform = bomb.transform;
+			foreach (KMBombFace face in bomb.Faces)
+			{
+				anchors.Add(face.Anchors);
+				if (face.TimerAnchors.Count > 0)
+					timerAnchors.Add(face.TimerAnchors);
+				else
+					timerAnchors.Add(face.Anchors);
+			}
+			while ((modules.Count + timerSideModules.Count + 1) > anchors.SelectMany(x => x).ToList().Count)
+			{
+				Transform module;
+				if (Random.value < 0.5f)
+				{
+					if (timerSideModules.Count == 0) continue;
+					module = timerSideModules[Random.Range(0, timerSideModules.Capacity)];
+					timerSideModules.Remove(module);
+				}
+				else
+				{
+					if (modules.Count == 0) continue;
+					module = modules[Random.Range(0, modules.Count)];
+					modules.Remove(module);
+				}
+
+				bombModules.Remove(module.GetComponent<KMBombModule>());
+				needyModules.Remove(module.GetComponent<KMNeedyModule>());
+				Destroy(module.gameObject);
+			}
+		}
+		else
+		{
+			bombTransform = new GameObject().transform;
+			bombTransform.gameObject.AddComponent<KMBomb>();
+			bombTransform.name = "Bomb";
+
+			int square = 1;
+			while ((square * square * 2) < (modules.Count + timerSideModules.Count + 1))
+				square++;
+			float squaresize = 0.2f * square;
+			for (int bombFace = 0; bombFace < 2; bombFace++)
+			{
+				Transform bombFaceTransform = new GameObject().transform;
+				
+				anchors.Add(new List<Transform>());
+				timerAnchors.Add(new List<Transform>());
+
+				for (float i = (-squaresize / 2) + 0.1f; i < squaresize / 2; i += 0.2f)
+				{
+					Transform rightwall = GameObject.CreatePrimitive(PrimitiveType.Quad).transform;
+					rightwall.localPosition = new Vector3((squaresize / 2), -0.1f, i);
+					rightwall.localEulerAngles = new Vector3(-180f, 90f, 0f);
+					rightwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+					rightwall.SetParent(bombFaceTransform, false);
+
+					Transform topwall = GameObject.CreatePrimitive(PrimitiveType.Quad).transform;
+					topwall.localPosition = new Vector3(i, -0.1f, (squaresize / 2) - (squaresize * bombFace));
+					topwall.localEulerAngles = new Vector3(-180f + (180f * bombFace), 0f, 0f);
+					topwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+					topwall.SetParent(bombFaceTransform, false);
+
+					for (float j = (-squaresize / 2) + 0.1f; j < squaresize / 2; j += 0.2f)
+					{
+						Transform anchor = new GameObject().transform;
+						anchor.localPosition = new Vector3(i, 0, j);
+						anchor.SetParent(bombFaceTransform, true);
+						anchors[bombFace].Add(anchor);
+						timerAnchors[bombFace].Add(anchor);
+					}
+				}
+
+				bombFaceTransform.localPosition = new Vector3(0, (bombFace * 0.2f) - 0.1f, 0);
+				bombFaceTransform.localEulerAngles = new Vector3(0, 0, 180f - (bombFace * 180f));
+				bombFaceTransform.SetParent(bombTransform, true);
+			}
+		}
+		_bomb = bombTransform;
+
+		for (int i = 0; i < anchors.Count; i++)
+			anchors[i] = anchors[i].OrderBy(x => Random.value).ToList();
+
+		int timerFace = Random.Range(0, timerAnchors.Count);
+
+		Transform timerAnchor = timerAnchors[timerFace][Random.Range(0, timerAnchors[timerFace].Count)];
+		anchors[timerFace].Remove(timerAnchor);
+		_timer = Instantiate(TimerModulePrefab);
+		_timer.transform.localPosition = Vector3.zero;
+		_timer.transform.localRotation = Quaternion.identity;
+		_timer.transform.localScale = Vector3.one;
+		_timer.transform.SetParent(timerAnchor, false);
+		_timer.gameObject.SetActive(true);
+		fakeInfo.timerModule = _timer;
+
+		foreach (Transform module in timerSideModules)
+		{
+			module.localPosition = Vector3.zero;
+			module.localRotation = Quaternion.identity;
+			module.localScale = Vector3.one;
+			Transform anchor = anchors[timerFace].FirstOrDefault();
+			while (anchor == null)
+			{
+				anchors.Remove(anchors[timerFace]);
+				timerFace = Random.Range(0, anchors.Count);
+				anchor = anchors[timerFace].FirstOrDefault();
+			}
+			anchors[timerFace].Remove(anchor);
+			module.SetParent(anchor, false);
+		}
+
+		foreach (Transform module in modules)
+		{
+			module.localPosition = Vector3.zero;
+			module.localRotation = Quaternion.identity;
+			module.localScale = Vector3.one;
+			timerFace = Random.Range(0, anchors.Count);
+			Transform anchor = anchors[timerFace].FirstOrDefault();
+			while (anchor == null)
+			{
+				anchors.Remove(anchors[timerFace]);
+				timerFace = Random.Range(0, anchors.Count);
+				anchor = anchors[timerFace].FirstOrDefault();
+			}
+			anchors[timerFace].Remove(anchor);
+			module.SetParent(anchor, false);
+		}
+
+		foreach (KMWidget widget in widgets)
+			widget.transform.SetParent(bombTransform, true);
+	}
+
     void Start()
     {
         MonoBehaviour[] scripts = MonoBehaviour.FindObjectsOfType<MonoBehaviour>();
@@ -776,14 +963,17 @@ public class TestHarness : MonoBehaviour
 
         currentSelectable = GetComponent<TestSelectable>();
 
-        KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
-        KMNeedyModule[] needyModules = FindObjectsOfType<KMNeedyModule>();
+		List<KMBombModule> modules = FindObjectsOfType<KMBombModule>().ToList();
+        List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
 	    KMWidget[] widgets = FindObjectsOfType<KMWidget>();
+	    PrepareBomb(modules, needyModules, widgets);
+
+	    fakeInfo.timerModule = _timer;
         fakeInfo.needyModules = needyModules.ToList();
-        currentSelectable.Children = new TestSelectable[modules.Length + needyModules.Length];
 	    fakeInfo.widgets = widgets.ToList();
+        currentSelectable.Children = new TestSelectable[modules.Count + needyModules.Count];
         currentSelectable.ChildRowLength = currentSelectable.Children.Length;
-        for (int i = 0; i < modules.Length; i++)
+        for (int i = 0; i < modules.Count; i++)
         {
             KMBombModule mod = modules[i];
 
@@ -828,12 +1018,12 @@ public class TestHarness : MonoBehaviour
             };
         }
 
-        for (int i = 0; i < needyModules.Length; i++)
+        for (int i = 0; i < needyModules.Count; i++)
         {
             TestSelectable testSelectable = needyModules[i].GetComponent<TestSelectable>();
-            currentSelectable.Children[modules.Length + i] = testSelectable;
+            currentSelectable.Children[modules.Count + i] = testSelectable;
             testSelectable.Parent = currentSelectable;
-            testSelectable.x = modules.Length + i;
+            testSelectable.x = modules.Count + i;
 
             needyModules[i].OnPass = delegate ()
             {
@@ -873,7 +1063,67 @@ public class TestHarness : MonoBehaviour
 
     void Update()
     {
-        if (!gamepadEnabled)
+	    mouseDownTIme += Time.deltaTime;
+		//Camera/bomb control
+		// Get the left mouse button
+		if (Input.GetMouseButtonDown(1))
+		{
+			// Get mouse origin
+			mouseOrigin = Input.mousePosition;
+			isRotating = true;
+		}
+
+		// Get the right mouse button
+		if (Input.GetMouseButtonDown(2))
+		{
+			// Get mouse origin
+			mouseOrigin = Input.mousePosition;
+			isPanning = true;
+		}
+
+		// Disable movements on button release
+		if (!Input.GetMouseButton(1)) isRotating = false;
+		if (!Input.GetMouseButton(2)) isPanning = false;
+
+		// Rotate camera along X and Y axis
+		if (isRotating)
+		{
+			Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
+			var speed = pos.y * turnSpeed;
+
+			if (speed < 0 && _bomb.localEulerAngles.x > 180 && (_bomb.localEulerAngles.x + speed) < 270.5f)
+				speed = 270.5f - _bomb.localEulerAngles.x;
+			else if (speed > 0 && _bomb.localEulerAngles.x < 180 && (_bomb.localEulerAngles.x + speed) > 89.5f)
+				speed = 89.5f - _bomb.localEulerAngles.x;
+
+			//_bomb.RotateAround(_bomb.position, _bomb.right, pos.y * turnSpeed);
+			//_bomb.RotateAround(_bomb.position, Vector3.forward, pos.x * turnSpeed);
+			_bomb.localEulerAngles += new Vector3(speed, 0, -pos.x * turnSpeed * 2);
+			_bomb.localEulerAngles = new Vector3(_bomb.localEulerAngles.x, 0, _bomb.localEulerAngles.z);
+
+			mouseOrigin = Input.mousePosition;
+		}
+
+		// Move the camera on it's XY plane
+		if (isPanning)
+		{
+			Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
+
+			Vector3 move = new Vector3(pos.x * -panSpeed, pos.y * -panSpeed, 0);
+			_camera.Translate(move, Space.Self);
+			mouseOrigin = Input.mousePosition;
+		}
+
+		float mouseWheel = Input.GetAxis("Mouse ScrollWheel");
+		if (mouseWheel != 0)
+		{
+			Vector3 move = mouseWheel * zoomSpeed * _camera.forward;
+			Debug.LogFormat("X:{0} Y:{1} Z:{2}", move.x, move.y, move.z);
+			//_camera.Translate(move, Space.World);
+			Camera.main.fieldOfView += (-mouseWheel * zoomSpeed);
+		}
+
+		if (!gamepadEnabled)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Debug.DrawRay(ray.origin, ray.direction);
