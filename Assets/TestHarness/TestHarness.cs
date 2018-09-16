@@ -254,6 +254,58 @@ public class FakeBombInfo : MonoBehaviour
         }
     }
 
+	public class TwoFactorWidget : Widget
+	{
+		private static int counter = 1;
+		public int instance;
+		public int code;
+		private float newcodetime;
+		public float timeremaining;
+
+		public static TwoFactorWidget CreateComponent(GameObject where, float newcode = 30)
+		{
+			TwoFactorWidget widget = where.AddComponent<TwoFactorWidget>();
+			widget.instance = counter++;
+
+			if (newcode < 30)
+				newcode = 30;
+			if (newcode > 999)
+				newcode = 999;
+
+			widget.newcodetime = newcode;
+			widget.timeremaining = newcode;
+			widget.code = Random.Range(0, 1000000);
+
+			Debug.LogFormat("Added Two factor widget #{0}: {1,6}.", widget.instance, widget.code);
+			return widget;
+		}
+
+		public override string GetResult(string key, string data)
+		{
+			if (key == "twofactor")
+			{
+				return JsonConvert.SerializeObject((object) new Dictionary<string, int>()
+				{
+					{
+						"twofactor_key", code
+					}
+				});
+			}
+			else return null;
+		}
+
+		private void FixedUpdate()
+		{
+			timeremaining -= Time.fixedDeltaTime;
+			if (timeremaining < 0)
+			{
+				timeremaining = newcodetime;
+				code = Random.Range(0, 1000000);
+				Debug.LogFormat("[Two Factor #{0}] code is now {1,6}.",instance,code);
+			}
+		}
+	}
+
     public class CustomWidget : Widget
     {
 
@@ -597,6 +649,12 @@ public class FakeBombInfo : MonoBehaviour
                                 widgetsResult.Add(PortWidget.CreateComponent(edgework, ports));
                             }
                             break;
+						case WidgetType.TWOFACTOR:
+							for (int i = 0; i < widgetConfig.Count; i++)
+							{
+								widgetsResult.Add(TwoFactorWidget.CreateComponent(edgework, widgetConfig.TwoFactorResetTime));
+							}
+							break;
                         case WidgetType.CUSTOM:
                             for (int i = 0; i < widgetConfig.Count; i++)
                             {

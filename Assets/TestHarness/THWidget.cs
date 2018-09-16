@@ -34,6 +34,9 @@
         public string CustomLabel;
         public IndicatorState IndicatorState;
 
+		// TwoFactor
+	    public int TwoFactorResetTime;
+
         // Custom
         public string CustomQueryKey;
         public string CustomData;

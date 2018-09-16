@@ -185,6 +185,10 @@ namespace EdgeworkConfigurator
 					}
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomPorts"), true);
                     break;
+				case WidgetType.TWOFACTOR:
+					EditorGUI.indentLevel++;
+					EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("TwoFactorResetTime"));
+					break;
                 case WidgetType.RANDOM: //Random Widget
                     EditorGUI.indentLevel++;
                     break;
