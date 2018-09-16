@@ -164,7 +164,25 @@ namespace EdgeworkConfigurator
                         EditorGUILayout.EndVertical();
 
                         EditorGUILayout.EndHorizontal();
-                    }
+	                    EditorGUILayout.Space();
+						EditorGUILayout.BeginHorizontal();
+
+	                    EditorGUILayout.BeginVertical();
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("ComponentVideoPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CompositeVideoPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("HDMIPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("VGAPort"));
+						EditorGUILayout.EndVertical();
+
+	                    EditorGUILayout.BeginVertical();
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("USBPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("ACPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("PCMCIAPort"));
+						EditorGUILayout.EndVertical();
+
+						EditorGUILayout.EndHorizontal();
+
+					}
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomPorts"), true);
                     break;
                 case WidgetType.RANDOM: //Random Widget

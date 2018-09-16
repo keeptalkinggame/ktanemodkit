@@ -545,6 +545,13 @@ public class FakeBombInfo : MonoBehaviour
                                     if (widgetConfig.StereoRCAPort) ports.Add("StereoRCA");
                                     if (widgetConfig.ParallelPort) ports.Add("Parallel");
                                     if (widgetConfig.SerialPort) ports.Add("Serial");
+									if (widgetConfig.ComponentVideoPort) ports.Add("ComponentVideo");
+									if (widgetConfig.CompositeVideoPort) ports.Add("CompositeVideo");
+									if (widgetConfig.HDMIPort) ports.Add("HDMI");
+									if (widgetConfig.VGAPort) ports.Add("VGA");
+									if (widgetConfig.USBPort) ports.Add("USB");
+									if (widgetConfig.PCMCIAPort) ports.Add("PCMCIA");
+									if (widgetConfig.ACPort) ports.Add("AC");
                                     ports.AddRange(widgetConfig.CustomPorts);
                                 }
                                 else if (widgetConfig.PortPlateType == PortPlateType.RANDOM_ANY)
@@ -555,7 +562,15 @@ public class FakeBombInfo : MonoBehaviour
                                     if (Random.value > 0.5f) ports.Add("StereoRCA");
                                     if (Random.value > 0.5f) ports.Add("Parallel");
                                     if (Random.value > 0.5f) ports.Add("Serial");
-                                    foreach (string port in widgetConfig.CustomPorts)
+									if (Random.value > 0.5f) ports.Add("ComponentVideo");
+	                                if (Random.value > 0.5f) ports.Add("CompositeVideo");
+	                                if (Random.value > 0.5f) ports.Add("HDMI");
+	                                if (Random.value > 0.5f) ports.Add("VGA");
+	                                if (Random.value > 0.5f) ports.Add("USB");
+	                                if (Random.value > 0.5f) ports.Add("PCMCIA");
+	                                if (Random.value > 0.5f) ports.Add("AC");
+
+									foreach (string port in widgetConfig.CustomPorts)
                                     {
                                         if (Random.value > 0.5f) ports.Add(port);
                                     }
