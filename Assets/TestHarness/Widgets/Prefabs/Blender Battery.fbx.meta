@@ -1,0 +1,118 @@
+fileFormatVersion: 2
+guid: d9cdfc5597b6f3e4fb521b58bfcc4387
+timeCreated: 1500299632
+licenseType: Pro
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Camera
+    100004: High_Poly_9_Volt
+    100006: High_Poly_Round
+    100008: High_Poly_Round_001
+    100010: Lamp
+    100012: Lamp_001
+    100014: Lamp_002
+    100016: Low_Poly_9_Volt
+    100018: Low_Poly_Round_
+    100020: Low_Poly_Round__001
+    100022: Plane
+    400000: //RootNode
+    400002: Camera
+    400004: High_Poly_9_Volt
+    400006: High_Poly_Round
+    400008: High_Poly_Round_001
+    400010: Lamp
+    400012: Lamp_001
+    400014: Lamp_002
+    400016: Low_Poly_9_Volt
+    400018: Low_Poly_Round_
+    400020: Low_Poly_Round__001
+    400022: Plane
+    2300000: High_Poly_9_Volt
+    2300002: High_Poly_Round
+    2300004: High_Poly_Round_001
+    2300006: Low_Poly_9_Volt
+    2300008: Low_Poly_Round_
+    2300010: Low_Poly_Round__001
+    2300012: Plane
+    3300000: High_Poly_9_Volt
+    3300002: High_Poly_Round
+    3300004: High_Poly_Round_001
+    3300006: Low_Poly_9_Volt
+    3300008: Low_Poly_Round_
+    3300010: Low_Poly_Round__001
+    3300012: Plane
+    4300000: High_Poly_Round_001
+    4300002: Low_Poly_Round__001
+    4300004: Plane
+    4300006: Low_Poly_9_Volt
+    4300008: Low_Poly_Round_
+    4300010: High_Poly_Round
+    4300012: High_Poly_9_Volt
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

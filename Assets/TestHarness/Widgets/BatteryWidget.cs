@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ public class BatteryWidget : Widget
 {
 	public int batt;
 	public TextMesh BatteryTextMesh;
+	public Transform[] BatteryHolders;
+	public Transform[] BatterySets;
 
 	public static BatteryWidget CreateComponent(BatteryWidget where, int battCount = -1)
 	{
@@ -19,20 +22,28 @@ public class BatteryWidget : Widget
 			widget.batt = battCount;
 		}
 
+		widget.BatteryTextMesh.transform.parent.gameObject.SetActive(false);
+		foreach(Transform t in widget.BatteryHolders)
+			t.gameObject.SetActive(false);
+		foreach (Transform t in widget.BatterySets)
+			t.gameObject.SetActive(false);
+		foreach(Transform t in widget.BatterySets.SelectMany(x => x.GetComponentsInChildren<MeshRenderer>()).Select(x => x.transform))
+			t.localEulerAngles = new Vector3(t.localEulerAngles.x, t.localEulerAngles.y, Random.Range(0, 360f));
+
 		switch (widget.batt)
 		{
 			case 0:
-				widget.BatteryTextMesh.text = "NONE";
+				widget.BatteryHolders[Random.Range(0, widget.BatteryHolders.Length)].gameObject.SetActive(true);
 				break;
 			case 1:
-				widget.BatteryTextMesh.text = "1 D Cell";
-				break;
 			case 2:
 			case 3:
 			case 4:
-				widget.BatteryTextMesh.text = widget.batt + " AA Cells";
+				widget.BatteryHolders[widget.batt - 1].gameObject.SetActive(true);
+				widget.BatterySets[widget.batt - 1].gameObject.SetActive(true);
 				break;
 			default:
+				widget.BatteryTextMesh.transform.parent.gameObject.SetActive(true);
 				widget.BatteryTextMesh.text = widget.batt + " Cells";
 				break;
 		}

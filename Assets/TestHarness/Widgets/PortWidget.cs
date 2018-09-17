@@ -5,8 +5,12 @@ using UnityEngine;
 public class PortWidget : Widget
 {
 	public List<string> ports;
-	public Transform PortsTransform;
+
+	public Transform TextPortsTransform;
 	public TextMesh OtherPortsTextMesh;
+
+	public Transform GraphicPortsTransform;
+	public Transform GraphicPortsFillerTransform;
 
 	public static PortWidget CreateComponent(PortWidget where, List<string> portNames = null)
 	{
@@ -64,19 +68,42 @@ public class PortWidget : Widget
 		if (portList.Length == 0) portList = "Empty plate";
 
 		
-		foreach (Transform t in widget.PortsTransform.GetComponentsInChildren<Transform>())
+		foreach (Transform t in widget.TextPortsTransform.GetComponentsInChildren<Transform>(true))
 		{
-			if (t == widget.PortsTransform) continue;
+			if (t.parent != widget.TextPortsTransform) continue;
 			t.gameObject.SetActive(false);
 		}
 
+		foreach (Transform t in widget.GraphicPortsTransform.GetComponentsInChildren<Transform>(true))
+		{
+			if (t.parent != widget.GraphicPortsTransform) continue;
+			t.gameObject.SetActive(false);
+		}
+
+		foreach (Transform t in widget.GraphicPortsFillerTransform.GetComponentsInChildren<Transform>(true))
+		{
+			if (t.parent != widget.GraphicPortsFillerTransform) continue;
+			t.gameObject.SetActive(true);
+		}
+
+		
 		List<string> otherPorts = new List<string>();
 		foreach (string port in widget.ports)
 		{
-			Transform p = widget.PortsTransform.Find(port);
+			Transform p = widget.TextPortsTransform.Find(port);
 			if (p != null) p.gameObject.SetActive(true);
 			else otherPorts.Add(port);
+
+			p = widget.GraphicPortsTransform.Find(port);
+			if (p != null) p.gameObject.SetActive(true);
+
+			p = widget.GraphicPortsFillerTransform.Find(port);
+			if (p != null) p.gameObject.SetActive(false);
 		}
+
+		widget.TextPortsTransform.parent.gameObject.SetActive(otherPorts.Count != 0);
+		widget.GraphicPortsTransform.parent.gameObject.SetActive(otherPorts.Count == 0);
+
 		widget.OtherPortsTextMesh.text = string.Join(", ", otherPorts.ToArray());
 
 		Debug.Log("Added port widget: " + portList);

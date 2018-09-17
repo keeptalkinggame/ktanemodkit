@@ -12,6 +12,14 @@ public class TwoFactorWidget : Widget
 
 	public TextMesh TwoFactorTextMesh;
 	public TextMesh TimeRemainingTextMesh;
+	public MeshRenderer TwoFactorDisplay;
+
+	private AudioSource _source;
+
+	private void Awake()
+	{
+		_source = transform.GetComponent<AudioSource>();
+	}
 
 	public static TwoFactorWidget CreateComponent(TwoFactorWidget where, float newcode = 30)
 	{
@@ -34,6 +42,7 @@ public class TwoFactorWidget : Widget
 	public override void Activate()
 	{
 		timeremaining = newcodetime;
+		TwoFactorTextMesh.text = string.Format("{0,6}.", code);
 		base.Activate();
 	}
 
@@ -53,16 +62,30 @@ public class TwoFactorWidget : Widget
 
 	private void FixedUpdate()
 	{
+		const float fadeToRedTime = 10.0f;
+
 		timeremaining -= Time.fixedDeltaTime;
+
+		if (timeremaining < 10 && timeremaining >= 0)
+		{
+			var colorChange = timeremaining / fadeToRedTime;
+
+			var redDiff = 127f - (108f * colorChange);
+			var greenDiff = 255f * colorChange;
+			TwoFactorDisplay.material.color = new Color(redDiff / 255, greenDiff / 255, 0f / 255);
+		}
+
 		if (timeremaining < 0)
 		{
 			timeremaining = newcodetime;
 			code = Random.Range(0, 1000000);
 			Debug.LogFormat("[Two Factor #{0}] code is now {1,6}.", instance, code);
+			_source.PlayOneShot(_source.clip);
+			TwoFactorDisplay.material.color = new Color(19f / 255, 255f / 255, 0f / 255);
+			TwoFactorTextMesh.text = string.Format("{0,6}.", code);
 		}
-
-		TwoFactorTextMesh.text = string.Format("{0:######}.", code);
-		TimeRemainingTextMesh.text = string.Format("{0:###.0}", timeremaining);
+		
+		TimeRemainingTextMesh.text = string.Format("{0,3}", (int)timeremaining);
 
 	}
 }

@@ -17,6 +17,8 @@ public class IndicatorWidget : Widget
 	public bool On;
 
 	public TextMesh IndicatorTextMesh;
+	public Transform LightOnTransform;
+	public Transform LightOffTransform;
 
 	public static IndicatorWidget CreateComponent(IndicatorWidget where, string label = null, IndicatorState state = IndicatorState.RANDOM)
 	{
@@ -49,7 +51,10 @@ public class IndicatorWidget : Widget
 			widget.On = state == IndicatorState.ON ? true : false;
 		}
 
-		widget.IndicatorTextMesh.text = (widget.On ? "LIT " : "UNLIT ") + widget.Val;
+		widget.LightOnTransform.gameObject.SetActive(widget.On);
+		widget.LightOffTransform.gameObject.SetActive(!widget.On);
+
+		widget.IndicatorTextMesh.text = widget.Val;
 
 		Debug.Log("Added indicator widget: " + widget.Val + " is " + (widget.On ? "ON" : "OFF"));
 		return widget;

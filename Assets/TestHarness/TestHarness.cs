@@ -737,7 +737,7 @@ public class TestHarness : MonoBehaviour
 				continue;
 
 			widgets.Remove(widget);
-			Destroy(widget);
+			Destroy(widget.gameObject);
 			i--;
 		}
 
@@ -842,11 +842,12 @@ public class TestHarness : MonoBehaviour
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
         }
+		
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
     {
-        AudioClip clip = AudioClips == null ? null : AudioClips.Where(a => a.name == clipName).FirstOrDefault();
+        AudioClip clip = AudioClips == null ? null : AudioClips.FirstOrDefault(a => a.name == clipName);
 
         if (clip != null)
         {
