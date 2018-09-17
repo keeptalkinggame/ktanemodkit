@@ -607,10 +607,11 @@ public class TestHarness : MonoBehaviour
 
 			for (int i = 0; i < square; i++)
 			{
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(0, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Bottom Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, 0), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Lef Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, 0), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Right Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(0, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Top Widget Area {0}", i)));
+				float offset = (i * 0.2f) - (squaresize / 2) + 0.1f;
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(offset, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Bottom Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Lef Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Right Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(offset, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Top Widget Area {0}", i)));
 			}
 		}
 		_bomb = bombTransform;
@@ -729,7 +730,7 @@ public class TestHarness : MonoBehaviour
 				widget.transform.rotation = zone.WorldRotation;
 				widget.transform.parent = zone.Parent.transform;
 				widget.transform.localPosition = zone.LocalPosition;
-				//widget.transform.parent = zone.Parent.transform.parent;
+				widget.transform.parent = bombTransform;
 				continue;
 			}
 			if (i == 0)
