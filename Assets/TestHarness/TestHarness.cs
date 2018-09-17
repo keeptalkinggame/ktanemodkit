@@ -839,7 +839,8 @@ public class TestHarness : MonoBehaviour
 
         currentSelectable.ActivateChildSelectableAreas();
 
-        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource = new GameObject().AddComponent<AudioSource>();
+	    audioSource.transform.parent = transform;
         KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
         foreach (KMAudio kmAudio in kmAudios)
         {
