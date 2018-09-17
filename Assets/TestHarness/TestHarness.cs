@@ -399,6 +399,7 @@ public class TestHarness : MonoBehaviour
 
     AudioSource audioSource;
     public List<AudioClip> AudioClips;
+	public Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> GameSoundEffects = new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
 
     public EdgeworkConfiguration EdgeworkConfiguration;
 
@@ -811,6 +812,7 @@ public class TestHarness : MonoBehaviour
                 Debug.Log("Strike");
                 statuslight.FlashStrike();
                 fakeInfo.HandleStrike();
+	            PlaySoundEffectHandler(KMSoundOverride.SoundEffect.Strike, transform);
                 return false;
             };
         }
@@ -842,24 +844,99 @@ public class TestHarness : MonoBehaviour
         foreach (KMAudio kmAudio in kmAudios)
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
+			kmAudio.HandlePlaySoundAtTransformWithRef += PlaySoundHandler;
+	        kmAudio.HandlePlayGameSoundAtTransform += PlaySoundEffectHandler;
+			kmAudio.HandlePlayGameSoundAtTransformWithRef += PlaySoundEffectHandlerWithRef;
         }
 		
+	    foreach (KMSoundOverride kmSoundOverride in FindObjectsOfType<KMSoundOverride>())
+	    {
+		    List<AudioClip> clips;
+		    if (!GameSoundEffects.TryGetValue(kmSoundOverride.OverrideEffect, out clips))
+		    {
+			    clips = new List<AudioClip>();
+			    GameSoundEffects[kmSoundOverride.OverrideEffect] = clips;
+		    }
+
+			if(kmSoundOverride.AudioClip != null)
+				clips.Add(kmSoundOverride.AudioClip);
+		    clips.AddRange(kmSoundOverride.AdditionalVariants.Where(x => x != null));
+	    }
+
     }
 
-    protected void PlaySoundHandler(string clipName, Transform t)
+	protected void PlaySoundHandler(string clipName, Transform t)
     {
         AudioClip clip = AudioClips == null ? null : AudioClips.FirstOrDefault(a => a.name == clipName);
 
         if (clip != null)
         {
-            audioSource.transform.position = t.position;
+	        audioSource.loop = false;
+			audioSource.transform.position = t.position;
             audioSource.PlayOneShot(clip);
         }
         else
             Debug.Log("Audio clip not found: " + clipName);
     }
 
-    void Update()
+	private KMAudio.KMAudioRef PlaySoundHandler(string clipName, Transform t, bool loop)
+	{
+		KMAudio.KMAudioRef audioRef = new KMAudio.KMAudioRef();
+		audioRef.StopSound = () => { };
+
+		AudioClip clip = AudioClips == null ? null : AudioClips.FirstOrDefault(a => a.name == clipName);
+
+		if (clip != null)
+		{
+			audioSource.transform.position = t.position;
+			audioSource.loop = loop;
+			audioSource.clip = clip;
+			audioSource.Play();
+			audioRef.StopSound = () => { audioSource.Stop(); };
+		}
+		else
+			Debug.Log("Audio clip not found: " + clipName);
+
+		return audioRef;
+	}
+
+	protected void PlaySoundEffectHandler(KMSoundOverride.SoundEffect effect, Transform t)
+	{
+		List<AudioClip> clips;
+		if (!GameSoundEffects.TryGetValue(effect, out clips)) return;
+
+		AudioClip clip = clips[Random.Range(0, clips.Count)];
+		if (clip != null)
+		{
+			audioSource.loop = false;
+			audioSource.transform.position = t.position;
+			audioSource.PlayOneShot(clip);
+		}
+	}
+
+	private KMAudio.KMAudioRef PlaySoundEffectHandlerWithRef(KMSoundOverride.SoundEffect sound, Transform t)
+	{
+		KMAudio.KMAudioRef audioRef = new KMAudio.KMAudioRef();
+		List<AudioClip> clips;
+		if (!GameSoundEffects.TryGetValue(sound, out clips))
+		{
+			audioRef.StopSound = () => { };
+			return audioRef;
+		}
+
+		AudioClip clip = clips[Random.Range(0, clips.Count)];
+		if (clip != null)
+		{
+			audioSource.loop = false;
+			audioSource.transform.position = t.position;
+			audioSource.PlayOneShot(clip);
+			audioRef.StopSound = () => { audioSource.Stop(); };
+		}
+
+		return audioRef;
+	}
+
+	void Update()
     {
 	    mouseDownTIme += Time.deltaTime;
 		//Camera/bomb control
