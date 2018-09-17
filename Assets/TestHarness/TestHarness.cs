@@ -1003,10 +1003,47 @@ public class TestHarness : MonoBehaviour
         }
     }
 
+	IEnumerator MoveCamera(Transform destination)
+	{
+		const float moveTime = 0.25f;
+		float startTime = Time.time;
+		Vector3 bombOrigin = _bomb.localEulerAngles;
+		Vector3 cameraOrigin = _camera.localPosition;
+
+		Vector3 bombDestination = new Vector3(0, 0, (bombOrigin.z >= 270.01f || bombOrigin.z <= 90f) ? 0.0f : 180.0f);
+		_bomb.localEulerAngles = bombDestination;
+
+		Vector3 cameraDestination = new Vector3(destination.position.x, _camera.localPosition.y, destination.position.z);
+		_bomb.localEulerAngles = bombOrigin;
+		
+		while ((Time.time - startTime) < moveTime)
+		{
+			_bomb.rotation = Quaternion.Lerp(Quaternion.Euler(bombOrigin), Quaternion.Euler(bombDestination), (Time.time - startTime) / moveTime);
+			_camera.localPosition = Vector3.Lerp(cameraOrigin, cameraDestination, (Time.time - startTime) / moveTime);
+			yield return null;
+		}
+
+		_bomb.localEulerAngles = bombDestination;
+		_camera.localPosition = cameraDestination;
+	}
+
+	void MoveCamera(TestSelectable selectable)
+	{
+		if (selectable.GetComponent<TestHarness>() != null)
+		{
+			StartCoroutine(MoveCamera(selectable.transform));
+		}
+		else if (selectable.Parent != null && selectable.Parent.GetComponent<TestHarness>() != null)
+		{
+			StartCoroutine(MoveCamera(selectable.transform));
+		}
+	}
+
     void Interact()
     {
         if (currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
         {
+	        MoveCamera(currentSelectableArea.Selectable);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
             currentSelectable = currentSelectableArea.Selectable;
             currentSelectable.ActivateChildSelectableAreas();
@@ -1026,6 +1063,7 @@ public class TestHarness : MonoBehaviour
     {
         if (currentSelectable.Parent != null && currentSelectable.Cancel())
         {
+	        MoveCamera(currentSelectable.Parent);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectable.Parent);
             currentSelectable = currentSelectable.Parent;
             currentSelectable.ActivateChildSelectableAreas();
