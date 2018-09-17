@@ -10,6 +10,9 @@ public class TwoFactorWidget : Widget
 	private float newcodetime;
 	public float timeremaining;
 
+	public TextMesh TwoFactorTextMesh;
+	public TextMesh TimeRemainingTextMesh;
+
 	public static TwoFactorWidget CreateComponent(TwoFactorWidget where, float newcode = 30)
 	{
 		TwoFactorWidget widget = Instantiate(where);
@@ -26,6 +29,12 @@ public class TwoFactorWidget : Widget
 
 		Debug.LogFormat("Added Two factor widget #{0}: {1,6}.", widget.instance, widget.code);
 		return widget;
+	}
+
+	public override void Activate()
+	{
+		timeremaining = newcodetime;
+		base.Activate();
 	}
 
 	public override string GetResult(string key, string data)
@@ -51,5 +60,9 @@ public class TwoFactorWidget : Widget
 			code = Random.Range(0, 1000000);
 			Debug.LogFormat("[Two Factor #{0}] code is now {1,6}.", instance, code);
 		}
+
+		TwoFactorTextMesh.text = string.Format("{0:######}.", code);
+		TimeRemainingTextMesh.text = string.Format("{0:###.0}", timeremaining);
+
 	}
 }

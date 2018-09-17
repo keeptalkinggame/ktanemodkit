@@ -5,6 +5,7 @@ using UnityEngine;
 public class BatteryWidget : Widget
 {
 	public int batt;
+	public TextMesh BatteryTextMesh;
 
 	public static BatteryWidget CreateComponent(BatteryWidget where, int battCount = -1)
 	{
@@ -18,7 +19,26 @@ public class BatteryWidget : Widget
 			widget.batt = battCount;
 		}
 
+		switch (widget.batt)
+		{
+			case 0:
+				widget.BatteryTextMesh.text = "NONE";
+				break;
+			case 1:
+				widget.BatteryTextMesh.text = "1 D Cell";
+				break;
+			case 2:
+			case 3:
+			case 4:
+				widget.BatteryTextMesh.text = widget.batt + " AA Cells";
+				break;
+			default:
+				widget.BatteryTextMesh.text = widget.batt + " Cells";
+				break;
+		}
+
 		Debug.Log("Added battery widget: " + widget.batt);
+		
 		return widget;
 	}
 

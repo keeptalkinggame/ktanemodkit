@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class SerialNumber : Widget
 {
+	public TextMesh serialTextMesh;
 	public string serial;
 
 	static readonly char[] SerialNumberPossibleCharArray = new char[35]
@@ -45,6 +46,8 @@ public class SerialNumber : Widget
 		{
 			widget.serial = sn;
 		}
+
+		widget.serialTextMesh.text = widget.serial;
 
 		Debug.Log("Serial: " + widget.serial);
 		return widget;

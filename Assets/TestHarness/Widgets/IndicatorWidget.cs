@@ -13,8 +13,10 @@ public class IndicatorWidget : Widget
 		"BOB","FRK"
 	};
 
-	public string val;
-	public bool on;
+	public string Val;
+	public bool On;
+
+	public TextMesh IndicatorTextMesh;
 
 	public static IndicatorWidget CreateComponent(IndicatorWidget where, string label = null, IndicatorState state = IndicatorState.RANDOM)
 	{
@@ -23,31 +25,33 @@ public class IndicatorWidget : Widget
 		if (label == null)
 		{
 			int pos = Random.Range(0, possibleValues.Count);
-			widget.val = possibleValues[pos];
+			widget.Val = possibleValues[pos];
 			possibleValues.RemoveAt(pos);
 		}
 		else
 		{
 			if (possibleValues.Contains(label))
 			{
-				widget.val = label;
+				widget.Val = label;
 				possibleValues.Remove(label);
 			}
 			else
 			{
-				widget.val = "NLL";
+				widget.Val = "NLL";
 			}
 		}
 		if (state == IndicatorState.RANDOM)
 		{
-			widget.on = Random.value > 0.4f;
+			widget.On = Random.value > 0.4f;
 		}
 		else
 		{
-			widget.on = state == IndicatorState.ON ? true : false;
+			widget.On = state == IndicatorState.ON ? true : false;
 		}
 
-		Debug.Log("Added indicator widget: " + widget.val + " is " + (widget.on ? "ON" : "OFF"));
+		widget.IndicatorTextMesh.text = (widget.On ? "LIT " : "UNLIT ") + widget.Val;
+
+		Debug.Log("Added indicator widget: " + widget.Val + " is " + (widget.On ? "ON" : "OFF"));
 		return widget;
 	}
 
@@ -58,10 +62,10 @@ public class IndicatorWidget : Widget
 			return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
 			{
 				{
-					"label", val
+					"label", Val
 				},
 				{
-					"on", on?bool.TrueString:bool.FalseString
+					"on", On?bool.TrueString:bool.FalseString
 				}
 			});
 		}
