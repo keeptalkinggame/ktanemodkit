@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -34,7 +35,10 @@ namespace EdgeworkConfigurator
                 SerialNumberType serialNumberType = DrawSerialNumberTypePicker();
                 if (serialNumberType == SerialNumberType.CUSTOM) EditorGUILayout.PropertyField(serializedObject.FindProperty("CustomSerialNumber"));
 
-                EditorGUILayout.Separator();
+	            EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
+	            if (config.Widgets.Any(x => x.Type == WidgetType.TWOFACTOR)) EditorGUILayout.PropertyField(serializedObject.FindProperty("TwoFactorResetTime"));
+
+				EditorGUILayout.Separator();
                 EditorGUILayout.LabelField("Widgets:");
 
                 SerializedProperty widgetListProperty = serializedObject.FindProperty("Widgets");
@@ -187,7 +191,6 @@ namespace EdgeworkConfigurator
                     break;
 				case WidgetType.TWOFACTOR:
 					EditorGUI.indentLevel++;
-					EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("TwoFactorResetTime"));
 					break;
                 case WidgetType.RANDOM: //Random Widget
                     EditorGUI.indentLevel++;

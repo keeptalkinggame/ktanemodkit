@@ -343,7 +343,7 @@ public class FakeBombInfo : MonoBehaviour
 						case WidgetType.TWOFACTOR:
 							for (int i = 0; i < widgetConfig.Count; i++)
 							{
-								widgets.Add(TwoFactorWidget.CreateComponent(TwoFactorWidget, widgetConfig.TwoFactorResetTime));
+								widgets.Add(TwoFactorWidget.CreateComponent(TwoFactorWidget, config.TwoFactorResetTime));
 							}
 							break;
                         case WidgetType.CUSTOM:
