@@ -390,6 +390,7 @@ public class TestHarness : MonoBehaviour
 	private FakeBombInfo fakeInfo;
 
     public GameObject HighlightPrefab;
+	TestSelectable currentModule;
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
 
@@ -1043,14 +1044,22 @@ public class TestHarness : MonoBehaviour
 		}
 	}
 
-    void Interact()
-    {
+	void Interact()
+	{
+		TestSelectable root = GetComponent<TestSelectable>();
+
         if (currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
         {
 	        MoveCamera(currentSelectableArea.Selectable);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
             currentSelectable = currentSelectableArea.Selectable;
-            currentSelectable.ActivateChildSelectableAreas();
+	        if (root.Children.Contains(currentSelectable))
+		        currentModule = currentSelectable;
+
+	        GetComponent<TestSelectable>().ActivateChildSelectableAreas();
+	        if (currentModule != null) currentModule.SelectableArea.DeactivateSelectableArea();
+
+			currentSelectable.ActivateChildSelectableAreas();
             lastSelected = currentSelectable.GetCurrentChild();
         }
     }
