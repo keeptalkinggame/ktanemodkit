@@ -937,10 +937,14 @@ public class TestHarness : MonoBehaviour
                         if (currentSelectableArea != null)
                         {
                             currentSelectableArea.Selectable.Deselect();
-                        }
+	                        currentSelectableArea = null;
+						}
 
-                        hitArea.Selectable.Select();
-                        currentSelectableArea = hitArea;
+	                    if (hitArea.transform.eulerAngles.z > 270.0f || hitArea.transform.eulerAngles.z < 90.0f)
+	                    {
+		                    hitArea.Selectable.Select();
+		                    currentSelectableArea = hitArea;
+	                    }
                     }
                 }
                 else
