@@ -17589,8 +17589,7 @@ MonoBehaviour:
   CustomWidget: {fileID: 114213089377510072}
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
   AudioClips: []
-  EdgeworkConfiguration: {fileID: 11400000, guid: b21116975a20c0247ac9ec65eabb4d76,
-    type: 2}
+  EdgeworkConfiguration: {fileID: 0}
   turnSpeed: 128
   panSpeed: 4
   zoomSpeed: 16
