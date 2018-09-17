@@ -965,10 +965,10 @@ public class TestHarness : MonoBehaviour
             if (Input.GetMouseButtonUp(0)) InteractEnded();
 	        if (Input.GetMouseButtonDown(1))
 	        {
-		        //mouseDownTIme = 0;
+		        mouseDownTIme = 0;
 	        }
 
-	        if (Input.GetMouseButtonUp(1) && mouseDownTIme < 0.1f)
+	        if (Input.GetMouseButtonUp(1) && mouseDownTIme < 0.25f)
 	        {
 				Cancel();
 	        }
