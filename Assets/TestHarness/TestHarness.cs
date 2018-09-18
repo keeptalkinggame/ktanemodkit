@@ -773,6 +773,19 @@ public class TestHarness : MonoBehaviour
 
 	}
 
+	StatusLight CreateStatusLight(Transform module)
+	{
+		KMStatusLightParent statuslightparent = module.GetComponentInChildren<KMStatusLightParent>();
+		if (statuslightparent == null) return null;
+		var statuslight = Instantiate<StatusLight>(StatusLightPrefab);
+		statuslight.transform.SetParent(statuslightparent.transform, false);
+		statuslight.transform.localPosition = Vector3.zero;
+		statuslight.transform.localScale = Vector3.one;
+		statuslight.transform.localRotation = Quaternion.identity;
+		statuslight.SetInActive();
+		return statuslight;
+	}
+
     void Start()
     {
         MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
@@ -802,14 +815,8 @@ public class TestHarness : MonoBehaviour
         for (int i = 0; i < modules.Count; i++)
         {
             KMBombModule mod = modules[i];
-
-            KMStatusLightParent statuslightparent = modules[i].GetComponentInChildren<KMStatusLightParent>();
-            var statuslight = Instantiate<StatusLight>(StatusLightPrefab);
-	        statuslight.transform.SetParent(statuslightparent.transform, false);
-            statuslight.transform.localPosition = Vector3.zero;
-            statuslight.transform.localScale = Vector3.one;
-            statuslight.transform.localRotation = Quaternion.identity;
-            statuslight.SetInActive();
+	        StatusLight statuslight = CreateStatusLight(mod.transform);
+            
             TestSelectable testSelectable = modules[i].GetComponent<TestSelectable>();
             currentSelectable.Children[i] = testSelectable;
             testSelectable.Parent = currentSelectable;
@@ -819,7 +826,7 @@ public class TestHarness : MonoBehaviour
             modules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
-                statuslight.SetPass();
+				if(statuslight != null) statuslight.SetPass();
 
                 fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
                 fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
@@ -840,7 +847,7 @@ public class TestHarness : MonoBehaviour
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
-                statuslight.FlashStrike();
+				if(statuslight != null) statuslight.FlashStrike();
                 fakeInfo.HandleStrike(modules[j].ModuleDisplayName);
                 return false;
             };
@@ -849,6 +856,7 @@ public class TestHarness : MonoBehaviour
         for (int i = 0; i < needyModules.Count; i++)
         {
             TestSelectable testSelectable = needyModules[i].GetComponent<TestSelectable>();
+	        StatusLight statusLight = CreateStatusLight(needyModules[i].transform);
             currentSelectable.Children[modules.Count + i] = testSelectable;
             testSelectable.Parent = currentSelectable;
             testSelectable.x = modules.Count + i;
@@ -866,6 +874,7 @@ public class TestHarness : MonoBehaviour
             needyModules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
+	            if (statusLight != null) statusLight.FlashStrike();
                 fakeInfo.HandleStrike(needyModules[j].ModuleDisplayName);
                 return false;
             };
