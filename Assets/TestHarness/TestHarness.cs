@@ -402,6 +402,7 @@ public class TestHarness : MonoBehaviour
 	public TimerModule TimerModulePrefab;
 	public Transform ModuleCoverPrefab;
 	public TwitchPlaysID TwitchIDPrefab;
+	public NeedyTimer NeedyTimerPrefab;
 
 	public SerialNumber SerialNumberWidget;
 	public BatteryWidget BatteryWidget;
@@ -852,10 +853,14 @@ public class TestHarness : MonoBehaviour
             testSelectable.Parent = currentSelectable;
             testSelectable.x = modules.Count + i;
 
-	        int j = i;
+	        NeedyTimer needyTimer = Instantiate(NeedyTimerPrefab);
+	        needyTimer.ParentComponent = needyModules[i];
+
+			int j = i;
             needyModules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
+	            needyTimer.StopTimer();
                 return false;
             };
             needyModules[i].OnStrike = delegate ()
@@ -864,6 +869,35 @@ public class TestHarness : MonoBehaviour
                 fakeInfo.HandleStrike(needyModules[j].ModuleDisplayName);
                 return false;
             };
+
+	        needyTimer.TotalTime = needyModules[i].CountdownTime;
+	        needyTimer.WarnTime = 5;
+	        
+	        needyModules[i].GetNeedyTimeRemainingHandler += () => needyTimer.isRunning ? needyTimer.TimeRemaining : -1;
+	        needyModules[i].SetNeedyTimeRemainingHandler += delegate (float time) { if (needyTimer.isRunning) needyTimer.TimeRemaining = time; };
+			needyTimer.OnTimerExpire += delegate
+			{
+				if (needyModules[j].OnTimerExpired != null)
+					needyModules[j].OnTimerExpired();
+			};
+
+	        KMAudio.KMAudioRef audioRef = null;
+			needyTimer.OnTimerWarn += delegate
+			{
+				if (needyTimer.ParentComponent.WarnAtFiveSeconds)
+					audioRef = PlaySoundEffectHandlerWithRef(KMSoundOverride.SoundEffect.NeedyWarning, needyTimer.transform);
+			};
+
+			needyTimer.OnTimerWarnOff += delegate
+			{
+				if (audioRef == null || audioRef.StopSound == null) return;
+				audioRef.StopSound();
+				audioRef = null;
+			};
+
+	        needyTimer.transform.SetParent(needyTimer.ParentComponent.transform, false);
+	        needyTimer.transform.gameObject.SetActive(true);
+
         }
 
         currentSelectable.ActivateChildSelectableAreas();
@@ -1247,23 +1281,21 @@ public class TestHarness : MonoBehaviour
     {
         if (GUILayout.Button("Activate Needy Modules"))
         {
-            foreach (KMNeedyModule needyModule in FindObjectsOfType<KMNeedyModule>())
+            foreach (NeedyTimer needyModule in FindObjectsOfType<NeedyTimer>())
             {
-                if (needyModule.OnNeedyActivation != null)
-                {
-                    needyModule.OnNeedyActivation();
-                }
+	            if (!needyModule.isRunning)
+	            {
+		            needyModule.Reset();
+		            needyModule.StartTimer();
+	            }
             }
         }
 
         if (GUILayout.Button("Deactivate Needy Modules"))
         {
-            foreach (KMNeedyModule needyModule in FindObjectsOfType<KMNeedyModule>())
+            foreach (NeedyTimer needyModule in FindObjectsOfType<NeedyTimer>())
             {
-                if (needyModule.OnNeedyDeactivation != null)
-                {
-                    needyModule.OnNeedyDeactivation();
-                }
+	            needyModule.StopTimer();
             }
         }
 
