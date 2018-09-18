@@ -422,7 +422,9 @@ public class TestHarness : MonoBehaviour
     TestSelectable lastSelected;
 
     AudioSource audioSource;
+	[Range(0.0f, 1.0f)] public float AudioVolume = 0.25f;
     public List<AudioClip> AudioClips;
+	public Dictionary<KMSoundOverride.SoundEffect, AudioSource> GameSoundEffectSources = new Dictionary<KMSoundOverride.SoundEffect, AudioSource>();
 	public Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> GameSoundEffects = new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
 
     public EdgeworkConfiguration EdgeworkConfiguration;
@@ -894,7 +896,7 @@ public class TestHarness : MonoBehaviour
 			needyTimer.OnTimerWarn += delegate
 			{
 				if (needyTimer.ParentComponent.WarnAtFiveSeconds)
-					audioRef = PlaySoundEffectHandlerWithRef(KMSoundOverride.SoundEffect.NeedyWarning, needyTimer.transform);
+					audioRef = PlaySoundEffectHandler(KMSoundOverride.SoundEffect.NeedyWarning, needyTimer.transform);
 			};
 
 			needyTimer.OnTimerWarnOff += delegate
@@ -911,31 +913,42 @@ public class TestHarness : MonoBehaviour
 
         currentSelectable.ActivateChildSelectableAreas();
 
+	    Transform audioSouceTransforms = new GameObject().transform;
+	    audioSouceTransforms.name = "Audio Sources";
+	    audioSouceTransforms.parent = transform;
+
         audioSource = new GameObject().AddComponent<AudioSource>();
-	    audioSource.transform.parent = transform;
+	    audioSource.transform.name = "PlaySoundHandler";
+	    audioSource.transform.parent = audioSouceTransforms;
         KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
         foreach (KMAudio kmAudio in kmAudios)
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
 			kmAudio.HandlePlaySoundAtTransformWithRef += PlaySoundHandler;
-	        kmAudio.HandlePlayGameSoundAtTransform += PlaySoundEffectHandler;
-			kmAudio.HandlePlayGameSoundAtTransformWithRef += PlaySoundEffectHandlerWithRef;
+	        kmAudio.HandlePlayGameSoundAtTransform += (effect,t) => PlaySoundEffectHandler(effect,t);
+			kmAudio.HandlePlayGameSoundAtTransformWithRef += PlaySoundEffectHandler;
         }
-		
-	    foreach (KMSoundOverride kmSoundOverride in FindObjectsOfType<KMSoundOverride>())
+
+
+	    KMSoundOverride[] kmSoundOverrides = FindObjectsOfType<KMSoundOverride>();
+		foreach (KMSoundOverride.SoundEffect effect in Enum.GetValues(typeof(KMSoundOverride.SoundEffect)))
 	    {
-		    List<AudioClip> clips;
-		    if (!GameSoundEffects.TryGetValue(kmSoundOverride.OverrideEffect, out clips))
+			AudioSource effectAudioSource = new GameObject().AddComponent<AudioSource>();
+		    effectAudioSource.transform.name = "SoundEffect." + effect;
+		    effectAudioSource.transform.parent = audioSouceTransforms;
+		    effectAudioSource.loop = effect == KMSoundOverride.SoundEffect.NeedyWarning ||
+		                             effect == KMSoundOverride.SoundEffect.AlarmClockBeep;
+
+			GameSoundEffectSources[effect] = effectAudioSource;
+		    GameSoundEffects[effect] = new List<AudioClip>();
+
+		    foreach (var kmSoundOverride in kmSoundOverrides.Where(x => x.OverrideEffect == effect))
 		    {
-			    clips = new List<AudioClip>();
-			    GameSoundEffects[kmSoundOverride.OverrideEffect] = clips;
-		    }
-
-			if(kmSoundOverride.AudioClip != null)
-				clips.Add(kmSoundOverride.AudioClip);
-		    clips.AddRange(kmSoundOverride.AdditionalVariants.Where(x => x != null));
+			    if (kmSoundOverride.AudioClip != null)
+				    GameSoundEffects[effect].Add(kmSoundOverride.AudioClip);
+			    GameSoundEffects[effect].AddRange(kmSoundOverride.AdditionalVariants.Where(x => x != null));
+			}
 	    }
-
     }
 
 	protected void PlaySoundHandler(string clipName, Transform t)
@@ -944,7 +957,8 @@ public class TestHarness : MonoBehaviour
 
         if (clip != null)
         {
-	        audioSource.loop = false;
+	        audioSource.volume = AudioVolume;
+			audioSource.loop = false;
 			audioSource.transform.position = t.position;
             audioSource.PlayOneShot(clip);
         }
@@ -954,13 +968,13 @@ public class TestHarness : MonoBehaviour
 
 	private KMAudio.KMAudioRef PlaySoundHandler(string clipName, Transform t, bool loop)
 	{
-		KMAudio.KMAudioRef audioRef = new KMAudio.KMAudioRef();
-		audioRef.StopSound = () => { };
+		KMAudio.KMAudioRef audioRef = new KMAudio.KMAudioRef {StopSound = () => { }};
 
 		AudioClip clip = AudioClips == null ? null : AudioClips.FirstOrDefault(a => a.name == clipName);
 
 		if (clip != null)
 		{
+			audioSource.volume = AudioVolume;
 			audioSource.transform.position = t.position;
 			audioSource.loop = loop;
 			audioSource.clip = clip;
@@ -973,25 +987,12 @@ public class TestHarness : MonoBehaviour
 		return audioRef;
 	}
 
-	protected void PlaySoundEffectHandler(KMSoundOverride.SoundEffect effect, Transform t)
-	{
-		List<AudioClip> clips;
-		if (!GameSoundEffects.TryGetValue(effect, out clips)) return;
-
-		AudioClip clip = clips[Random.Range(0, clips.Count)];
-		if (clip != null)
-		{
-			audioSource.loop = false;
-			audioSource.transform.position = t.position;
-			audioSource.PlayOneShot(clip);
-		}
-	}
-
-	private KMAudio.KMAudioRef PlaySoundEffectHandlerWithRef(KMSoundOverride.SoundEffect sound, Transform t)
+	private KMAudio.KMAudioRef PlaySoundEffectHandler(KMSoundOverride.SoundEffect effect, Transform t)
 	{
 		KMAudio.KMAudioRef audioRef = new KMAudio.KMAudioRef();
 		List<AudioClip> clips;
-		if (!GameSoundEffects.TryGetValue(sound, out clips))
+		AudioSource source;
+		if (!GameSoundEffects.TryGetValue(effect, out clips) || !GameSoundEffectSources.TryGetValue(effect, out source) || clips.Count == 0)
 		{
 			audioRef.StopSound = () => { };
 			return audioRef;
@@ -1000,10 +1001,18 @@ public class TestHarness : MonoBehaviour
 		AudioClip clip = clips[Random.Range(0, clips.Count)];
 		if (clip != null)
 		{
-			audioSource.loop = false;
-			audioSource.transform.position = t.position;
-			audioSource.PlayOneShot(clip);
-			audioRef.StopSound = () => { audioSource.Stop(); };
+			source.volume = AudioVolume;
+			source.transform.position = t.position;
+			if (source.loop)
+			{
+				source.clip = clip;
+				source.Play();
+			}
+			else
+			{
+				source.PlayOneShot(clip);
+			}
+			audioRef.StopSound = () => { if(source.loop) source.Stop(); };
 		}
 
 		return audioRef;
