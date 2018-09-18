@@ -12,7 +12,9 @@ public class FakeBombInfo : MonoBehaviour
 {
     float startupTime = .5f;
 
-    public delegate void LightsOn();
+	public KMAudio Audio;
+
+	public delegate void LightsOn();
     public LightsOn ActivateLights;
 	public TimerModule timerModule;
 
@@ -55,14 +57,13 @@ public class FakeBombInfo : MonoBehaviour
 	        timeLeft = timerModule.TimeRemaining;
 	        if (timerModule.ExplodedToTime)
 	        {
-		        exploded = true;
-		        if (Detonate != null) Detonate();
-		        Debug.Log("KABOOM!");
+		        OnBombExploded("Time Ran Out!");
+				
 	        }
         }
     }
 
-    public const int numStrikes = 3;
+	public int numStrikes = 3;
 
     public bool solved;
 	public bool exploded;
@@ -159,42 +160,57 @@ public class FakeBombInfo : MonoBehaviour
         return true;
     }
 
-    public void HandleStrike()
+	public void OnBombExploded(string reason)
+	{
+		if (exploded) return;
+		Debug.LogFormat("KABOOM! - Cause of Explosion: {0}", string.IsNullOrEmpty(reason) ? "Unknown" : reason);
+		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombExplode, transform);
+		timerModule.TimerRunning = false;
+		exploded = true;
+	}
+
+	public void HandleStrike(string reason = null)
     {
-        strikes++;
+	    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
+
+		if (!string.IsNullOrEmpty(reason))
+			Debug.Log("Strike: " + reason);
+
+		strikes++;
 	    timerModule.StrikeCount++;
         Debug.Log(strikes + "/" + numStrikes);
         if (strikes == numStrikes)
         {
-	        exploded = true;
-	        timerModule.TimerRunning = false;
-            if (Detonate != null) Detonate();
-            Debug.Log("KABOOM!");
+	        OnBombExploded(reason);
+			if (Detonate != null) Detonate();
         }
+
+	    if (timerModule.TimeMode)
+		    strikes--;
+
+	    if (timerModule.ZenMode)
+		    numStrikes++;
     }
 
     public delegate void OnDetonate();
     public OnDetonate Detonate;
 
-    public void HandleStrike(string reason)
-    {
-        Debug.Log("Strike: " + reason);
-        HandleStrike();
-    }
-
-    public delegate void OnSolved();
+	public delegate void OnSolved();
     public OnSolved HandleSolved;
 
     public void Solved()
     {
-	    if (exploded) return;
-        solved = true;
+		if (solved || exploded) return;
+	    Debug.Log("Bomb defused!");
+	    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombDefused, transform);
+	    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.GameOverFanfare, transform);
 	    timerModule.TimerRunning = false;
+
+		solved = true;
         if (HandleSolved != null) HandleSolved();
-        Debug.Log("Bomb defused!");
     }
 
-    public delegate void LightState(bool state);
+	public delegate void LightState(bool state);
     public LightState OnLights;
     public void OnLightsOn()
     {
@@ -206,11 +222,11 @@ public class FakeBombInfo : MonoBehaviour
         if (OnLights != null) OnLights(false);
     }
 
-    /// <summary>
-    /// Sets up the edgework of the FakeBombInfo according to the provided edgework configuration.
-    /// </summary>
-    /// <param name="config"></param>
-    public void SetupEdgework(EdgeworkConfiguration config)
+	/// <summary>
+	/// Sets up the edgework of the FakeBombInfo according to the provided edgework configuration.
+	/// </summary>
+	/// <param name="config"></param>
+	public void SetupEdgework(EdgeworkConfiguration config)
     {
 	    widgets = new List<Widget>();
 	    List<THWidget> RandomIndicators = new List<THWidget>();
@@ -373,6 +389,13 @@ public class FakeBombInfo : MonoBehaviour
 	}
 }
 
+public enum TwitchPlaysMode
+{
+	NormalMode,
+	TimeMode,
+	ZenMode
+}
+
 public class TestHarness : MonoBehaviour
 {
 	public StatusLight StatusLightPrefab;
@@ -402,6 +425,8 @@ public class TestHarness : MonoBehaviour
 	public Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> GameSoundEffects = new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
 
     public EdgeworkConfiguration EdgeworkConfiguration;
+	[ReadOnlyWhenPlaying] public bool TwitchPlaysActive = true;
+	[ReadOnlyWhenPlaying] public TwitchPlaysMode TwitchPlaysMode = TwitchPlaysMode.NormalMode;
 
 	public float turnSpeed = 128.0f;      // Speed of camera turning when mouse moves in along an axis
 	public float panSpeed = 4.0f;       // Speed of the camera when being panned
@@ -419,8 +444,12 @@ public class TestHarness : MonoBehaviour
 	private TimerModule _timer;
 	private readonly List<Transform> _twitchPlayModules = new List<Transform>();
 
+	public static TestHarness Instance;
+
 	void Awake()
-    {
+	{
+		Instance = this;
+
 	    _camera = Camera.main.transform;
 	    _camera.localPosition = new Vector3(0, 0.7f, 0);
 	    _camera.localEulerAngles = new Vector3(90, 0, 0);
@@ -437,6 +466,7 @@ public class TestHarness : MonoBehaviour
 	    fakeInfo.IndicatorWidget = IndicatorWidget;
 	    fakeInfo.TwoFactorWidget = TwoFactorWidget;
 	    fakeInfo.CustomWidget = CustomWidget;
+	    fakeInfo.Audio = GetComponent<KMAudio>();
 
 		fakeInfo.SetupEdgework(EdgeworkConfiguration);
 
@@ -452,7 +482,7 @@ public class TestHarness : MonoBehaviour
         AddSelectables();
     }
 
-    void ReplaceBombInfo()
+	void ReplaceBombInfo()
     {
         MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
         foreach (MonoBehaviour s in scripts)
@@ -505,6 +535,46 @@ public class TestHarness : MonoBehaviour
 		widgetInner.SetParent(widgetBase, false);
 
 		return WidgetZone.CreateZone(widgetInner.gameObject);
+	}
+
+	void PrepareTwitchPlaysModule(Transform module)
+	{
+		if (!TwitchPlaysActive) return;
+		_twitchPlayModules.Add(module);
+
+		KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
+		TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
+		tpID.FakeBombInfo = fakeInfo;
+		tpID.TimerModule = fakeInfo.timerModule;
+		tpID.Module = module;
+		tpID.gameObject.SetActive(true);
+		if (statusLight == null)
+		{
+			tpID.transform.localPosition = new Vector3(0.075167f, 0.06316f, 0.076057f);
+			tpID.transform.SetParent(module, false);
+		}
+		else
+		{
+			tpID.transform.localPosition = new Vector3(0, 0.0432f, 0);
+			tpID.transform.SetParent(statusLight.transform, false);
+		}
+	}
+
+	void PrepareModuleAnchor(List<List<Transform>> anchors, Transform module, ref int timerFace)
+	{
+		module.localPosition = Vector3.zero;
+		module.localRotation = Quaternion.identity;
+		module.localScale = Vector3.one;
+		Transform anchor = anchors[timerFace].FirstOrDefault();
+		while (anchor == null)
+		{
+			anchors.Remove(anchors[timerFace]);
+			timerFace = Random.Range(0, anchors.Count);
+			anchor = anchors[timerFace].FirstOrDefault();
+		}
+		anchors[timerFace].Remove(anchor);
+		module.SetParent(anchor, false);
+		PrepareTwitchPlaysModule(module);
 	}
 
 	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, List<Widget> widgets)
@@ -633,69 +703,26 @@ public class TestHarness : MonoBehaviour
 		_timer.gameObject.SetActive(true);
 		fakeInfo.timerModule = _timer;
 
+		if (TwitchPlaysMode == TwitchPlaysMode.TimeMode)
+		{
+			_timer.TimeMode = true;
+			TwitchPlaysID.TimeMode = true;
+		}
+		else if (TwitchPlaysMode == TwitchPlaysMode.ZenMode)
+		{
+			_timer.ZenMode = true;
+			TwitchPlaysID.ZenMode = true;
+		}
+
 		foreach (Transform module in timerSideModules)
 		{
-			_twitchPlayModules.Add(module);
-			module.localPosition = Vector3.zero;
-			module.localRotation = Quaternion.identity;
-			module.localScale = Vector3.one;
-			Transform anchor = anchors[timerFace].FirstOrDefault();
-			while (anchor == null)
-			{
-				anchors.Remove(anchors[timerFace]);
-				timerFace = Random.Range(0, anchors.Count);
-				anchor = anchors[timerFace].FirstOrDefault();
-			}
-			anchors[timerFace].Remove(anchor);
-			module.SetParent(anchor, false);
-
-			KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
-			TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
-			tpID.Module = module;
-			tpID.gameObject.SetActive(true);
-			if (statusLight == null)
-			{
-				tpID.transform.localPosition = new Vector3(0.075167f, 0.06316f, 0.076057f);
-				tpID.transform.SetParent(module, false);
-			}
-			else
-			{
-				tpID.transform.localPosition = new Vector3(0, 0.0432f, 0);
-				tpID.transform.SetParent(statusLight.transform, false);
-			}
+			PrepareModuleAnchor(anchors, module, ref timerFace);
 		}
 
 		foreach (Transform module in modules)
 		{
-			_twitchPlayModules.Add(module);
-			module.localPosition = Vector3.zero;
-			module.localRotation = Quaternion.identity;
-			module.localScale = Vector3.one;
 			timerFace = Random.Range(0, anchors.Count);
-			Transform anchor = anchors[timerFace].FirstOrDefault();
-			while (anchor == null)
-			{
-				anchors.Remove(anchors[timerFace]);
-				timerFace = Random.Range(0, anchors.Count);
-				anchor = anchors[timerFace].FirstOrDefault();
-			}
-			anchors[timerFace].Remove(anchor);
-			module.SetParent(anchor, false);
-
-			KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
-			TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
-			tpID.Module = module;
-			tpID.gameObject.SetActive(true);
-			if (statusLight == null)
-			{
-				tpID.transform.localPosition = new Vector3(0.075167f, 0.06316f, 0.076057f);
-				tpID.transform.SetParent(module, false);
-			}
-			else
-			{
-				tpID.transform.localPosition = new Vector3(0, 0.0432f, 0);
-				tpID.transform.SetParent(statusLight.transform, false);
-			}
+			PrepareModuleAnchor(anchors, module, ref timerFace);
 		}
 
 		foreach (Transform anchor in anchors.SelectMany(x => x))
@@ -807,12 +834,13 @@ public class TestHarness : MonoBehaviour
                 if (allSolved) fakeInfo.Solved();
                 return false;
             };
+
+	        int j = i;
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
                 statuslight.FlashStrike();
-                fakeInfo.HandleStrike();
-	            PlaySoundEffectHandler(KMSoundOverride.SoundEffect.Strike, transform);
+                fakeInfo.HandleStrike(modules[j].ModuleDisplayName);
                 return false;
             };
         }
@@ -824,6 +852,7 @@ public class TestHarness : MonoBehaviour
             testSelectable.Parent = currentSelectable;
             testSelectable.x = modules.Count + i;
 
+	        int j = i;
             needyModules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
@@ -832,7 +861,7 @@ public class TestHarness : MonoBehaviour
             needyModules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
-                fakeInfo.HandleStrike();
+                fakeInfo.HandleStrike(needyModules[j].ModuleDisplayName);
                 return false;
             };
         }
@@ -991,11 +1020,8 @@ public class TestHarness : MonoBehaviour
 		}
 
 		float mouseWheel = Input.GetAxis("Mouse ScrollWheel");
-		if (mouseWheel != 0)
+		if (Mathf.Abs(mouseWheel) > 0.000000001f)
 		{
-			Vector3 move = mouseWheel * zoomSpeed * _camera.forward;
-			Debug.LogFormat("X:{0} Y:{1} Z:{2}", move.x, move.y, move.z);
-			//_camera.Translate(move, Space.World);
 			Camera.main.fieldOfView += (-mouseWheel * zoomSpeed);
 		}
 
@@ -1086,28 +1112,31 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-	IEnumerator MoveCamera(Transform destination)
+	public static IEnumerator MoveCamera(Transform destination)
 	{
-		const float moveTime = 0.25f;
+		const float moveTime = 0.5f;
 		float startTime = Time.time;
-		Vector3 bombOrigin = _bomb.localEulerAngles;
-		Vector3 cameraOrigin = _camera.localPosition;
+
+		
+
+		Vector3 bombOrigin = Instance._bomb.localEulerAngles;
+		Vector3 cameraOrigin = Instance._camera.localPosition;
 
 		Vector3 bombDestination = new Vector3(0, 0, (bombOrigin.z >= 270.01f || bombOrigin.z <= 90f) ? 0.0f : 180.0f);
-		_bomb.localEulerAngles = bombDestination;
+		Instance._bomb.localEulerAngles = bombDestination;
 
-		Vector3 cameraDestination = new Vector3(destination.position.x, _camera.localPosition.y, destination.position.z);
-		_bomb.localEulerAngles = bombOrigin;
+		Vector3 cameraDestination = new Vector3(destination.position.x, Instance._camera.localPosition.y, destination.position.z);
+		Instance._bomb.localEulerAngles = bombOrigin;
 		
 		while ((Time.time - startTime) < moveTime)
 		{
-			_bomb.rotation = Quaternion.Lerp(Quaternion.Euler(bombOrigin), Quaternion.Euler(bombDestination), (Time.time - startTime) / moveTime);
-			_camera.localPosition = Vector3.Lerp(cameraOrigin, cameraDestination, (Time.time - startTime) / moveTime);
+			Instance._bomb.rotation = Quaternion.Lerp(Quaternion.Euler(bombOrigin), Quaternion.Euler(bombDestination), (Time.time - startTime) / moveTime);
+			Instance._camera.localPosition = Vector3.Lerp(cameraOrigin, cameraDestination, (Time.time - startTime) / moveTime);
 			yield return null;
 		}
 
-		_bomb.localEulerAngles = bombDestination;
-		_camera.localPosition = cameraDestination;
+		Instance._bomb.localEulerAngles = bombDestination;
+		Instance._camera.localPosition = cameraDestination;
 	}
 
 	void MoveCamera(TestSelectable selectable)
@@ -1261,34 +1290,38 @@ public class TestHarness : MonoBehaviour
 
         GUILayout.Label("Time remaining: " + fakeInfo.GetFormattedTime());
 
-        GUILayout.Space(10);
-	    TwitchPlaysID.AntiTrollMode = GUILayout.Toggle(TwitchPlaysID.AntiTrollMode, "Troll Commands Disabled");
-	    TwitchPlaysID.AnarchyMode = GUILayout.Toggle(TwitchPlaysID.AnarchyMode, "Anarchy Mode Enabled");
+	    if (TwitchPlaysActive)
+	    {
+		    GUILayout.Space(10);
+		    TwitchPlaysID.AntiTrollMode = GUILayout.Toggle(TwitchPlaysID.AntiTrollMode, "Troll Commands Disabled");
+		    TwitchPlaysID.AnarchyMode = GUILayout.Toggle(TwitchPlaysID.AnarchyMode, "Anarchy Mode Enabled");
 
-        GUI.SetNextControlName("commandField");
-        command = GUILayout.TextField(command);
-        if ((GUILayout.Button("Simulate Twitch Command") || Event.current.keyCode == KeyCode.Return) && GUI.GetNameOfFocusedControl() == "commandField" && command != "")
-        {
-            Debug.Log("Twitch Command: " + command);
-            foreach (Transform module in _twitchPlayModules)
-            {
-	            TwitchPlaysID tpID = module.GetComponentInChildren<TwitchPlaysID>();
-	            if (tpID == null) continue;
-	            tpID.ProcessCommand(command);
-            }
+		    GUI.SetNextControlName("commandField");
+		    command = GUILayout.TextField(command);
+		    if ((GUILayout.Button("Simulate Twitch Command") || Event.current.keyCode == KeyCode.Return) &&
+		        GUI.GetNameOfFocusedControl() == "commandField" && command != "")
+		    {
+			    Debug.Log("Twitch Command: " + command);
+			    foreach (Transform module in _twitchPlayModules)
+			    {
+				    TwitchPlaysID tpID = module.GetComponentInChildren<TwitchPlaysID>();
+				    if (tpID == null) continue;
+				    tpID.ProcessCommand(command);
+			    }
 
-	        if (command.Equals("!cancel", StringComparison.InvariantCultureIgnoreCase))
-	        {
-		        Canceller.SetCancel();
-	        }
-			else if (command.Equals("!stop", StringComparison.InvariantCultureIgnoreCase))
-	        {
-		        Canceller.SetCancel();
-		        TwitchPlaysID.TPCoroutineQueue.CancelFutureSubcoroutines();
-	        }
+			    if (command.Equals("!cancel", StringComparison.InvariantCultureIgnoreCase))
+			    {
+				    Canceller.SetCancel();
+			    }
+			    else if (command.Equals("!stop", StringComparison.InvariantCultureIgnoreCase))
+			    {
+				    Canceller.SetCancel();
+				    TwitchPlaysID.TPCoroutineQueue.CancelFutureSubcoroutines();
+			    }
 
-            command = "";
-        }
+			    command = "";
+		    }
+	    }
     }
 
     private Light testLight;

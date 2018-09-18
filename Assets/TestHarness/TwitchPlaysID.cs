@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -21,10 +22,27 @@ public class TwitchPlaysID : MonoBehaviour
 	public Component TwitchCommandComponent;
 	public MethodInfo ProcessTwitchCommandMethod;
 	public MethodInfo TwitchForcedSolveMethod;
+	public FieldInfo TwitchCancelField;
+	public FieldInfo TwitchHelpMessageField;
+	public FieldInfo TwitchManualCodeField;
+	public FieldInfo TwitchValidCommandsField;
+	public FieldInfo TwitchModuleSolveScoreField;
+	public FieldInfo TwitchModuleStrikeScoreField;
+	public FieldInfo TwitchTimeModeField;
+	public FieldInfo TwitchZenModeField;
+	public FieldInfo TwitchModeField;
+
+	public TimerModule TimerModule;
+	public FakeBombInfo FakeBombInfo;
 
 
 	public bool Solved;
 	public int StrikeCount;
+
+	public string HelpMessage;
+	public string ManualCode;
+	public int ModuleSolveScore = 5;
+	public int ModuleStrikeScore = -6;
 
 	public static bool AntiTrollMode = true;
 	public static bool AnarchyMode;
@@ -36,6 +54,7 @@ public class TwitchPlaysID : MonoBehaviour
 		if (triedToSolve)
 			StopEverything();
 		StrikeCount++;
+		TimerModule.UpdateTimeModeTime(-6, true);
 		return true;
 	}
 
@@ -63,6 +82,7 @@ public class TwitchPlaysID : MonoBehaviour
 	private bool HandlePass()
 	{
 		Solved = true;
+		TimerModule.UpdateTimeModeTime(5, false);
 		return true;
 	}
 
@@ -111,6 +131,20 @@ public class TwitchPlaysID : MonoBehaviour
 					bool forceSolve;
 					while (responseCoroutine.TryMoveNext(out forceSolve, string.Format("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name)) ?? false)
 						yield return responseCoroutine.Current;
+				}
+				else
+				{
+					try
+					{
+						method.Invoke(component, new object[] { });
+					}
+					catch (System.Exception ex)
+					{
+						Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name);
+						Debug.LogException(ex);
+						StopEverything();
+						yield break;
+					}
 				}
 			}
 			
@@ -165,6 +199,7 @@ public class TwitchPlaysID : MonoBehaviour
 
 	public void ProcessCommand(string command)
 	{
+
 		var matches = Regex.Match(command, string.Format(@"!{0} (.+)", ModuleID));
 		if (matches.Success)
 		{
@@ -174,11 +209,90 @@ public class TwitchPlaysID : MonoBehaviour
 			{
 				SolveModule();
 			}
+			else if (internalCommand.Equals("help") || internalCommand.Equals("manual"))
+			{
+				string helpMessage = GetString(TwitchHelpMessageField);
+				string manualCode = GetString(TwitchManualCodeField);
+				if (manualCode == null)
+				{
+					if (BombModule != null)
+						manualCode = BombModule.ModuleDisplayName;
+					else if (NeedyModule != null)
+						manualCode = NeedyModule.ModuleDisplayName;
+					else
+						manualCode = "<null>";
+				}
+
+				if (helpMessage == null)
+					helpMessage = "No help for !{0}. | " + manualCode;
+				else
+					helpMessage += " | " + manualCode;
+
+				Debug.LogFormat(helpMessage, ModuleID);
+			}
+
+
 			else
 			{
-				TPCoroutineQueue.AddToQueue(SimulateModule(matches.Groups[1].Value));
+				string[] validCommands = GetStrings(TwitchValidCommandsField);
+				if(validCommands == null || validCommands.Length == 0 || validCommands.Any(x => Regex.IsMatch(matches.Groups[1].Value, x)))
+					TPCoroutineQueue.AddToQueue(SimulateModule(matches.Groups[1].Value));
 			}
 		}
+
+		if (command.ToLowerInvariant().Equals("!solvebomb"))
+		{
+			SolveModule();
+		}
+	}
+
+	protected void SetBool(FieldInfo boolField, bool val)
+	{
+		if (boolField == null || TwitchCommandComponent == null || boolField.FieldType != typeof(bool)) return;
+		if (boolField.IsStatic)
+		{
+			boolField.SetValue(null, val);
+		}
+		else
+		{
+			boolField.SetValue(TwitchCommandComponent, val);
+		}
+	}
+
+	protected bool? GetBool(FieldInfo boolField)
+	{
+		bool result = boolField != null && TwitchCommandComponent != null && boolField.FieldType == typeof(bool);
+		if (!result) return null;
+		if (boolField.IsStatic)
+			return (bool) boolField.GetValue(null);
+		return (bool) boolField.GetValue(TwitchCommandComponent);
+	}
+
+	protected string GetString(FieldInfo stringField)
+	{
+		bool result = stringField != null && TwitchCommandComponent != null && stringField.FieldType == typeof(string);
+		if (!result) return null;
+		if (stringField.IsStatic)
+			return (string)stringField.GetValue(null);
+		return (string)stringField.GetValue(TwitchCommandComponent);
+	}
+
+	protected string[] GetStrings(FieldInfo stringField)
+	{
+		bool result = stringField != null && TwitchCommandComponent != null && stringField.FieldType == typeof(string[]);
+		if (!result) return null;
+		if (stringField.IsStatic)
+			return (string[])stringField.GetValue(null);
+		return (string[])stringField.GetValue(TwitchCommandComponent);
+	}
+
+	protected int? GetInt(FieldInfo intField)
+	{
+		bool result = intField != null && TwitchCommandComponent != null && intField.FieldType == typeof(int);
+		if (!result) return null;
+		if (intField.IsStatic)
+			return (int)intField.GetValue(null);
+		return (int)intField.GetValue(TwitchCommandComponent);
 	}
 
 	protected void FindTwitchCommandMethod()
@@ -194,6 +308,23 @@ public class TwitchPlaysID : MonoBehaviour
 			TwitchCommandComponent = component;
 			ProcessTwitchCommandMethod = method;
 			TwitchForcedSolveMethod = type.GetMethod("TwitchHandleForcedSolve", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+			TwitchCancelField = type.GetField("TwitchShouldCancelCommand", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchModeField = type.GetField("TwitchPlaysActive", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchTimeModeField = type.GetField("TimeModeActive", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchZenModeField = type.GetField("ZenModeActive", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+			TwitchHelpMessageField = type.GetField("TwitchHelpMessage", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchManualCodeField = type.GetField("TwitchManualCode", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchValidCommandsField = type.GetField("TwitchValidCommands", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+			TwitchModuleSolveScoreField = type.GetField("TwitchModuleScore", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchModuleStrikeScoreField = type.GetField("TwitchModuleStrikeScore", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+			SetBool(TwitchModeField, true);
+			SetBool(TwitchTimeModeField, TimeMode);
+			SetBool(TwitchZenModeField, ZenMode);
+
 			break;
 		}
 	}
@@ -223,6 +354,9 @@ public class TwitchPlaysID : MonoBehaviour
 		if (method.DeclaringType != null)
 			methodDeclaringTypeFullName = method.DeclaringType.FullName;
 
+		IEnumerator focus = null;
+		bool focused = false;
+
 		// Simple Command
 		if (typeof(IEnumerable<KMSelectable>).IsAssignableFrom(ProcessTwitchCommandMethod.ReturnType))
 		{
@@ -243,13 +377,18 @@ public class TwitchPlaysID : MonoBehaviour
 				yield break;
 			}
 
+			focus = TestHarness.MoveCamera(Module);
+			while (focus.MoveNext())
+				yield return focus.Current;
+			focused = true;
+
 			int initialStrikes = StrikeCount;
 			foreach (KMSelectable selectable in selectableSequence)
 			{
 				if (Canceller.ShouldCancel)
 				{
 					Canceller.ResetCancel();
-					yield break;
+					break;
 				}
 				DoInteractionStart(selectable);
 				yield return new WaitForSeconds(0.1f);
@@ -263,7 +402,7 @@ public class TwitchPlaysID : MonoBehaviour
 		}
 
 		// Complex Commands
-		if (method.ReturnType == typeof(IEnumerator))
+		else if (method.ReturnType == typeof(IEnumerator))
 		{
 			IEnumerator responseCoroutine = null;
 			try
@@ -323,6 +462,16 @@ public class TwitchPlaysID : MonoBehaviour
 				}
 			}
 
+			focus = TestHarness.MoveCamera(Module);
+			while (focus.MoveNext())
+				yield return focus.Current;
+			focused = true;
+
+			bool needQuaternionReset = false;
+			Quaternion initialModuleQuaternion = Module.localRotation;
+			bool tryCancelSequence = false;
+			bool multipleStrikes = false;
+
 			while (true)
 			{
 				
@@ -337,6 +486,8 @@ public class TwitchPlaysID : MonoBehaviour
 				if (moved.HasValue && !moved.Value)
 					break;
 
+				SetBool(TwitchCancelField, Canceller.ShouldCancel);
+
 				object currentObject = responseCoroutine.Current;
 				if (currentObject is KMSelectable)
 				{
@@ -345,8 +496,8 @@ public class TwitchPlaysID : MonoBehaviour
 					{
 						DoInteractionEnd(selectable);
 						heldSelectables.Remove(selectable);
-						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
-							yield break;
+						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
+							break;
 					}
 					else
 					{
@@ -361,6 +512,15 @@ public class TwitchPlaysID : MonoBehaviour
 						DoInteractionStart(selectable);
 						yield return new WaitForSeconds(.1f);
 						DoInteractionEnd(selectable);
+						if (tryCancelSequence && Canceller.ShouldCancel)
+						{
+							Canceller.ResetCancel();
+							break;
+						}
+
+						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
+							break;
+
 					}
 				}
 				else if (currentObject is string)
@@ -374,7 +534,8 @@ public class TwitchPlaysID : MonoBehaviour
 						if (Canceller.ShouldCancel)
 						{
 							Canceller.ResetCancel();
-							yield break;
+							Debug.Log("Twitch handler sent: " + currentString);
+							break;
 						}
 						continue;
 					}
@@ -385,7 +546,8 @@ public class TwitchPlaysID : MonoBehaviour
 						if (Canceller.ShouldCancel)
 						{
 							Canceller.ResetCancel();
-							yield break;
+							Debug.Log("Twitch handler sent: " + currentString);
+							break;
 						}
 
 						yield return null;
@@ -397,7 +559,7 @@ public class TwitchPlaysID : MonoBehaviour
 						if (AntiTrollMode && !AnarchyMode)
 						{
 							Debug.Log("Twitch handler sent: " + currentString);
-							yield break;
+							break;
 						}
 						else
 						{
@@ -406,19 +568,79 @@ public class TwitchPlaysID : MonoBehaviour
 						}
 					}
 
-					Debug.Log("Twitch handler sent: " + currentObject);
+					else if (currentString.Equals("cancelled") && Canceller.ShouldCancel)
+					{
+						Canceller.ResetCancel();
+						break;
+					}
+
+					else if(currentString.Equals("trycancelsequence"))
+					{
+						tryCancelSequence = true;
+						continue;
+					}
+
+					else if(currentString.Equals("multiple strikes"))
+					{
+						multipleStrikes = true;
+						
+					}
+					else if (currentString.Equals("end multiple strikes"))
+					{
+						multipleStrikes = false;
+						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
+							break;
+					}
+					else if (currentString.Equals("autosolve"))
+					{
+						SolveModule();
+						break;
+					}
+					else if (currentString.Equals("detonate"))
+					{
+						FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
+						FakeBombInfo.HandleStrike("Detonate Command in TP module");
+						break;
+					}
+
+					else
+					{
+						Debug.Log("Twitch handler sent: " + currentObject);
+					}
+
 					yield return currentObject;
 				}
 				else if (currentObject is Quaternion)
 				{
+					needQuaternionReset = true;
 					Module.localRotation = (Quaternion)currentObject;
 				}
 				else
 					yield return currentObject;
 
-				if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
-					yield break;
+				if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
+					break;
+
+				tryCancelSequence = false;
 			}
+
+			if (needQuaternionReset)
+			{
+				Quaternion currentRotation = Module.localRotation;
+				float startTime = Time.time;
+				while ((Time.time - startTime) < 0.25f)
+				{
+					Module.localRotation = Quaternion.Lerp(currentRotation, initialModuleQuaternion, (Time.time - startTime) / 0.25f);
+					yield return null;
+				}
+			}
+		}
+
+		if (focused)
+		{
+			focus = TestHarness.MoveCamera(TestHarness.Instance.transform);
+			while (focus.MoveNext())
+				yield return focus.Current;
 		}
 	}
 }

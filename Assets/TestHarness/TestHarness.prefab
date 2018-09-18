@@ -10,6 +10,7 @@ GameObject:
   - component: {fileID: 439642}
   - component: {fileID: 114848120511536268}
   - component: {fileID: 114617884380056244}
+  - component: {fileID: 114641285877887362}
   m_Layer: 0
   m_Name: TestHarness
   m_TagString: Untagged
@@ -893,6 +894,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4555501708394932}
   - component: {fileID: 114173487630168412}
+  - component: {fileID: 114093679093806600}
   m_Layer: 0
   m_Name: TimerModule
   m_TagString: Untagged
@@ -16061,6 +16063,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Mobile/Diffuse
+--- !u!114 &114093679093806600
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1186157034193446}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1675560866, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114100447210127442
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -16241,12 +16254,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bff9aff62444b81a4856204e01a6845, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Audio: {fileID: 114093679093806600}
   TimerText: {fileID: 102884644907197288}
   StrikesText: {fileID: 102904636005135822}
   TimeRemaining: 600
   StrikeCount: 0
   TimerRunning: 0
   ExplodedToTime: 0
+  ZenMode: 0
+  TimeMode: 0
+  TimeModeMultiplier: 8
+  TimeModeMultiplierUpperCap: 10
+  TimeModeMultiplierBoostRate: 0.1
+  TimeModeMinimumTimeGained: 20
+  TimeModeMultiplierLowerCap: 1
+  TimeModeMultiplierPenaltyRate: 1.5
+  TimeModeStrikePenaltyMultiplier: 0.2
+  TimeModeMinimumTimeLost: 15
 --- !u!114 &114173888932421550
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -17031,6 +17055,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Legacy Shaders/Diffuse
+--- !u!114 &114641285877887362
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 101964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1675560866, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114643620400535006
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -17453,8 +17488,14 @@ MonoBehaviour:
   IDNumber: {fileID: 1762821375086342}
   Unsupported: {fileID: 1232823179714264}
   TwitchCommandComponent: {fileID: 0}
+  TimerModule: {fileID: 0}
+  FakeBombInfo: {fileID: 0}
   Solved: 0
   StrikeCount: 0
+  HelpMessage: 
+  ManualCode: 
+  ModuleSolveScore: 5
+  ModuleStrikeScore: -6
 --- !u!114 &114815473616059116
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -17590,6 +17631,8 @@ MonoBehaviour:
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
   AudioClips: []
   EdgeworkConfiguration: {fileID: 0}
+  TwitchPlaysActive: 1
+  TwitchPlaysMode: 0
   turnSpeed: 128
   panSpeed: 4
   zoomSpeed: 16
