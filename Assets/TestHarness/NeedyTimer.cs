@@ -4,23 +4,20 @@ public class NeedyTimer : MonoBehaviour
 {
 	public float TimeRemaining { get; set; }
 
-	protected void Awake()
-	{
-		Reset();
-	}
-
 	public void Reset()
 	{
-		TimeRemaining = TotalTime;
+		TimeRemaining = ParentComponent != null ? ParentComponent.CountdownTime : TotalTime;
 		UpdateSevenSegText();
-		isWarning = false;
+		IsWarning = false;
 	}
 
-	public void StartTimer()
+	public void StartTimer(bool reset=false)
 	{
+		if (reset) Reset();
+
 		Display.On = true;
-		isRunning = true;
-		isWarning = false;
+		IsRunning = true;
+		IsWarning = false;
 
 		if (ParentComponent.OnNeedyActivation != null)
 			ParentComponent.OnNeedyActivation();
@@ -29,8 +26,8 @@ public class NeedyTimer : MonoBehaviour
 	public void StopTimer()
 	{
 		Display.On = false;
-		isRunning = false;
-		isWarning = false;
+		IsRunning = false;
+		IsWarning = false;
 
 		if (ParentComponent.OnNeedyDeactivation != null)
 			ParentComponent.OnNeedyDeactivation();
@@ -38,33 +35,18 @@ public class NeedyTimer : MonoBehaviour
 
 	private void Update()
 	{
-		if (!isRunning || TimeRemaining <= 0f) return;
+		if (!IsRunning || TimeRemaining <= 0f) return;
 
 		TimeRemaining -= Time.deltaTime;
-		if (TimeRemaining <= WarnTime && !isWarning)
-		{
-			isWarning = true;
-			if (OnTimerWarn != null)
-			{
-				OnTimerWarn();
-			}
-		}
+		IsWarning = TimeRemaining <= WarnTime && TimeRemaining > 0;
+
 		if (TimeRemaining <= 0f)
 		{
 			if (OnTimerExpire != null)
-			{
 				OnTimerExpire();
-			}
 			StopTimer();
 		}
-		if (TimeRemaining > WarnTime && isWarning)
-		{
-			isWarning = false;
-			if (OnTimerWarnOff != null)
-			{
-				OnTimerWarnOff();
-			}
-		}
+
 		UpdateSevenSegText();
 	}
 
@@ -82,8 +64,24 @@ public class NeedyTimer : MonoBehaviour
 	public NeedyTimerWarnEvent OnTimerWarn;
 	public NeedyTimerWarnOffEvent OnTimerWarnOff;
 
-	public bool isRunning { get; private set; }
-	protected bool isWarning;
+	public bool IsRunning { get; private set; }
+	protected bool IsWarning
+	{
+		get { return _isWarning; }
+		set
+		{
+			if (_isWarning == value) return;
+
+			_isWarning = value;
+			if (value && OnTimerWarn != null)
+				OnTimerWarn();
+
+			if (!value && OnTimerWarnOff != null)
+				OnTimerWarnOff();
+		}
+	}
+
+	private bool _isWarning;
 
 	public delegate void NeedyTimerExpireEvent();
 	public delegate void NeedyTimerWarnEvent();

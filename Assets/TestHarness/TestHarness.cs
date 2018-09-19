@@ -884,8 +884,8 @@ public class TestHarness : MonoBehaviour
 	        needyTimer.TotalTime = needyModules[i].CountdownTime;
 	        needyTimer.WarnTime = 5;
 	        
-	        needyModules[i].GetNeedyTimeRemainingHandler += () => needyTimer.isRunning ? needyTimer.TimeRemaining : -1;
-	        needyModules[i].SetNeedyTimeRemainingHandler += delegate (float time) { if (needyTimer.isRunning) needyTimer.TimeRemaining = time; };
+	        needyModules[i].GetNeedyTimeRemainingHandler += () => needyTimer.IsRunning ? needyTimer.TimeRemaining : -1;
+	        needyModules[i].SetNeedyTimeRemainingHandler += delegate (float time) { if (needyTimer.IsRunning) needyTimer.TimeRemaining = time; };
 			needyTimer.OnTimerExpire += delegate
 			{
 				if (needyModules[j].OnTimerExpired != null)
@@ -1301,10 +1301,10 @@ public class TestHarness : MonoBehaviour
         {
             foreach (NeedyTimer needyModule in FindObjectsOfType<NeedyTimer>())
             {
-	            if (!needyModule.isRunning)
+	            if (!needyModule.IsRunning)
 	            {
-		            needyModule.Reset();
-		            needyModule.StartTimer();
+		            needyModule.StartTimer(true);
+		            PlaySoundEffectHandler(KMSoundOverride.SoundEffect.NeedyActivated, needyModule.transform);
 	            }
             }
         }
