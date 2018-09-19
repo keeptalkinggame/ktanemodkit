@@ -27,6 +27,26 @@ public class TimerModule : MonoBehaviour
 	public float TimeModeMinimumTimeLost = 15.0f;
 
 
+	protected bool EmergencyLighsRunning
+	{
+		get { return _emergencyLightsRunning; }
+		set
+		{
+			if (value == _emergencyLightsRunning) return;
+			_emergencyLightsRunning = value;
+			if (value && OnStartEmergencyLights != null) OnStartEmergencyLights();
+			if (!value && OnStopEmergencyLights != null) OnStopEmergencyLights();
+		}
+	}
+	private bool _emergencyLightsRunning;
+	
+	public delegate void StartEmergencyLights();
+	public delegate void StopEmergencyLights();
+
+	public StartEmergencyLights OnStartEmergencyLights;
+	public StopEmergencyLights OnStopEmergencyLights;
+	
+
 	private void Start()
 	{
 		if (ZenMode) TimeRemaining = 1.0f;
@@ -64,6 +84,7 @@ public class TimerModule : MonoBehaviour
 			}
 
 			TimeRemaining -= Time.deltaTime * multiplier;
+			EmergencyLighsRunning = TimeRemaining <= 60.0f && TimeRemaining >= 0.0f;
 
 			if (TimeRemaining < 0)
 			{

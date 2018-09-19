@@ -704,6 +704,15 @@ public class TestHarness : MonoBehaviour
 		_timer.transform.localScale = Vector3.one;
 		_timer.transform.SetParent(timerAnchor, false);
 		_timer.gameObject.SetActive(true);
+
+		_timer.OnStartEmergencyLights += delegate 
+		{
+			_emergencyLightsActivated = true;
+			StartCoroutine(CycleEmergencyLights());
+		};
+
+		_timer.OnStopEmergencyLights += delegate { _emergencyLightsActivated = false; };
+
 		fakeInfo.timerModule = _timer;
 
 		if (TwitchPlaysMode == TwitchPlaysMode.TimeMode)
@@ -1374,8 +1383,35 @@ public class TestHarness : MonoBehaviour
 	    }
     }
 
-    private Light testLight;
+	private Light _emergencyLight;
+	private bool _emegerncyLightsOn;
+	private bool _emergencyLightsActivated;
+	public IEnumerator CycleEmergencyLights()
+	{
+		while (_emergencyLightsActivated)
+		{
+			TurnOnEmergencyLights();
+			yield return new WaitForSeconds(1.0f);
+			TurnOffEmergencyLights();
+			yield return new WaitForSeconds(Mathf.Lerp(0.75f, 2.0f, fakeInfo.timeLeft / 60.0f));
+		}
+	}
 
+	void TurnOnEmergencyLights()
+	{
+		_emegerncyLightsOn = true;
+		UpdateAmbientIntensity();
+		PlaySoundEffectHandler(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
+	}
+
+	void TurnOffEmergencyLights()
+	{
+		_emegerncyLightsOn = false;
+		UpdateAmbientIntensity();
+	}
+
+	private bool lightsOn;
+    private Light testLight;
     public void PrepareLights()
     {
         foreach (Light l in FindObjectsOfType<Light>())
@@ -1388,24 +1424,35 @@ public class TestHarness : MonoBehaviour
         o.transform.localRotation = Quaternion.Euler(new Vector3(130, -30, 0));
         testLight = o.AddComponent<Light>();
         testLight.type = LightType.Directional;
+
+	    o = new GameObject("Emergency Light");
+	    o.transform.localPosition = new Vector3(0, 3, 0);
+	    o.transform.localRotation = Quaternion.Euler(new Vector3(130, -30, 0));
+	    _emergencyLight = o.AddComponent<Light>();
+	    _emergencyLight.type = LightType.Directional;
+	    _emergencyLight.color = Color.red;
+	    _emergencyLight.enabled = false;
     }
+
+	public void UpdateAmbientIntensity()
+	{
+		RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
+		RenderSettings.ambientIntensity = lightsOn && !_emegerncyLightsOn ? 1f : 0.1f;
+		DynamicGI.UpdateEnvironment();
+		testLight.enabled = lightsOn && !_emegerncyLightsOn;
+		_emergencyLight.enabled = _emegerncyLightsOn;
+	}
 
     public void TurnLightsOn()
     {
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
-        RenderSettings.ambientIntensity = 1f;
-        DynamicGI.UpdateEnvironment();
-
-        testLight.enabled = true;
+	    lightsOn = true;
+	    UpdateAmbientIntensity();
     }
 
     public void TurnLightsOff()
     {
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
-        RenderSettings.ambientIntensity = 0.1f;
-        DynamicGI.UpdateEnvironment();
-
-        testLight.enabled = false;
-    }
+	    lightsOn = false;
+		UpdateAmbientIntensity();
+	}
 }
 
