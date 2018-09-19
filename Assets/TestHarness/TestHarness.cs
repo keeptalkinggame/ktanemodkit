@@ -477,6 +477,7 @@ public class TestHarness : MonoBehaviour
         {
             TurnLightsOn();
             fakeInfo.OnLightsOn();
+	        PlaySoundEffectHandler(KMSoundOverride.SoundEffect.Switch, transform);
         };
         TurnLightsOff();
 
@@ -1108,6 +1109,7 @@ public class TestHarness : MonoBehaviour
 
 	                    if (hitArea.transform.eulerAngles.z > 270.0f || hitArea.transform.eulerAngles.z < 90.0f)
 	                    {
+		                    PlaySoundEffectHandler(KMSoundOverride.SoundEffect.SelectionTick, hitArea.Selectable.transform);
 		                    hitArea.Selectable.Select();
 		                    currentSelectableArea = hitArea;
 	                    }
@@ -1330,12 +1332,14 @@ public class TestHarness : MonoBehaviour
         {
             TurnLightsOn();
             fakeInfo.OnLightsOn();
+	        PlaySoundEffectHandler(KMSoundOverride.SoundEffect.LightBuzzShort, transform);
         }
 
         if (GUILayout.Button("Lights Off"))
         {
             TurnLightsOff();
             fakeInfo.OnLightsOff();
+	        PlaySoundEffectHandler(KMSoundOverride.SoundEffect.LightBuzz, transform);
         }
 
         bool previous = gamepadEnabled;
