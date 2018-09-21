@@ -1378,6 +1378,7 @@ GameObject:
   - component: {fileID: 4598041152613868}
   - component: {fileID: 114165574428916416}
   - component: {fileID: 114149635203600312}
+  - component: {fileID: 114133804580953004}
   m_Layer: 0
   m_Name: NeedyTimer
   m_TagString: Untagged
@@ -16588,6 +16589,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Mobile/Diffuse
+--- !u!114 &114133804580953004
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1307330936428782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1675560866, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114145472506656858
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -16705,6 +16717,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 635ac7485ab3ba340832c117eed664db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Audio: {fileID: 114133804580953004}
   Display: {fileID: 114149635203600312}
   TotalTime: 0
   ParentComponent: {fileID: 0}
@@ -18109,6 +18122,7 @@ MonoBehaviour:
   TwoFactorWidget: {fileID: 114885870854110436}
   CustomWidget: {fileID: 114213089377510072}
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
+  AudioVolume: 0.25
   AudioClips: []
   EdgeworkConfiguration: {fileID: 0}
   TwitchPlaysActive: 1

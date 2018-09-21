@@ -107,6 +107,8 @@ public class FakeBombInfo : MonoBehaviour
 
     public List<KeyValuePair<KMBombModule, bool>> modules = new List<KeyValuePair<KMBombModule, bool>>();
     public List<KMNeedyModule> needyModules = new List<KMNeedyModule>();
+	public List<NeedyTimer> needyModuleTimers { get { return needyModules.Select(x => x.GetComponentInChildren<NeedyTimer>()).ToList(); } }
+
 	public List<Widget> widgets = new List<Widget>();
 
     public List<string> GetModuleNames()
@@ -167,6 +169,11 @@ public class FakeBombInfo : MonoBehaviour
 		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombExplode, transform);
 		timerModule.TimerRunning = false;
 		exploded = true;
+
+		foreach (NeedyTimer timer in needyModuleTimers)
+		{
+			timer.StopTimer(NeedyTimer.NeedyState.Terminated);
+		}
 	}
 
 	public void HandleStrike(string reason = null)
@@ -208,6 +215,9 @@ public class FakeBombInfo : MonoBehaviour
 
 		solved = true;
         if (HandleSolved != null) HandleSolved();
+
+	    foreach (NeedyTimer timer in needyModuleTimers)
+		    timer.StopTimer(NeedyTimer.NeedyState.BombComplete);
     }
 
 	public delegate void LightState(bool state);
@@ -867,54 +877,34 @@ public class TestHarness : MonoBehaviour
 
         for (int i = 0; i < needyModules.Count; i++)
         {
-            TestSelectable testSelectable = needyModules[i].GetComponent<TestSelectable>();
-	        StatusLight statusLight = CreateStatusLight(needyModules[i].transform);
+	        KMNeedyModule needyModule = needyModules[i];
+
+            TestSelectable testSelectable = needyModule.GetComponent<TestSelectable>();
             currentSelectable.Children[modules.Count + i] = testSelectable;
             testSelectable.Parent = currentSelectable;
             testSelectable.x = modules.Count + i;
 
-	        NeedyTimer needyTimer = Instantiate(NeedyTimerPrefab);
-	        needyTimer.ParentComponent = needyModules[i];
+	        StatusLight statusLight = CreateStatusLight(needyModule.transform);
+			NeedyTimer needyTimer = Instantiate(NeedyTimerPrefab);
+	        needyTimer.ParentComponent = needyModule;
 
-			int j = i;
-            needyModules[i].OnPass = delegate ()
+	        needyModule.OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
 	            needyTimer.StopTimer();
                 return false;
             };
-            needyModules[i].OnStrike = delegate ()
+	        needyModule.OnStrike = delegate ()
             {
                 Debug.Log("Strike");
 	            if (statusLight != null) statusLight.FlashStrike();
-                fakeInfo.HandleStrike(needyModules[j].ModuleDisplayName);
+                fakeInfo.HandleStrike(needyModule.ModuleDisplayName);
                 return false;
             };
 
-	        needyTimer.TotalTime = needyModules[i].CountdownTime;
-	        needyTimer.WarnTime = 5;
-	        
-	        needyModules[i].GetNeedyTimeRemainingHandler += () => needyTimer.IsRunning ? needyTimer.TimeRemaining : -1;
-	        needyModules[i].SetNeedyTimeRemainingHandler += delegate (float time) { if (needyTimer.IsRunning) needyTimer.TimeRemaining = time; };
-			needyTimer.OnTimerExpire += delegate
-			{
-				if (needyModules[j].OnTimerExpired != null)
-					needyModules[j].OnTimerExpired();
-			};
-
-	        KMAudio.KMAudioRef audioRef = null;
-			needyTimer.OnTimerWarn += delegate
-			{
-				if (needyTimer.ParentComponent.WarnAtFiveSeconds)
-					audioRef = PlaySoundEffectHandler(KMSoundOverride.SoundEffect.NeedyWarning, needyTimer.transform);
-			};
-
-			needyTimer.OnTimerWarnOff += delegate
-			{
-				if (audioRef == null || audioRef.StopSound == null) return;
-				audioRef.StopSound();
-				audioRef = null;
-			};
+	        needyTimer.TotalTime = needyModule.CountdownTime;
+	        needyModule.GetNeedyTimeRemainingHandler += needyTimer.GetTimeRemaining;
+	        needyModule.SetNeedyTimeRemainingHandler += needyTimer.SetTimeRemaining;
 
 	        needyTimer.transform.SetParent(needyTimer.ParentComponent.transform, false);
 	        needyTimer.transform.gameObject.SetActive(true);
@@ -1310,21 +1300,17 @@ public class TestHarness : MonoBehaviour
     {
         if (GUILayout.Button("Activate Needy Modules"))
         {
-            foreach (NeedyTimer needyModule in FindObjectsOfType<NeedyTimer>())
-            {
-	            if (!needyModule.IsRunning)
-	            {
-		            needyModule.StartTimer(true);
-		            PlaySoundEffectHandler(KMSoundOverride.SoundEffect.NeedyActivated, needyModule.transform);
-	            }
-            }
+	        foreach (NeedyTimer needyModule in fakeInfo.needyModuleTimers)
+	        {
+		        needyModule.StartTimer();
+	        }
         }
 
         if (GUILayout.Button("Deactivate Needy Modules"))
         {
-            foreach (NeedyTimer needyModule in FindObjectsOfType<NeedyTimer>())
+            foreach (NeedyTimer needyModule in fakeInfo.needyModuleTimers)
             {
-	            needyModule.StopTimer();
+	            needyModule.StopTimer(NeedyTimer.NeedyState.InitialSetup);
             }
         }
 
