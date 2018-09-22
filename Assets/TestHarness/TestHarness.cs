@@ -1191,7 +1191,7 @@ public class TestHarness : MonoBehaviour
 
 	public static IEnumerator MoveCamera(Transform destination)
 	{
-		const float moveTime = 0.5f;
+		const float moveTime = 0.125f;
 		float startTime = Time.time;
 
 		

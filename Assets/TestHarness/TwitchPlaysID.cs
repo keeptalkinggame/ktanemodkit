@@ -380,6 +380,7 @@ public class TwitchPlaysID : MonoBehaviour
 			focus = TestHarness.MoveCamera(Module);
 			while (focus.MoveNext())
 				yield return focus.Current;
+			yield return new WaitForSeconds(0.5f);
 			focused = true;
 
 			int initialStrikes = StrikeCount;
@@ -465,6 +466,7 @@ public class TwitchPlaysID : MonoBehaviour
 			focus = TestHarness.MoveCamera(Module);
 			while (focus.MoveNext())
 				yield return focus.Current;
+			yield return new WaitForSeconds(0.5f);
 			focused = true;
 
 			bool needQuaternionReset = false;
@@ -641,6 +643,7 @@ public class TwitchPlaysID : MonoBehaviour
 			focus = TestHarness.MoveCamera(TestHarness.Instance.transform);
 			while (focus.MoveNext())
 				yield return focus.Current;
+			yield return new WaitForSeconds(0.5f);
 		}
 	}
 }
