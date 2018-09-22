@@ -574,7 +574,7 @@ public class TestHarness : MonoBehaviour
 		}
 	}
 
-	void PrepareModuleAnchor(List<List<Transform>> anchors, Transform module, ref int timerFace)
+	Transform PrepareModuleAnchor(List<List<Transform>> anchors, Transform module, ref int timerFace, Transform parent, bool prepareTwitchPlays = true)
 	{
 		module.localPosition = Vector3.zero;
 		module.localRotation = Quaternion.identity;
@@ -852,7 +852,7 @@ public class TestHarness : MonoBehaviour
 
 		List<KMBombModule> modules = FindObjectsOfType<KMBombModule>().ToList();
         List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
-	    PrepareBomb(modules, needyModules, fakeInfo.widgets);
+	    PrepareBomb(modules, needyModules, ref fakeInfo.widgets);
 
 	    fakeInfo.timerModule = _timer;
         fakeInfo.needyModules = needyModules.ToList();
