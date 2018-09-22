@@ -5,14 +5,14 @@ using UnityEngine;
 public class TwoFactorWidget : Widget
 {
 	private static int counter = 1;
-	public int instance;
+	[PrivateWhenPlaying] public int instance;
 	public int code;
 	private float newcodetime;
 	public float timeremaining;
 
-	public TextMesh TwoFactorTextMesh;
-	public TextMesh TimeRemainingTextMesh;
-	public MeshRenderer TwoFactorDisplay;
+	[PrivateWhenPlaying] public TextMesh TwoFactorTextMesh;
+	[PrivateWhenPlaying] public TextMesh TimeRemainingTextMesh;
+	[PrivateWhenPlaying] public MeshRenderer TwoFactorDisplay;
 
 	private AudioSource _source;
 

@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class SerialNumber : Widget
 {
-	public TextMesh serialTextMesh;
-	public string serial;
+	[PrivateWhenPlaying] public TextMesh serialTextMesh;
+	[ReadOnlyWhenPlaying] public string serial;
 
 	static readonly char[] SerialNumberPossibleCharArray = new char[35]
 	{

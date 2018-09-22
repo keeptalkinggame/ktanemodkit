@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class PortWidget : Widget
 {
-	public List<string> ports;
+	[ReadOnlyWhenPlaying] public List<string> ports;
 
-	public Transform TextPortsTransform;
-	public TextMesh OtherPortsTextMesh;
+	[PrivateWhenPlaying] public Transform TextPortsTransform;
+	[PrivateWhenPlaying] public TextMesh OtherPortsTextMesh;
 
-	public Transform GraphicPortsTransform;
-	public Transform GraphicPortsFillerTransform;
+	[PrivateWhenPlaying] public Transform GraphicPortsTransform;
+	[PrivateWhenPlaying] public Transform GraphicPortsFillerTransform;
 
 	public static PortWidget CreateComponent(PortWidget where, List<string> portNames = null)
 	{

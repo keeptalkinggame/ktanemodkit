@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class BatteryWidget : Widget
 {
-	public int batt;
-	public TextMesh BatteryTextMesh;
-	public Transform[] BatteryHolders;
-	public Transform[] BatterySets;
+	[ReadOnlyWhenPlaying] public int batt;
+	[PrivateWhenPlaying] public TextMesh BatteryTextMesh;
+	[PrivateWhenPlaying] public Transform[] BatteryHolders;
+	[PrivateWhenPlaying] public Transform[] BatterySets;
 
 	public static BatteryWidget CreateComponent(BatteryWidget where, int battCount = -1)
 	{

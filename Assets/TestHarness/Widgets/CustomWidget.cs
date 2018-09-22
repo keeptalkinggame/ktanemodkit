@@ -3,8 +3,8 @@ using UnityEngine;
 public class CustomWidget : Widget
 {
 
-	public string key;
-	public string data;
+	[ReadOnlyWhenPlaying] public string key;
+	[ReadOnlyWhenPlaying] public string data;
 
 	public static CustomWidget CreateComponent(CustomWidget where, string queryKey, string dataString)
 	{

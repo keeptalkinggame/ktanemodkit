@@ -6,9 +6,9 @@ public abstract class Widget : MonoBehaviour
 	public abstract string GetResult(string key, string data);
 	public virtual void Activate() { }
 
-	public int SizeX;
-	public int SizeZ;
-	public bool Rotate;
+	[PrivateWhenPlaying] public int SizeX;
+	[PrivateWhenPlaying] public int SizeZ;
+	[PrivateWhenPlaying] public bool Rotate;
 	public static Vector3 BaseSize = new Vector3(0.06f, 0.03f, 0.06f);
 }
 

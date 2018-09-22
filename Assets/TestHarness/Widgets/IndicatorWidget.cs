@@ -13,12 +13,12 @@ public class IndicatorWidget : Widget
 		"BOB","FRK"
 	};
 
-	public string Val;
-	public bool On;
+	[ReadOnlyWhenPlaying] public string Val;
+	[ReadOnlyWhenPlaying] public bool On;
 
-	public TextMesh IndicatorTextMesh;
-	public Transform LightOnTransform;
-	public Transform LightOffTransform;
+	[PrivateWhenPlaying] public TextMesh IndicatorTextMesh;
+	[PrivateWhenPlaying] public Transform LightOnTransform;
+	[PrivateWhenPlaying] public Transform LightOffTransform;
 
 	public static IndicatorWidget CreateComponent(IndicatorWidget where, string label = null, IndicatorState state = IndicatorState.RANDOM)
 	{
