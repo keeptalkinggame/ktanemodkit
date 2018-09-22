@@ -580,18 +580,24 @@ public class TestHarness : MonoBehaviour
 		module.localRotation = Quaternion.identity;
 		module.localScale = Vector3.one;
 		Transform anchor = anchors[timerFace].FirstOrDefault();
-		while (anchor == null)
+		while (anchor == null && anchors.Count > 0)
 		{
 			anchors.Remove(anchors[timerFace]);
 			timerFace = Random.Range(0, anchors.Count);
 			anchor = anchors[timerFace].FirstOrDefault();
 		}
+		if (anchor == null) return null;
+
 		anchors[timerFace].Remove(anchor);
 		module.SetParent(anchor, false);
-		PrepareTwitchPlaysModule(module);
+
+		if(parent != null) module.SetParent(parent, true);
+		if(prepareTwitchPlays) PrepareTwitchPlaysModule(module);
+
+		return anchor;
 	}
 
-	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, List<Widget> widgets)
+	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, ref List<Widget> widgets)
 	{
 		Transform bombTransform;
 		List<Transform> timerSideModules = new List<Transform>();
@@ -644,14 +650,21 @@ public class TestHarness : MonoBehaviour
 		}
 		else
 		{
-			bombTransform = new GameObject().transform;
-			bombTransform.gameObject.AddComponent<KMBomb>();
-			bombTransform.name = "Bomb";
-
 			int square = 1;
 			while ((square * square * 2) < (modules.Count + timerSideModules.Count + 1))
 				square++;
 			float squaresize = 0.2f * square;
+
+			bombTransform = new GameObject("Bomb").transform;
+			bombTransform.gameObject.AddComponent<KMBomb>();
+
+			Transform bombFaces = new GameObject("Bomb Faces").transform;
+			bombFaces.SetParent(bombTransform);
+
+			Transform bottom = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			bottom.localScale = new Vector3(squaresize, 0.005f, squaresize);
+			bottom.SetParent(bombFaces, true);
+
 			for (int bombFace = 0; bombFace < 2; bombFace++)
 			{
 				Transform bombFaceTransform = new GameObject().transform;
@@ -660,26 +673,29 @@ public class TestHarness : MonoBehaviour
 				anchors.Add(new List<Transform>());
 				timerAnchors.Add(new List<Transform>());
 
+				Transform walls = new GameObject("Walls").transform;
+				walls.SetParent(bombFaceTransform);
+
 				for (float i = (-squaresize / 2) + 0.1f; i < squaresize / 2; i += 0.2f)
 				{
-					Transform rightwall = new GameObject().transform;
+					Transform rightwall = new GameObject(bombFace == 0 ? "Right Wall" : "Left Wall").transform;
 					rightwall.localPosition = new Vector3((squaresize / 2), -0.1f, i);
 					rightwall.localEulerAngles = new Vector3(0f, -90f, 0f);
-					rightwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-					rightwall.SetParent(bombFaceTransform, false);
-					GameObject.CreatePrimitive(PrimitiveType.Quad).transform.SetParent(rightwall, false);
+					rightwall.localScale = new Vector3(0.2f, 0.2f, 0.005f);
+					rightwall.SetParent(walls, false);
+					GameObject.CreatePrimitive(PrimitiveType.Cube).transform.SetParent(rightwall, false);
 
-					Transform topwall = new GameObject().transform;
+					Transform topwall = new GameObject(bombFace == 0 ? "Top Wall" : "Bottom Wall").transform;
 					topwall.localPosition = new Vector3(i, -0.1f, (squaresize / 2) - (squaresize * bombFace));
 					topwall.localEulerAngles = new Vector3(0f, -180f + (180f * bombFace), 0f);
-					topwall.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-					topwall.SetParent(bombFaceTransform, false);
-					GameObject.CreatePrimitive(PrimitiveType.Quad).transform.SetParent(topwall, false);
+					topwall.localScale = new Vector3(0.2f, 0.2f, 0.005f);
+					topwall.SetParent(walls, false);
+					GameObject.CreatePrimitive(PrimitiveType.Cube).transform.SetParent(topwall, false);
 
 					for (float j = (-squaresize / 2) + 0.1f; j < squaresize / 2; j += 0.2f)
 					{
-						Transform anchor = new GameObject().transform;
-						anchor.localPosition = new Vector3(i, 0, j);
+						Transform anchor = new GameObject("Anchor").transform;
+						anchor.localPosition = new Vector3(i, -0.02f, j);
 						anchor.SetParent(bombFaceTransform, true);
 						anchors[bombFace].Add(anchor);
 						timerAnchors[bombFace].Add(anchor);
@@ -688,16 +704,19 @@ public class TestHarness : MonoBehaviour
 
 				bombFaceTransform.localPosition = new Vector3(0, (bombFace * 0.2f) - 0.1f, 0);
 				bombFaceTransform.localEulerAngles = new Vector3(0, 0, 180f - (bombFace * 180f));
-				bombFaceTransform.SetParent(bombTransform, true);
+				bombFaceTransform.SetParent(bombFaces, true);
 			}
+
+			Transform widgetAreas = new GameObject("Widget Areas").transform;
+			widgetAreas.SetParent(bombTransform);
 
 			for (int i = 0; i < square; i++)
 			{
 				float offset = (i * 0.2f) - (squaresize / 2) + 0.1f;
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(offset, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Bottom Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Lef Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Right Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(offset, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), bombTransform, string.Format("Top Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(offset, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Bottom Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Lef Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Right Widget Area {0}", i)));
+				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(offset, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Top Widget Area {0}", i)));
 			}
 		}
 		_bomb = bombTransform;
@@ -706,15 +725,12 @@ public class TestHarness : MonoBehaviour
 			anchors[i] = anchors[i].OrderBy(x => Random.value).ToList();
 
 		int timerFace = Random.Range(0, timerAnchors.Count);
-
-		Transform timerAnchor = timerAnchors[timerFace][Random.Range(0, timerAnchors[timerFace].Count)];
-		anchors[timerFace].Remove(timerAnchor);
 		_timer = Instantiate(TimerModulePrefab);
-		_timer.transform.localPosition = Vector3.zero;
-		_timer.transform.localRotation = Quaternion.identity;
-		_timer.transform.localScale = Vector3.one;
-		_timer.transform.SetParent(timerAnchor, false);
 		_timer.gameObject.SetActive(true);
+
+
+		Transform timerAnchor = PrepareModuleAnchor(timerAnchors, _timer.transform, ref timerFace, bombTransform, false);
+		anchors[timerFace].Remove(timerAnchor);
 
 		_timer.OnStartEmergencyLights += delegate 
 		{
@@ -737,26 +753,34 @@ public class TestHarness : MonoBehaviour
 			TwitchPlaysID.ZenMode = true;
 		}
 
+		Transform modulesTransform = new GameObject("Modules").transform;
+		modulesTransform.SetParent(bombTransform, true);
 		foreach (Transform module in timerSideModules)
 		{
-			PrepareModuleAnchor(anchors, module, ref timerFace);
+			Transform anchor = PrepareModuleAnchor(anchors, module, ref timerFace, modulesTransform);
+
+			if (anchor != null) continue;
+			bombModules.Remove(transform.GetComponent<KMBombModule>());
+			needyModules.Remove(transform.GetComponent<KMNeedyModule>());
 		}
 
 		foreach (Transform module in modules)
 		{
 			timerFace = Random.Range(0, anchors.Count);
-			PrepareModuleAnchor(anchors, module, ref timerFace);
+			Transform anchor = PrepareModuleAnchor(anchors, module, ref timerFace, modulesTransform);
+
+			if (anchor != null) continue;
+			bombModules.Remove(transform.GetComponent<KMBombModule>());
+			needyModules.Remove(transform.GetComponent<KMNeedyModule>());
 		}
 
-		foreach (Transform anchor in anchors.SelectMany(x => x))
+		while (anchors.Sum(x => x.Count) > 0)
 		{
-			Transform cover = Instantiate(ModuleCoverPrefab);
-			cover.transform.localPosition = Vector3.zero;
-			cover.transform.localRotation = Quaternion.identity;
-			cover.transform.localScale = Vector3.one;
-			cover.transform.SetParent(anchor, false);
-			cover.gameObject.SetActive(true);
+			PrepareModuleAnchor(anchors, Instantiate(ModuleCoverPrefab), ref timerFace, null, false);
 		}
+
+		Transform widgetsTransform = new GameObject("Widgets").transform;
+		widgetsTransform.SetParent(bombTransform);
 
 		SerialNumber sn = widgets.FirstOrDefault(x => x.GetType() == typeof(SerialNumber)) as SerialNumber;
 		if(sn == null) throw new Exception("Could not locate the serial number widget. Cannot continue");
@@ -782,7 +806,7 @@ public class TestHarness : MonoBehaviour
 				widget.transform.rotation = zone.WorldRotation;
 				widget.transform.parent = zone.Parent.transform;
 				widget.transform.localPosition = zone.LocalPosition;
-				widget.transform.parent = bombTransform;
+				widget.transform.parent = widgetsTransform;
 				continue;
 			}
 			if (i == 0)
