@@ -776,7 +776,9 @@ public class TestHarness : MonoBehaviour
 
 		while (anchors.Sum(x => x.Count) > 0)
 		{
-			PrepareModuleAnchor(anchors, Instantiate(ModuleCoverPrefab), ref timerFace, null, false);
+			Transform cover = Instantiate(ModuleCoverPrefab);
+			cover.gameObject.SetActive(true);
+			PrepareModuleAnchor(anchors, cover, ref timerFace, null, false);
 		}
 
 		Transform widgetsTransform = new GameObject("Widgets").transform;
