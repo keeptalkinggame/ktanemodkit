@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,13 +32,17 @@ public class TwitchPlaysID : MonoBehaviour
 	public FieldInfo TwitchTimeModeField;
 	public FieldInfo TwitchZenModeField;
 	public FieldInfo TwitchModeField;
+	public FieldInfo TwitchSkipTimeAllowedField;
 
 	public TimerModule TimerModule;
 	public FakeBombInfo FakeBombInfo;
 
+	private static List<TwitchPlaysID> TwitchPlaysModules = new List<TwitchPlaysID>();
 
+	public bool Solvable { get { return BombModule != null; } }
 	public bool Solved;
 	public int StrikeCount;
+	public bool TimeSkippingAllowed { get { return GetBool(TwitchSkipTimeAllowedField) ?? false; } }
 
 	public string HelpMessage;
 	public string ManualCode;
@@ -48,6 +53,7 @@ public class TwitchPlaysID : MonoBehaviour
 	public static bool AnarchyMode;
 	public static bool TimeMode;
 	public static bool ZenMode;
+	
 
 	private bool HandleStrike()
 	{
@@ -84,6 +90,15 @@ public class TwitchPlaysID : MonoBehaviour
 		Solved = true;
 		TimerModule.UpdateTimeModeTime(5, false);
 		return true;
+	}
+
+	private string GetModuleDisplayName()
+	{
+		if (BombModule != null)
+			return BombModule.ModuleDisplayName;
+		if (NeedyModule != null)
+			return NeedyModule.ModuleDisplayName;
+		return null;
 	}
 
 	private bool triedToSolve;
@@ -186,6 +201,7 @@ public class TwitchPlaysID : MonoBehaviour
 		{
 			NeedyModule.OnStrike += HandleStrike;
 		}
+		TwitchPlaysModules.Add(this);
 	}
 
 	private void Update()
@@ -319,7 +335,9 @@ public class TwitchPlaysID : MonoBehaviour
 			TwitchValidCommandsField = type.GetField("TwitchValidCommands", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
 			TwitchModuleSolveScoreField = type.GetField("TwitchModuleScore", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-			TwitchModuleStrikeScoreField = type.GetField("TwitchModuleStrikeScore", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchModuleStrikeScoreField = type.GetField("TwitchStrikePenalty", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+			TwitchSkipTimeAllowedField = type.GetField("TwitchPlaysSkipTimeAllowed", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
 			SetBool(TwitchModeField, true);
 			SetBool(TwitchTimeModeField, TimeMode);
@@ -405,6 +423,7 @@ public class TwitchPlaysID : MonoBehaviour
 		// Complex Commands
 		else if (method.ReturnType == typeof(IEnumerator))
 		{
+			_beforeStrikeCount = StrikeCount;
 			IEnumerator responseCoroutine = null;
 			try
 			{
@@ -529,21 +548,26 @@ public class TwitchPlaysID : MonoBehaviour
 				{
 					string currentString = (string)currentObject;
 					float waitTime;
-					Match match = Regex.Match(currentString, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-					if (match.Success && float.TryParse(match.Groups[1].Value, out waitTime))
-					{
-						yield return new WaitForSecondsWithCancel(waitTime, false, this);
-						if (Canceller.ShouldCancel)
-						{
-							Canceller.ResetCancel();
-							Debug.Log("Twitch handler sent: " + currentString);
-							break;
-						}
-						continue;
-					}
+					Match match;
 
-					match = Regex.Match(currentString, "^trycancel$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-					if (match.Success)
+					if (currentString.Equals("strike", StringComparison.InvariantCultureIgnoreCase))
+					{
+						Debug.Log("Module has declared that a strike is pending, and might not happen while it is in focus");
+					}
+					else if (currentString.Equals("solve", StringComparison.InvariantCultureIgnoreCase))
+					{
+						Debug.Log("Module has declared that a solve is pending, and might not happen while it is in focus");
+					}
+					else if (currentString.Equals("unsubmittablepenalty", StringComparison.InvariantCultureIgnoreCase))
+					{
+						Debug.LogFormat("The answer that was submitted to module ID {0} ({1}) could not be submitted.", IDTextMesh.text, GetModuleDisplayName());
+					}
+					else if (currentString.Equals("parseerror"))
+					{
+						Debug.LogFormat("Bad command");
+						break;
+					}
+					else if (currentString.RegexMatch(out match, "^trycancel((?: (?:.|\\n)+)?)$"))
 					{
 						if (Canceller.ShouldCancel)
 						{
@@ -555,37 +579,35 @@ public class TwitchPlaysID : MonoBehaviour
 						yield return null;
 						continue;
 					}
-
-					if (currentString.StartsWith("antitroll"))
+					else if (currentString.RegexMatch(out match, "^trycancelsequence((?: (?:.|\\n)+)?)$"))
 					{
-						if (AntiTrollMode && !AnarchyMode)
+						tryCancelSequence = true;
+						yield return currentObject;
+						continue;
+					}
+					if (currentString.RegexMatch(out match, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$") && float.TryParse(match.Groups[1].Value, out waitTime))
+					{
+						yield return new WaitForSecondsWithCancel(waitTime, false, this);
+						if (Canceller.ShouldCancel)
 						{
+							Canceller.ResetCancel();
 							Debug.Log("Twitch handler sent: " + currentString);
 							break;
 						}
-						else
-						{
-							yield return null;
-							continue;
-						}
 					}
-
-					else if (currentString.Equals("cancelled") && Canceller.ShouldCancel)
+					else if (SendToTwitchChat(currentString, "[USER_NICK_NAME_HERE]") != SendToTwitchChatResponse.NotHandled)
 					{
-						Canceller.ResetCancel();
-						break;
-					}
-
-					else if(currentString.Equals("trycancelsequence"))
-					{
-						tryCancelSequence = true;
+						if (AntiTrollMode && !AnarchyMode) break;
+						yield return null;
 						continue;
 					}
-
-					else if(currentString.Equals("multiple strikes"))
+					else if (currentString.StartsWith("add strike", StringComparison.InvariantCultureIgnoreCase))
+					{
+						HandleStrike();
+					}
+					else if (currentString.Equals("multiple strikes"))
 					{
 						multipleStrikes = true;
-						
 					}
 					else if (currentString.Equals("end multiple strikes"))
 					{
@@ -598,24 +620,136 @@ public class TwitchPlaysID : MonoBehaviour
 						SolveModule();
 						break;
 					}
-					else if (currentString.Equals("detonate"))
+					else if (currentString.RegexMatch(out match, "^(?:detonate|explode)(?: ([0-9.]+))?(?: ((?:.|\\n)+))?$"))
 					{
-						FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
-						FakeBombInfo.HandleStrike("Detonate Command in TP module");
+						if (!float.TryParse(match.Groups[1].Value, out waitTime))
+						{
+							if (string.IsNullOrEmpty(match.Groups[1].Value))
+							{
+								Debug.LogFormat("Immediate explosion reqeusted by module's twitch handler");
+								waitTime = 0.1f;
+							}
+							else
+							{
+								Debug.Log("Badly formatted detonate command string: " + currentObject);
+								yield return currentObject;
+								continue;
+							}
+						}
+						else
+						{
+							Debug.LogFormat("Delayed explosion reqeusted by module's twitch handler. The bomb will explode in {0} seconds", match.Groups[1].Value);
+						}
+
+						_delayedExplosionPending = true;
+						if(_delayedExplosionCoroutine != null)
+							StopCoroutine(_delayedExplosionCoroutine);
+						_delayedExplosionCoroutine = StartCoroutine(DelayedModuleBombExplosion(waitTime, match.Groups[2].Value));
+					}
+					else if (currentString.RegexMatch(out match, "^cancel (detonate|explode|detonation|explosion)$"))
+					{
+						_delayedExplosionPending = false;
+						Debug.LogFormat("Delayed explosion cancelled.");
+						if (_delayedExplosionCoroutine != null)
+							StopCoroutine(_delayedExplosionCoroutine);
+					}
+					else if (currentString.RegexMatch(out match, "^(end |toggle )?(?:elevator|hold|waiting) music$"))
+					{
+						Debug.Log("Twitch handler sent: " + currentObject);
+						if (match.Groups.Count > 1 && _elevatorMusicStarted)
+						{
+							_elevatorMusicStarted = false;
+							Debug.LogFormat("Stopping Elevator music");
+						}
+						else if (!currentString.StartsWith("end ", StringComparison.InvariantCultureIgnoreCase) && !_elevatorMusicStarted)
+						{
+							Debug.LogFormat("Starting Elevator music");
+						}
+					}
+					else if (currentString.ToLowerInvariant().Equals("hide camera"))
+					{
+						Debug.Log("Hiding of camera / HUD requested");
+					}
+					else if (currentString.Equals("cancelled") && Canceller.ShouldCancel)
+					{
+						Canceller.ResetCancel();
+						SetBool(TwitchCancelField, false);
 						break;
+					}
+					else if (currentString.RegexMatch(out match, "^(?:skiptime|settime) ([0-9:.]+)") && match.Groups[1].Value.TryParseTime(out waitTime))
+					{
+						Debug.LogFormat("Time skipping requested");
+						
+
+
+						var skipDenied = TwitchPlaysModules.Where(x => x.Solvable && !x.TimeSkippingAllowed && !x.Solved).ToList();
+
+						if (!skipDenied.Any())
+						{
+							if ((ZenMode && TimerModule.TimeRemaining < waitTime) ||
+							    (!ZenMode && TimerModule.TimeRemaining > waitTime))
+							{
+								TimerModule.TimeRemaining = waitTime;
+								Debug.LogFormat("Skipping of time was allowed. Bomb Timer is now {0}", TimerModule.GetFormattedTime());
+							}
+							else
+							{
+								Debug.LogFormat("Skipping of time was not allowed because the requested time to skip to has already gone by.");
+							}
+						}
+						else
+						{
+							Debug.LogFormat("Skipping of time was not allowed, because there is at least one unsolved module that doesn't allow skipping of time present:");
+							Debug.LogFormat(skipDenied.Select(x => string.Format("!{0} - ({1})", x.IDTextMesh.text, x.BombModule.ModuleDisplayName)).Join("\n"));
+						}
 					}
 
 					else
 					{
-						Debug.Log("Twitch handler sent: " + currentObject);
+						Debug.Log("Unprocessed string: " + currentObject);
 					}
 
 					yield return currentObject;
+				}
+				else if (currentObject is string[])
+				{
+					string[] currentStrings = (string[]) currentObject;
+					if (currentStrings.Length >= 1)
+					{
+						if (new[] {"detonate", "explode"}.Contains(currentStrings[0].ToLowerInvariant()))
+						{
+							FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
+							string moduleDisplayName = GetModuleDisplayName() ?? "Detonate Command in TP Module";
+							switch (currentStrings.Length)
+							{
+								case 3:
+									moduleDisplayName = currentStrings[2];
+									goto case 2;
+
+								case 2:
+									Debug.Log("Detonate command chat message: " + currentStrings[1]);
+									goto default;
+
+								default:
+									FakeBombInfo.HandleStrike(moduleDisplayName);
+									break;
+							}
+						}
+					}
 				}
 				else if (currentObject is Quaternion)
 				{
 					needQuaternionReset = true;
 					Module.localRotation = (Quaternion)currentObject;
+				}
+				else if (currentObject is Quaternion[])
+				{
+					Quaternion[] localQuaternions = (Quaternion[]) currentObject;
+					if (localQuaternions.Length == 2)
+					{
+						needQuaternionReset = true;
+						Module.localRotation = localQuaternions[0];
+					}
 				}
 				else
 					yield return currentObject;
@@ -646,6 +780,80 @@ public class TwitchPlaysID : MonoBehaviour
 			yield return new WaitForSeconds(0.5f);
 		}
 	}
+
+	protected enum SendToTwitchChatResponse
+	{
+		InstantResponse,
+		Handled,
+		NotHandled
+	}
+
+	protected SendToTwitchChatResponse SendToTwitchChat(string message, string userNickName)
+	{
+		Match match;
+		float messageDelayTime;
+		// Within the messages, allow variables:
+		// {0} = user’s nickname
+		// {1} = Code (module number)
+		if (message.RegexMatch(out match, @"^senddelayedmessage ([0-9]+(?:\.[0-9])?) (\S(?:\S|\s)*)$") && float.TryParse(match.Groups[1].Value, out messageDelayTime))
+		{
+			Debug.LogFormat("Sending delayed message \"{0}\" in {1} seconds", match.Groups[2].Value, match.Groups[1].Value);
+			return SendToTwitchChatResponse.InstantResponse;
+		}
+
+		if (!message.RegexMatch(out match, @"^(sendtochat|sendtochaterror|strikemessage|antitroll) +(\S(?:\S|\s)*)$")) return SendToTwitchChatResponse.NotHandled;
+
+		var chatMsg = string.Format(match.Groups[2].Value, userNickName, IDTextMesh.text);
+
+		switch (match.Groups[1].Value)
+		{
+			case "sendtochat":
+				Debug.LogFormat("Sending chat message: {0}", chatMsg);
+				return SendToTwitchChatResponse.InstantResponse;
+			case "antitroll":
+				if (!AntiTrollMode || AnarchyMode)
+				{
+					Debug.Log("Troll command allowed to happen");
+					return SendToTwitchChatResponse.Handled;
+				}
+				Debug.LogFormat("Troll commmand denied, Sending error message to chat: {0}", chatMsg);
+				return SendToTwitchChatResponse.InstantResponse;
+			case "sendtochaterror":
+				Debug.LogFormat("Sending error message to chat: {0}", chatMsg);
+				return SendToTwitchChatResponse.InstantResponse;
+			case "strikemessage":
+				StrikeMessageConflict |= StrikeCount != _beforeStrikeCount && !string.IsNullOrEmpty(StrikeMessage) && !StrikeMessage.Equals(chatMsg);
+				StrikeMessage = chatMsg;
+				if (StrikeMessageConflict)
+				{
+					Debug.LogFormat("Strikes happened on the module, and the message changed as to reason for strike, so nothing will be reported");
+				}
+				else
+				{
+					Debug.LogFormat("Strike message set to {0}", StrikeMessage);
+				}
+				return SendToTwitchChatResponse.Handled;
+			default:
+				return SendToTwitchChatResponse.NotHandled;
+		}
+	}
+
+	protected IEnumerator DelayedModuleBombExplosion(float delay, string chatMessage)
+	{
+		yield return new WaitForSeconds(delay);
+		if (!_delayedExplosionPending) yield break;
+		Debug.LogFormat("Sending the following message to chat: {0}", chatMessage);
+
+		FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
+		FakeBombInfo.HandleStrike(GetModuleDisplayName() ?? "Detonate Command in TP module");
+	}
+
+	private Coroutine _delayedExplosionCoroutine;
+	private bool _delayedExplosionPending;
+	protected string StrikeMessage;
+	private int _beforeStrikeCount;
+	protected bool StrikeMessageConflict;
+	private bool _elevatorMusicStarted;
 }
 
 public static class Canceller
