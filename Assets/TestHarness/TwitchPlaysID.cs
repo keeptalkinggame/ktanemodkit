@@ -92,6 +92,7 @@ public class TwitchPlaysID : MonoBehaviour
 
 	private bool HandlePass()
 	{
+		if (Solved) return true;
 		Solved = true;
 		TimerModule.UpdateTimeModeTime(5, false);
 		if(!AnarchyMode)

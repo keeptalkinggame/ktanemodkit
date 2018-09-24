@@ -873,21 +873,16 @@ public class TestHarness : MonoBehaviour
             fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(modules[i], false));
             modules[i].OnPass = delegate ()
             {
-                Debug.Log("Module Passed");
+	            KeyValuePair<KMBombModule, bool> kvp = fakeInfo.modules.First(t => t.Key.Equals(mod));
+	            if (kvp.Value) return false;
+
+				Debug.Log("Module Passed");
 				if(statuslight != null) statuslight.SetPass();
 
-                fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
+                fakeInfo.modules.Remove(kvp);
                 fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
-                bool allSolved = true;
-                foreach (KeyValuePair<KMBombModule, bool> m in fakeInfo.modules)
-                {
-                    if (!m.Value)
-                    {
-                        allSolved = false;
-                        break;
-                    }
-                }
-                if (allSolved) fakeInfo.Solved();
+
+                if (fakeInfo.modules.All(x => x.Value)) fakeInfo.Solved();
                 return false;
             };
 
