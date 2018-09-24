@@ -49,6 +49,11 @@ public class TwitchPlaysID : MonoBehaviour
 	public int ModuleSolveScore = 5;
 	public int ModuleStrikeScore = -6;
 
+	public List<Transform> ModuleCameras = new List<Transform>();
+	private static List<Transform> _moduleCameras;
+	private static List<Transform> _moduleCamerasInUse = new List<Transform>();
+	private Transform _moduleCamera;
+
 	public static bool AntiTrollMode = true;
 	public static bool AnarchyMode;
 	public static bool TimeMode;
@@ -89,6 +94,8 @@ public class TwitchPlaysID : MonoBehaviour
 	{
 		Solved = true;
 		TimerModule.UpdateTimeModeTime(5, false);
+		if(!AnarchyMode)
+			UnviewCamera();
 		return true;
 	}
 
@@ -201,7 +208,9 @@ public class TwitchPlaysID : MonoBehaviour
 		{
 			NeedyModule.OnStrike += HandleStrike;
 		}
+
 		TwitchPlaysModules.Add(this);
+		if (_moduleCameras == null) _moduleCameras = ModuleCameras;
 	}
 
 	private void Update()
@@ -246,7 +255,6 @@ public class TwitchPlaysID : MonoBehaviour
 
 				Debug.LogFormat(helpMessage, ModuleID);
 			}
-
 
 			else
 			{
@@ -361,8 +369,158 @@ public class TwitchPlaysID : MonoBehaviour
 		}
 	}
 
-	static readonly Dictionary<Component, HashSet<KMSelectable>> ComponentHelds = new Dictionary<Component, HashSet<KMSelectable>> { };
-	IEnumerator SimulateModule(string command)
+
+	private bool _zoomed;
+	private Rect _originalCameraRect;
+	private readonly Rect _zoomCameraLocation = new Rect(0.2738095f, 0.12f, 0.452381f, 0.76f);
+	public IEnumerator ZoomCamera(float duration = 1.0f)
+	{
+		if (_moduleCamera == null) yield break;
+		var cameraInstance = _moduleCamera.GetComponentInChildren<Camera>();
+		if (cameraInstance == null) yield break;
+		_zoomed = true;
+		_originalCameraRect = cameraInstance.rect;
+		cameraInstance.depth = 100;
+		yield return null;
+		float initialTime = Time.time;
+		while ((Time.time - initialTime) < duration)
+		{
+			float lerp = (Time.time - initialTime) / duration;
+			cameraInstance.rect = new Rect(Mathf.Lerp(_originalCameraRect.x, _zoomCameraLocation.x, lerp),
+				Mathf.Lerp(_originalCameraRect.y, _zoomCameraLocation.y, lerp),
+				Mathf.Lerp(_originalCameraRect.width, _zoomCameraLocation.width, lerp),
+				Mathf.Lerp(_originalCameraRect.height, _zoomCameraLocation.height, lerp));
+
+			yield return null;
+		}
+		cameraInstance.rect = _zoomCameraLocation;
+	}
+
+	public IEnumerator UnZoomCamera(float duration = 1.0f)
+	{
+		if (_moduleCamera == null) yield break;
+		if (!_zoomed) yield break;
+		var cameraInstance = _moduleCamera.GetComponentInChildren<Camera>();
+		yield return null;
+		float initialTime = Time.time;
+		while ((Time.time - initialTime) < duration)
+		{
+			float lerp = (Time.time - initialTime) / duration;
+			cameraInstance.rect = new Rect(Mathf.Lerp(_zoomCameraLocation.x, _originalCameraRect.x, lerp),
+				Mathf.Lerp(_zoomCameraLocation.y, _originalCameraRect.y, lerp),
+				Mathf.Lerp(_zoomCameraLocation.width, _originalCameraRect.width, lerp),
+				Mathf.Lerp(_zoomCameraLocation.height, _originalCameraRect.height, lerp));
+
+			yield return null;
+		}
+		cameraInstance.rect = _originalCameraRect;
+		cameraInstance.depth = 99;
+	}
+
+	private void UnviewCamera()
+	{
+		if (_moduleCamera == null) return;
+		_moduleCamerasInUse.Remove(_moduleCamera);
+		_moduleCameras.Add(_moduleCamera);
+		_moduleCamera.gameObject.SetActive(false);
+		_moduleCamera = null;
+	}
+
+	private void AttachCameraToModule()
+	{
+		if (_moduleCamera != null) return;
+		Transform t;
+		if (_moduleCameras.Any())
+		{
+			t = _moduleCameras[0];
+			_moduleCameras.Remove(t);
+			_moduleCamerasInUse.Add(t);
+		}
+		else if (_moduleCamerasInUse.Any())
+		{
+			t = _moduleCamerasInUse[0];
+			_moduleCamerasInUse.Remove(t);
+			_moduleCamerasInUse.Add(t); //Put the camera to back of the line.
+		}
+		else
+		{
+			Debug.Log("There are no available cameras to attach to the module");
+			return;
+		}
+
+		t.localPosition = Vector3.zero;
+		t.localRotation = Quaternion.identity;
+		t.localScale = Vector3.one;
+		t.gameObject.SetActive(true);
+
+		var module = TwitchPlaysModules.FirstOrDefault(x => x._moduleCamera == t);
+		if (module != null) module._moduleCamera = null;
+		_moduleCamera = t;
+
+		if (BombModule != null) t.SetParent(BombModule.transform, false);
+		else if (NeedyModule != null) t.SetParent(NeedyModule.transform, false);
+		else
+		{
+			Debug.Log("This should never happen, but apparently this TwitchPlays instance was spawned without a bomb module nor a needy module");
+			t.gameObject.SetActive(false);
+			_moduleCamerasInUse.Remove(t);
+			_moduleCameras.Insert(0, t);
+			_moduleCamera = null;
+			return;
+		}
+	}
+
+	private bool _responded;
+	private bool _zoom;
+	private IEnumerator RespondToCommandCommon(string inputCommand)
+	{
+		_zoom = false;
+		_responded = false;
+		inputCommand = inputCommand.Trim();
+		if (inputCommand.Equals("unview", StringComparison.InvariantCultureIgnoreCase))
+		{
+			_responded = true;
+			UnviewCamera();
+		}
+		else
+		{
+			if (inputCommand.StartsWith("view", StringComparison.InvariantCultureIgnoreCase))
+			{
+				_responded = true;
+			}
+			AttachCameraToModule();
+
+			Match match;
+			if (inputCommand.RegexMatch(out match, "^zoom(?: ([0-9]+(?:\\.[0-9])?))?$"))
+			{
+				float delay;
+				if (match.Groups.Count == 1 || !float.TryParse(match.Groups[1].Value, out delay))
+					delay = 2;
+				delay = Math.Max(2, delay);
+				_zoom = true;
+				yield return null;
+				if (delay >= 15)
+					yield return "elevator music";
+				yield return string.Format("trywaitcancel {0} Your request to hold up the bomb for {0} seconds has been cut short.", delay);
+			}
+
+			if (inputCommand.StartsWith("zoom ", StringComparison.InvariantCultureIgnoreCase))
+				_zoom = true;
+		}
+
+		if (inputCommand.Equals("show", StringComparison.InvariantCultureIgnoreCase))
+		{
+			yield return "show";
+			yield return null;
+		}
+		else if (inputCommand.Equals("solve"))
+		{
+			SolveModule();
+			_responded = true;
+		}
+	}
+
+	IEnumerator RespondToCommandInternalSimple(string command)
 	{
 		if (ProcessTwitchCommandMethod == null) yield break;
 		MethodInfo method = ProcessTwitchCommandMethod;
@@ -372,93 +530,132 @@ public class TwitchPlaysID : MonoBehaviour
 		if (method.DeclaringType != null)
 			methodDeclaringTypeFullName = method.DeclaringType.FullName;
 
-		IEnumerator focus = null;
-		bool focused = false;
-
-		// Simple Command
-		if (typeof(IEnumerable<KMSelectable>).IsAssignableFrom(ProcessTwitchCommandMethod.ReturnType))
+		IEnumerable<KMSelectable> selectableSequence = null;
+		try
 		{
-			IEnumerable<KMSelectable> selectableSequence = null;
-			try
+			selectableSequence = (IEnumerable<KMSelectable>)method.Invoke(component, new object[] { command });
+			if (selectableSequence == null)
 			{
-				selectableSequence = (IEnumerable<KMSelectable>)method.Invoke(component, new object[] { command });
-				if (selectableSequence == null)
-				{
-					Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning null).", methodDeclaringTypeFullName, method.Name);
-					yield break;
-				}
-			}
-			catch (System.Exception ex)
-			{
-				Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name);
-				Debug.LogException(ex);
-				yield break;
-			}
-
-			focus = TestHarness.MoveCamera(Module);
-			while (focus.MoveNext())
-				yield return focus.Current;
-			yield return new WaitForSeconds(0.5f);
-			focused = true;
-
-			int initialStrikes = StrikeCount;
-			foreach (KMSelectable selectable in selectableSequence)
-			{
-				if (Canceller.ShouldCancel)
-				{
-					Canceller.ResetCancel();
-					break;
-				}
-				DoInteractionStart(selectable);
-				yield return new WaitForSeconds(0.1f);
-				DoInteractionEnd(selectable);
-
-				if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
-				{
-					break;
-				}
-			};
-		}
-
-		// Complex Commands
-		else if (method.ReturnType == typeof(IEnumerator))
-		{
-			_beforeStrikeCount = StrikeCount;
-			IEnumerator responseCoroutine = null;
-			try
-			{
-				responseCoroutine = (IEnumerator)method.Invoke(component, new object[] { command });
-			}
-			catch (System.Exception ex)
-			{
-				Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name);
-				Debug.LogException(ex);
-				yield break;
-			}
-
-			if (responseCoroutine == null)
-			{
+				_responded = true;
 				Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning null).", methodDeclaringTypeFullName, method.Name);
 				yield break;
 			}
+		}
+		catch (System.Exception ex)
+		{
+			_responded = true;
+			Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name);
+			Debug.LogException(ex);
+			yield break;
+		}
 
-			if (!ComponentHelds.ContainsKey(component))
-				ComponentHelds[component] = new HashSet<KMSelectable>();
-			HashSet<KMSelectable> heldSelectables = ComponentHelds[component];
+		yield return null;
+		yield return "trycancelsequence";
+		yield return selectableSequence;
+	}
 
-			int initialStrikes = StrikeCount;
+	IEnumerator RespondToCommandInternalComplex(string command)
+	{
+		if (ProcessTwitchCommandMethod == null) yield break;
+		MethodInfo method = ProcessTwitchCommandMethod;
+		Component component = TwitchCommandComponent;
 
-			bool forceSolve;
-			bool? moved = responseCoroutine.TryMoveNext(out forceSolve, string.Format("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name));
+		string methodDeclaringTypeFullName = null;
+		if (method.DeclaringType != null)
+			methodDeclaringTypeFullName = method.DeclaringType.FullName;
+
+		IEnumerator responseCoroutine = null;
+		try
+		{
+			responseCoroutine = (IEnumerator)method.Invoke(component, new object[] { command });
+		}
+		catch (System.Exception ex)
+		{
+			_responded = true;
+			Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name);
+			Debug.LogException(ex);
+			yield break;
+		}
+
+		if (responseCoroutine == null)
+		{
+			_responded = true;
+			Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning null).", methodDeclaringTypeFullName, method.Name);
+			yield break;
+		}
+
+		while (responseCoroutine.MoveNext())
+			yield return responseCoroutine.Current;
+	}
+
+	IEnumerator RespondToTwitchCommand(string command)
+	{
+		if (ProcessTwitchCommandMethod == null) return null;
+		if (typeof(IEnumerable<KMSelectable>).IsAssignableFrom(ProcessTwitchCommandMethod.ReturnType))
+			return RespondToCommandInternalSimple(command);
+		if (ProcessTwitchCommandMethod.ReturnType == typeof(IEnumerator))
+			return RespondToCommandInternalComplex(command);
+		return null;
+	}
+
+	static readonly Dictionary<Component, HashSet<KMSelectable>> ComponentHelds = new Dictionary<Component, HashSet<KMSelectable>> { };
+
+	IEnumerator SimulateModule(string command)
+	{
+		if (Solved && !AnarchyMode) yield break;
+
+		IEnumerator focus = null;
+		bool focused = false;
+		IEnumerator responseCoroutine = RespondToCommandCommon(command);
+		string methodDeclaringTypeFullName = null;
+		string methodName = null;
+		int initialStrikes = StrikeCount;
+		_beforeStrikeCount = StrikeCount;
+		bool forceSolve;
+		//MethodInfo method = null;
+		Component component = this;
+		if (TwitchCommandComponent != null)
+			component = TwitchCommandComponent;
+
+		if (!ComponentHelds.ContainsKey(component))
+			ComponentHelds[component] = new HashSet<KMSelectable>();
+		HashSet<KMSelectable> heldSelectables = ComponentHelds[component];
+
+		bool? moved = responseCoroutine.MoveNext();
+		if (!(moved ?? false))
+		{
+			if (_responded) yield break;
+			if (ProcessTwitchCommandMethod == null) yield break;
+
+			if (command.StartsWith("zoom ", StringComparison.InvariantCultureIgnoreCase))
+				command = command.Substring(4).Trim();
+			responseCoroutine = RespondToTwitchCommand(command);
+
+			if (ProcessTwitchCommandMethod.DeclaringType != null)
+				methodDeclaringTypeFullName = ProcessTwitchCommandMethod.DeclaringType.FullName;
+			methodName = ProcessTwitchCommandMethod.Name;
+
+			if (responseCoroutine == null)
+			{
+				Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning null).",
+					methodDeclaringTypeFullName, methodName);
+				yield break;
+			}
+
+			moved = responseCoroutine.TryMoveNext(out forceSolve,
+				string.Format("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.",
+					methodDeclaringTypeFullName, methodName));
 			if (forceSolve)
 			{
 				Debug.LogFormat("There was a problem with the solver. Force-solving module");
 				SolveModule();
 				yield break;
 			}
+
 			if (moved.HasValue && !moved.Value)
 			{
-				Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning empty sequence).", methodDeclaringTypeFullName, method.Name);
+				Debug.LogFormat("Twitch Plays handler {0}.{1} reports invalid command (by returning empty sequence).",
+					methodDeclaringTypeFullName, methodName);
 				yield break;
 			}
 			else if (!moved.HasValue)
@@ -467,310 +664,320 @@ public class TwitchPlaysID : MonoBehaviour
 			}
 
 			string str = responseCoroutine.Current as string;
-			if (str != null)
-			{
-				if (str.StartsWith("sendtochat"))
-				{
-					Debug.Log("Twitch handler sent: " + str);
-					yield break;
-				}
+			if (str != null && SendToTwitchChat(str, "[YOUR_NICKNAME_COULD_BE_HERE]") == SendToTwitchChatResponse.InstantResponse)
+				yield break;
+		}
 
-				if (str.StartsWith("antitroll") && AntiTrollMode && !AnarchyMode)
-				{
-					Debug.Log("Twitch handler sent: " + str);
-					yield break;
-				}
-			}
+		focus = TestHarness.MoveCamera(Module);
+		while (focus.MoveNext())
+			yield return focus.Current;
+		yield return new WaitForSeconds(0.5f);
+		focused = true;
 
-			focus = TestHarness.MoveCamera(Module);
+		if (_zoom)
+		{
+			focus = ZoomCamera();
 			while (focus.MoveNext())
 				yield return focus.Current;
-			yield return new WaitForSeconds(0.5f);
-			focused = true;
+		}
 
-			bool needQuaternionReset = false;
-			Quaternion initialModuleQuaternion = Module.localRotation;
-			bool tryCancelSequence = false;
-			bool multipleStrikes = false;
+		bool needQuaternionReset = false;
+		Quaternion initialModuleQuaternion = Module.localRotation;
+		bool tryCancelSequence = false;
+		bool multipleStrikes = false;
 
-			while (true)
+		while (true)
+		{
+			moved = responseCoroutine.TryMoveNext(out forceSolve,
+				string.Format("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, methodName));
+			if (forceSolve)
 			{
-				
-				moved = responseCoroutine.TryMoveNext(out forceSolve, string.Format("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", methodDeclaringTypeFullName, method.Name));
-				if (forceSolve)
+				Debug.LogFormat("There was a problem with the solver. Force-solving module");
+				SolveModule();
+				yield break;
+			}
+
+			if (moved.HasValue && !moved.Value)
+				break;
+
+			SetBool(TwitchCancelField, Canceller.ShouldCancel);
+
+			object currentObject = responseCoroutine.Current;
+			if (currentObject is KMSelectable)
+			{
+				KMSelectable selectable = (KMSelectable) currentObject;
+				if (heldSelectables.Contains(selectable))
 				{
-					Debug.LogFormat("There was a problem with the solver. Force-solving module");
-					SolveModule();
-					yield break;
-				}
-
-				if (moved.HasValue && !moved.Value)
-					break;
-
-				SetBool(TwitchCancelField, Canceller.ShouldCancel);
-
-				object currentObject = responseCoroutine.Current;
-				if (currentObject is KMSelectable)
-				{
-					KMSelectable selectable = (KMSelectable)currentObject;
-					if (heldSelectables.Contains(selectable))
-					{
-						DoInteractionEnd(selectable);
-						heldSelectables.Remove(selectable);
-						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
-							break;
-					}
-					else
-					{
-						DoInteractionStart(selectable);
-						heldSelectables.Add(selectable);
-					}
-				}
-				else if (currentObject is IEnumerable<KMSelectable>)
-				{
-					foreach (var selectable in (IEnumerable<KMSelectable>)currentObject)
-					{
-						DoInteractionStart(selectable);
-						yield return new WaitForSeconds(.1f);
-						DoInteractionEnd(selectable);
-						if (tryCancelSequence && Canceller.ShouldCancel)
-						{
-							Canceller.ResetCancel();
-							break;
-						}
-
-						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
-							break;
-
-					}
-				}
-				else if (currentObject is string)
-				{
-					string currentString = (string)currentObject;
-					float waitTime;
-					Match match;
-
-					if (currentString.Equals("strike", StringComparison.InvariantCultureIgnoreCase))
-					{
-						Debug.Log("Module has declared that a strike is pending, and might not happen while it is in focus");
-					}
-					else if (currentString.Equals("solve", StringComparison.InvariantCultureIgnoreCase))
-					{
-						Debug.Log("Module has declared that a solve is pending, and might not happen while it is in focus");
-					}
-					else if (currentString.Equals("unsubmittablepenalty", StringComparison.InvariantCultureIgnoreCase))
-					{
-						Debug.LogFormat("The answer that was submitted to module ID {0} ({1}) could not be submitted.", IDTextMesh.text, GetModuleDisplayName());
-					}
-					else if (currentString.Equals("parseerror"))
-					{
-						Debug.LogFormat("Bad command");
+					DoInteractionEnd(selectable);
+					heldSelectables.Remove(selectable);
+					if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
 						break;
-					}
-					else if (currentString.RegexMatch(out match, "^trycancel((?: (?:.|\\n)+)?)$"))
-					{
-						if (Canceller.ShouldCancel)
-						{
-							Canceller.ResetCancel();
-							Debug.Log("Twitch handler sent: " + currentString);
-							break;
-						}
-
-						yield return null;
-						continue;
-					}
-					else if (currentString.RegexMatch(out match, "^trycancelsequence((?: (?:.|\\n)+)?)$"))
-					{
-						tryCancelSequence = true;
-						yield return currentObject;
-						continue;
-					}
-					if (currentString.RegexMatch(out match, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$") && float.TryParse(match.Groups[1].Value, out waitTime))
-					{
-						yield return new WaitForSecondsWithCancel(waitTime, false, this);
-						if (Canceller.ShouldCancel)
-						{
-							Canceller.ResetCancel();
-							Debug.Log("Twitch handler sent: " + currentString);
-							break;
-						}
-					}
-					else if (SendToTwitchChat(currentString, "[USER_NICK_NAME_HERE]") != SendToTwitchChatResponse.NotHandled)
-					{
-						if (AntiTrollMode && !AnarchyMode) break;
-						yield return null;
-						continue;
-					}
-					else if (currentString.StartsWith("add strike", StringComparison.InvariantCultureIgnoreCase))
-					{
-						HandleStrike();
-					}
-					else if (currentString.Equals("multiple strikes"))
-					{
-						multipleStrikes = true;
-					}
-					else if (currentString.Equals("end multiple strikes"))
-					{
-						multipleStrikes = false;
-						if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
-							break;
-					}
-					else if (currentString.Equals("autosolve"))
-					{
-						SolveModule();
-						break;
-					}
-					else if (currentString.RegexMatch(out match, "^(?:detonate|explode)(?: ([0-9.]+))?(?: ((?:.|\\n)+))?$"))
-					{
-						if (!float.TryParse(match.Groups[1].Value, out waitTime))
-						{
-							if (string.IsNullOrEmpty(match.Groups[1].Value))
-							{
-								Debug.LogFormat("Immediate explosion reqeusted by module's twitch handler");
-								waitTime = 0.1f;
-							}
-							else
-							{
-								Debug.Log("Badly formatted detonate command string: " + currentObject);
-								yield return currentObject;
-								continue;
-							}
-						}
-						else
-						{
-							Debug.LogFormat("Delayed explosion reqeusted by module's twitch handler. The bomb will explode in {0} seconds", match.Groups[1].Value);
-						}
-
-						_delayedExplosionPending = true;
-						if(_delayedExplosionCoroutine != null)
-							StopCoroutine(_delayedExplosionCoroutine);
-						_delayedExplosionCoroutine = StartCoroutine(DelayedModuleBombExplosion(waitTime, match.Groups[2].Value));
-					}
-					else if (currentString.RegexMatch(out match, "^cancel (detonate|explode|detonation|explosion)$"))
-					{
-						_delayedExplosionPending = false;
-						Debug.LogFormat("Delayed explosion cancelled.");
-						if (_delayedExplosionCoroutine != null)
-							StopCoroutine(_delayedExplosionCoroutine);
-					}
-					else if (currentString.RegexMatch(out match, "^(end |toggle )?(?:elevator|hold|waiting) music$"))
-					{
-						Debug.Log("Twitch handler sent: " + currentObject);
-						if (match.Groups.Count > 1 && _elevatorMusicStarted)
-						{
-							_elevatorMusicStarted = false;
-							Debug.LogFormat("Stopping Elevator music");
-						}
-						else if (!currentString.StartsWith("end ", StringComparison.InvariantCultureIgnoreCase) && !_elevatorMusicStarted)
-						{
-							Debug.LogFormat("Starting Elevator music");
-						}
-					}
-					else if (currentString.ToLowerInvariant().Equals("hide camera"))
-					{
-						Debug.Log("Hiding of camera / HUD requested");
-					}
-					else if (currentString.Equals("cancelled") && Canceller.ShouldCancel)
-					{
-						Canceller.ResetCancel();
-						SetBool(TwitchCancelField, false);
-						break;
-					}
-					else if (currentString.RegexMatch(out match, "^(?:skiptime|settime) ([0-9:.]+)") && match.Groups[1].Value.TryParseTime(out waitTime))
-					{
-						Debug.LogFormat("Time skipping requested");
-						
-
-
-						var skipDenied = TwitchPlaysModules.Where(x => x.Solvable && !x.TimeSkippingAllowed && !x.Solved).ToList();
-
-						if (!skipDenied.Any())
-						{
-							if ((ZenMode && TimerModule.TimeRemaining < waitTime) ||
-							    (!ZenMode && TimerModule.TimeRemaining > waitTime))
-							{
-								TimerModule.TimeRemaining = waitTime;
-								Debug.LogFormat("Skipping of time was allowed. Bomb Timer is now {0}", TimerModule.GetFormattedTime());
-							}
-							else
-							{
-								Debug.LogFormat("Skipping of time was not allowed because the requested time to skip to has already gone by.");
-							}
-						}
-						else
-						{
-							Debug.LogFormat("Skipping of time was not allowed, because there is at least one unsolved module that doesn't allow skipping of time present:");
-							Debug.LogFormat(skipDenied.Select(x => string.Format("!{0} - ({1})", x.IDTextMesh.text, x.BombModule.ModuleDisplayName)).Join("\n"));
-						}
-					}
-
-					else
-					{
-						Debug.Log("Unprocessed string: " + currentObject);
-					}
-
-					yield return currentObject;
-				}
-				else if (currentObject is string[])
-				{
-					string[] currentStrings = (string[]) currentObject;
-					if (currentStrings.Length >= 1)
-					{
-						if (new[] {"detonate", "explode"}.Contains(currentStrings[0].ToLowerInvariant()))
-						{
-							FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
-							string moduleDisplayName = GetModuleDisplayName() ?? "Detonate Command in TP Module";
-							switch (currentStrings.Length)
-							{
-								case 3:
-									moduleDisplayName = currentStrings[2];
-									goto case 2;
-
-								case 2:
-									Debug.Log("Detonate command chat message: " + currentStrings[1]);
-									goto default;
-
-								default:
-									FakeBombInfo.HandleStrike(moduleDisplayName);
-									break;
-							}
-						}
-					}
-				}
-				else if (currentObject is Quaternion)
-				{
-					needQuaternionReset = true;
-					Module.localRotation = (Quaternion)currentObject;
-				}
-				else if (currentObject is Quaternion[])
-				{
-					Quaternion[] localQuaternions = (Quaternion[]) currentObject;
-					if (localQuaternions.Length == 2)
-					{
-						needQuaternionReset = true;
-						Module.localRotation = localQuaternions[0];
-					}
 				}
 				else
-					yield return currentObject;
-
-				if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
-					break;
-
-				tryCancelSequence = false;
-			}
-
-			if (needQuaternionReset)
-			{
-				Quaternion currentRotation = Module.localRotation;
-				float startTime = Time.time;
-				while ((Time.time - startTime) < 0.25f)
 				{
-					Module.localRotation = Quaternion.Lerp(currentRotation, initialModuleQuaternion, (Time.time - startTime) / 0.25f);
-					yield return null;
+					DoInteractionStart(selectable);
+					heldSelectables.Add(selectable);
 				}
 			}
+			else if (currentObject is IEnumerable<KMSelectable>)
+			{
+				foreach (var selectable in (IEnumerable<KMSelectable>) currentObject)
+				{
+					DoInteractionStart(selectable);
+					yield return new WaitForSeconds(.1f);
+					DoInteractionEnd(selectable);
+					if (tryCancelSequence && Canceller.ShouldCancel)
+					{
+						Canceller.ResetCancel();
+						break;
+					}
+
+					if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
+						break;
+
+				}
+			}
+			else if (currentObject is string)
+			{
+				string currentString = (string) currentObject;
+				float waitTime;
+				Match match;
+
+				if (currentString.Equals("strike", StringComparison.InvariantCultureIgnoreCase))
+				{
+					Debug.Log("Module has declared that a strike is pending, and might not happen while it is in focus");
+				}
+				else if (currentString.Equals("solve", StringComparison.InvariantCultureIgnoreCase))
+				{
+					Debug.Log("Module has declared that a solve is pending, and might not happen while it is in focus");
+				}
+				else if (currentString.Equals("unsubmittablepenalty", StringComparison.InvariantCultureIgnoreCase))
+				{
+					Debug.LogFormat("The answer that was submitted to module ID {0} ({1}) could not be submitted.", IDTextMesh.text,
+						GetModuleDisplayName());
+				}
+				else if (currentString.Equals("parseerror"))
+				{
+					Debug.LogFormat("Bad command");
+					break;
+				}
+				else if (currentString.RegexMatch(out match, "^trycancel((?: (?:.|\\n)+)?)$"))
+				{
+					if (Canceller.ShouldCancel)
+					{
+						Canceller.ResetCancel();
+						Debug.Log("Twitch handler sent: " + currentString);
+						break;
+					}
+
+					yield return null;
+					continue;
+				}
+				else if (currentString.RegexMatch(out match, "^trycancelsequence((?: (?:.|\\n)+)?)$"))
+				{
+					tryCancelSequence = true;
+					yield return currentObject;
+					continue;
+				}
+
+				if (currentString.RegexMatch(out match, "^trywaitcancel ([0-9]+(?:\\.[0-9])?)((?: (?:.|\\n)+)?)$") &&
+				    float.TryParse(match.Groups[1].Value, out waitTime))
+				{
+					yield return new WaitForSecondsWithCancel(waitTime, false, this);
+					if (Canceller.ShouldCancel)
+					{
+						Canceller.ResetCancel();
+						Debug.Log("Twitch handler sent: " + currentString);
+						break;
+					}
+				}
+				else if (SendToTwitchChat(currentString, "[USER_NICK_NAME_HERE]") != SendToTwitchChatResponse.NotHandled)
+				{
+					if (AntiTrollMode && !AnarchyMode) break;
+					yield return null;
+					continue;
+				}
+				else if (currentString.StartsWith("add strike", StringComparison.InvariantCultureIgnoreCase))
+				{
+					HandleStrike();
+				}
+				else if (currentString.Equals("multiple strikes"))
+				{
+					multipleStrikes = true;
+				}
+				else if (currentString.Equals("end multiple strikes"))
+				{
+					multipleStrikes = false;
+					if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode)
+						break;
+				}
+				else if (currentString.Equals("autosolve"))
+				{
+					SolveModule();
+					break;
+				}
+				else if (currentString.RegexMatch(out match, "^(?:detonate|explode)(?: ([0-9.]+))?(?: ((?:.|\\n)+))?$"))
+				{
+					if (!float.TryParse(match.Groups[1].Value, out waitTime))
+					{
+						if (string.IsNullOrEmpty(match.Groups[1].Value))
+						{
+							Debug.LogFormat("Immediate explosion reqeusted by module's twitch handler");
+							waitTime = 0.1f;
+						}
+						else
+						{
+							Debug.Log("Badly formatted detonate command string: " + currentObject);
+							yield return currentObject;
+							continue;
+						}
+					}
+					else
+					{
+						Debug.LogFormat("Delayed explosion reqeusted by module's twitch handler. The bomb will explode in {0} seconds",
+							match.Groups[1].Value);
+					}
+
+					_delayedExplosionPending = true;
+					if (_delayedExplosionCoroutine != null)
+						StopCoroutine(_delayedExplosionCoroutine);
+					_delayedExplosionCoroutine = StartCoroutine(DelayedModuleBombExplosion(waitTime, match.Groups[2].Value));
+				}
+				else if (currentString.RegexMatch(out match, "^cancel (detonate|explode|detonation|explosion)$"))
+				{
+					_delayedExplosionPending = false;
+					Debug.LogFormat("Delayed explosion cancelled.");
+					if (_delayedExplosionCoroutine != null)
+						StopCoroutine(_delayedExplosionCoroutine);
+				}
+				else if (currentString.RegexMatch(out match, "^(end |toggle )?(?:elevator|hold|waiting) music$"))
+				{
+					Debug.Log("Twitch handler sent: " + currentObject);
+					if (match.Groups.Count > 1 && _elevatorMusicStarted)
+					{
+						_elevatorMusicStarted = false;
+						Debug.LogFormat("Stopping Elevator music");
+					}
+					else if (!currentString.StartsWith("end ", StringComparison.InvariantCultureIgnoreCase) && !_elevatorMusicStarted)
+					{
+						Debug.LogFormat("Starting Elevator music");
+					}
+				}
+				else if (currentString.ToLowerInvariant().Equals("hide camera"))
+				{
+					Debug.Log("Hiding of camera / HUD requested");
+				}
+				else if (currentString.Equals("cancelled") && Canceller.ShouldCancel)
+				{
+					Canceller.ResetCancel();
+					SetBool(TwitchCancelField, false);
+					break;
+				}
+				else if (currentString.RegexMatch(out match, "^(?:skiptime|settime) ([0-9:.]+)") &&
+				         match.Groups[1].Value.TryParseTime(out waitTime))
+				{
+					Debug.LogFormat("Time skipping requested");
+
+
+
+					var skipDenied = TwitchPlaysModules.Where(x => x.Solvable && !x.TimeSkippingAllowed && !x.Solved).ToList();
+
+					if (!skipDenied.Any())
+					{
+						if ((ZenMode && TimerModule.TimeRemaining < waitTime) ||
+						    (!ZenMode && TimerModule.TimeRemaining > waitTime))
+						{
+							TimerModule.TimeRemaining = waitTime;
+							Debug.LogFormat("Skipping of time was allowed. Bomb Timer is now {0}", TimerModule.GetFormattedTime());
+						}
+						else
+						{
+							Debug.LogFormat("Skipping of time was not allowed because the requested time to skip to has already gone by.");
+						}
+					}
+					else
+					{
+						Debug.LogFormat(
+							"Skipping of time was not allowed, because there is at least one unsolved module that doesn't allow skipping of time present:");
+						Debug.LogFormat(skipDenied
+							.Select(x => string.Format("!{0} - ({1})", x.IDTextMesh.text, x.BombModule.ModuleDisplayName)).Join("\n"));
+					}
+				}
+
+				else
+				{
+					Debug.Log("Unprocessed string: " + currentObject);
+				}
+
+				yield return currentObject;
+			}
+			else if (currentObject is string[])
+			{
+				string[] currentStrings = (string[]) currentObject;
+				if (currentStrings.Length >= 1)
+				{
+					if (new[] {"detonate", "explode"}.Contains(currentStrings[0].ToLowerInvariant()))
+					{
+						FakeBombInfo.strikes = FakeBombInfo.numStrikes - 1;
+						string moduleDisplayName = GetModuleDisplayName() ?? "Detonate Command in TP Module";
+						switch (currentStrings.Length)
+						{
+							case 3:
+								moduleDisplayName = currentStrings[2];
+								goto case 2;
+
+							case 2:
+								Debug.Log("Detonate command chat message: " + currentStrings[1]);
+								goto default;
+
+							default:
+								FakeBombInfo.HandleStrike(moduleDisplayName);
+								break;
+						}
+					}
+				}
+			}
+			else if (currentObject is Quaternion)
+			{
+				needQuaternionReset = true;
+				Module.localRotation = (Quaternion) currentObject;
+			}
+			else if (currentObject is Quaternion[])
+			{
+				Quaternion[] localQuaternions = (Quaternion[]) currentObject;
+				if (localQuaternions.Length == 2)
+				{
+					needQuaternionReset = true;
+					Module.localRotation = localQuaternions[0];
+				}
+			}
+			else
+				yield return currentObject;
+
+			if ((StrikeCount != initialStrikes || Solved) && !AnarchyMode && !multipleStrikes)
+				break;
+
+			tryCancelSequence = false;
 		}
+
+		if (needQuaternionReset)
+		{
+			Quaternion currentRotation = Module.localRotation;
+			float startTime = Time.time;
+			while ((Time.time - startTime) < 0.25f)
+			{
+				Module.localRotation = Quaternion.Lerp(currentRotation, initialModuleQuaternion, (Time.time - startTime) / 0.25f);
+				yield return null;
+			}
+		}
+
+		if (_zoom)
+		{
+			focus = UnZoomCamera();
+			while (focus.MoveNext())
+				yield return focus.Current;
+		}
+
 
 		if (focused)
 		{
