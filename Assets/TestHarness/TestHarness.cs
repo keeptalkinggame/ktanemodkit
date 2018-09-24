@@ -1196,12 +1196,13 @@ public class TestHarness : MonoBehaviour
 		const float moveTime = 0.125f;
 		float startTime = Time.time;
 
-		
+		float front = destination.eulerAngles.z < 90 || destination.eulerAngles.z > 270 ? 0 : 180;
+		float back = destination.eulerAngles.z < 90 || destination.eulerAngles.z > 270 ? 180 : 0;
 
 		Vector3 bombOrigin = Instance._bomb.localEulerAngles;
 		Vector3 cameraOrigin = Instance._camera.localPosition;
 
-		Vector3 bombDestination = new Vector3(0, 0, (bombOrigin.z >= 270.01f || bombOrigin.z <= 90f) ? 0.0f : 180.0f);
+		Vector3 bombDestination = new Vector3(0, 0, (bombOrigin.z >= 270.01f || bombOrigin.z <= 90f) ? front : back);
 		Instance._bomb.localEulerAngles = bombDestination;
 
 		Vector3 cameraDestination = new Vector3(destination.position.x, Instance._camera.localPosition.y, destination.position.z);
