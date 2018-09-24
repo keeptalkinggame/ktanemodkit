@@ -599,11 +599,13 @@ public class TwitchPlaysID : MonoBehaviour
 	}
 
 	static readonly Dictionary<Component, HashSet<KMSelectable>> ComponentHelds = new Dictionary<Component, HashSet<KMSelectable>> { };
-
+	
 	IEnumerator SimulateModule(string command)
 	{
 		if (Solved && !AnarchyMode) yield break;
 
+		needQuaternionReset = false;
+		frontFace = _heldFrontFace;
 		IEnumerator focus = null;
 		bool focused = false;
 		IEnumerator responseCoroutine = RespondToCommandCommon(command);
@@ -681,7 +683,7 @@ public class TwitchPlaysID : MonoBehaviour
 				yield return focus.Current;
 		}
 
-		bool needQuaternionReset = false;
+		
 		Quaternion initialModuleQuaternion = Module.localRotation;
 		bool tryCancelSequence = false;
 		bool multipleStrikes = false;
@@ -939,16 +941,16 @@ public class TwitchPlaysID : MonoBehaviour
 			}
 			else if (currentObject is Quaternion)
 			{
-				needQuaternionReset = true;
-				Module.localRotation = (Quaternion) currentObject;
+				RotateBombByLocalQuaternion((Quaternion) currentObject);
 			}
 			else if (currentObject is Quaternion[])
 			{
 				Quaternion[] localQuaternions = (Quaternion[]) currentObject;
 				if (localQuaternions.Length == 2)
 				{
-					needQuaternionReset = true;
-					Module.localRotation = localQuaternions[0];
+					//Module.parent.parent.localRotation = localQuaternions[0];
+					RotateBombByLocalQuaternion(localQuaternions[0]);
+					if (_moduleCamera != null) _moduleCamera.localRotation = Quaternion.Euler(frontFace ? -localQuaternions[1].eulerAngles : localQuaternions[1].eulerAngles);
 				}
 			}
 			else
@@ -962,13 +964,9 @@ public class TwitchPlaysID : MonoBehaviour
 
 		if (needQuaternionReset)
 		{
-			Quaternion currentRotation = Module.localRotation;
-			float startTime = Time.time;
-			while ((Time.time - startTime) < 0.25f)
-			{
-				Module.localRotation = Quaternion.Lerp(currentRotation, initialModuleQuaternion, (Time.time - startTime) / 0.25f);
-				yield return null;
-			}
+			focus = TestHarness.MoveCamera(Module);
+			while (focus.MoveNext())
+				yield return focus.Current;
 		}
 
 		if (_zoom)
@@ -978,7 +976,6 @@ public class TwitchPlaysID : MonoBehaviour
 				yield return focus.Current;
 		}
 
-
 		if (focused)
 		{
 			focus = TestHarness.MoveCamera(TestHarness.Instance.transform);
@@ -986,6 +983,21 @@ public class TwitchPlaysID : MonoBehaviour
 				yield return focus.Current;
 			yield return new WaitForSeconds(0.5f);
 		}
+	}
+
+	bool needQuaternionReset;
+	private bool frontFace;
+	private bool _heldFrontFace { get { return Module.parent.parent.localEulerAngles.z < 90 || Module.parent.parent.localEulerAngles.z > 270; } }
+	protected void RotateBombByLocalQuaternion(Quaternion localQuaternion)
+	{
+		if (!needQuaternionReset)
+		{
+			frontFace = _heldFrontFace;
+			needQuaternionReset = true;
+		}
+		float currentZSpin = frontFace ? 0.0f : 180.0f;
+		Module.parent.parent.localRotation = Quaternion.Euler(0, 0, currentZSpin) * localQuaternion;
+		//Module.parent.parent.localRotation = localQuaternion;
 	}
 
 	protected enum SendToTwitchChatResponse
