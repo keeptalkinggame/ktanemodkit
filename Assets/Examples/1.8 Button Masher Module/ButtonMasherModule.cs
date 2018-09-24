@@ -52,11 +52,20 @@ public class ButtonMasherModule : MonoBehaviour
 #pragma warning restore 0414
 #pragma warning disable 0649
 	private bool TwitchShouldCancelCommand;
+	private bool TwitchPlaysSkipTimeAllowed = true;
 #pragma warning restore 0649
 	private IEnumerator ProcessTwitchCommand(string command)
 	{
 		var split = command.ToLowerInvariant().Split(new []{" "}, StringSplitOptions.RemoveEmptyEntries);
 		int count;
+
+		if (command.StartsWith("command |") || command.StartsWith("command|"))
+		{
+			yield return null;
+			foreach (string c in command.Split('|').Skip(1))
+				yield return c;
+			yield break;
+		}
 
 		if (command == "detonate")
 		{
