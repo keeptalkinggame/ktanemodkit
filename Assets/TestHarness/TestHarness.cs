@@ -411,6 +411,7 @@ public class TestHarness : MonoBehaviour
 	public StatusLight StatusLightPrefab;
 	public TimerModule TimerModulePrefab;
 	public Transform ModuleCoverPrefab;
+	public Transform ModuleFoamBacking;
 	public TwitchPlaysID TwitchIDPrefab;
 	public NeedyTimer NeedyTimerPrefab;
 
@@ -699,6 +700,13 @@ public class TestHarness : MonoBehaviour
 						anchor.SetParent(bombFaceTransform, true);
 						anchors[bombFace].Add(anchor);
 						timerAnchors[bombFace].Add(anchor);
+
+						Transform backing = Instantiate(ModuleFoamBacking);
+						backing.gameObject.SetActive(true);
+						backing.localPosition = Vector3.zero;
+						backing.localRotation = Quaternion.identity;
+						backing.localScale = Vector3.one;
+						backing.SetParent(anchor, false);
 					}
 				}
 
