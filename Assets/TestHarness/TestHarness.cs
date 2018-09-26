@@ -740,6 +740,7 @@ public class TestHarness : MonoBehaviour
 
 		int timerFace = Random.Range(0, timerAnchors.Count);
 		_timer = Instantiate(fakeInfo.numStrikes == 1 ? StrikelessTimerModulePrefab : TimerModulePrefab);
+		_timer.TimeRemaining = TimeLimit;
 		_timer.gameObject.SetActive(true);
 
 		Transform timerAnchor = PrepareModuleAnchor(timerAnchors, _timer.transform, ref timerFace, bombTransform, false);
