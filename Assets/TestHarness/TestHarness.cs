@@ -16,7 +16,7 @@ public class FakeBombInfo : MonoBehaviour
 
 	public delegate void LightsOn();
     public LightsOn ActivateLights;
-	public TimerModule timerModule;
+	public TimerModule TimerModule;
 
 	public SerialNumber SerialNumberWidget;
 	public BatteryWidget BatteryWidget;
@@ -28,7 +28,7 @@ public class FakeBombInfo : MonoBehaviour
 	void FixedUpdate()
     {
         if (solved || exploded) return;
-	    if (timerModule == null) return;
+	    if (TimerModule == null) return;
         if (startupTime > 0)
         {
             startupTime -= Time.fixedDeltaTime;
@@ -49,13 +49,13 @@ public class FakeBombInfo : MonoBehaviour
 		            w.Activate();
 	            }
 
-	            timerModule.TimerRunning = true;
+	            TimerModule.TimerRunning = true;
             }
         }
         else
         {
-	        timeLeft = timerModule.TimeRemaining;
-	        if (timerModule.ExplodedToTime)
+	        timeLeft = TimerModule.TimeRemaining;
+	        if (TimerModule.ExplodedToTime)
 	        {
 		        OnBombExploded("Time Ran Out!");
 				
@@ -167,7 +167,7 @@ public class FakeBombInfo : MonoBehaviour
 		if (exploded) return;
 		Debug.LogFormat("KABOOM! - Cause of Explosion: {0}", string.IsNullOrEmpty(reason) ? "Unknown" : reason);
 		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombExplode, transform);
-		timerModule.TimerRunning = false;
+		TimerModule.TimerRunning = false;
 		exploded = true;
 
 		foreach (NeedyTimer timer in needyModuleTimers)
@@ -184,7 +184,7 @@ public class FakeBombInfo : MonoBehaviour
 			Debug.Log("Strike: " + reason);
 
 		strikes++;
-	    timerModule.StrikeCount++;
+	    TimerModule.StrikeCount++;
         Debug.Log(strikes + "/" + numStrikes);
         if (strikes == numStrikes)
         {
@@ -192,10 +192,10 @@ public class FakeBombInfo : MonoBehaviour
 			if (Detonate != null) Detonate();
         }
 
-	    if (timerModule.TimeMode)
+	    if (TimerModule.TimeMode)
 		    strikes--;
 
-	    if (timerModule.ZenMode)
+	    if (TimerModule.ZenMode)
 		    numStrikes++;
     }
 
@@ -211,7 +211,7 @@ public class FakeBombInfo : MonoBehaviour
 	    Debug.Log("Bomb defused!");
 	    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombDefused, transform);
 	    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.GameOverFanfare, transform);
-	    timerModule.TimerRunning = false;
+	    TimerModule.TimerRunning = false;
 
 		solved = true;
         if (HandleSolved != null) HandleSolved();
@@ -410,6 +410,7 @@ public class TestHarness : MonoBehaviour
 {
 	public StatusLight StatusLightPrefab;
 	public TimerModule TimerModulePrefab;
+	public TimerModule StrikelessTimerModulePrefab;
 	public Transform ModuleCoverPrefab;
 	public Transform ModuleFoamBacking;
 	public TwitchPlaysID TwitchIDPrefab;
@@ -437,6 +438,9 @@ public class TestHarness : MonoBehaviour
     public List<AudioClip> AudioClips;
 	public Dictionary<KMSoundOverride.SoundEffect, AudioSource> GameSoundEffectSources = new Dictionary<KMSoundOverride.SoundEffect, AudioSource>();
 	public Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> GameSoundEffects = new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
+
+	public int StrikeCount = 3;
+	public int TimeLimit = 600;
 
     public EdgeworkConfiguration EdgeworkConfiguration;
 	[ReadOnlyWhenPlaying] public bool TwitchPlaysActive = true;
@@ -474,6 +478,8 @@ public class TestHarness : MonoBehaviour
 		PrepareLights();
 
         fakeInfo = gameObject.AddComponent<FakeBombInfo>();
+		fakeInfo.numStrikes = StrikeCount;
+		fakeInfo.timeLeft = TimeLimit;
 	    fakeInfo.SerialNumberWidget = SerialNumberWidget;
 	    fakeInfo.BatteryWidget = BatteryWidget;
 	    fakeInfo.PortWidget = PortWidget;
@@ -560,7 +566,7 @@ public class TestHarness : MonoBehaviour
 		KMStatusLightParent statusLight = module.GetComponentInChildren<KMStatusLightParent>();
 		TwitchPlaysID tpID = Instantiate(TwitchIDPrefab);
 		tpID.FakeBombInfo = fakeInfo;
-		tpID.TimerModule = fakeInfo.timerModule;
+		tpID.TimerModule = fakeInfo.TimerModule;
 		tpID.Module = module;
 		tpID.gameObject.SetActive(true);
 		if (statusLight == null)
@@ -733,9 +739,8 @@ public class TestHarness : MonoBehaviour
 			anchors[i] = anchors[i].OrderBy(x => Random.value).ToList();
 
 		int timerFace = Random.Range(0, timerAnchors.Count);
-		_timer = Instantiate(TimerModulePrefab);
+		_timer = Instantiate(fakeInfo.numStrikes == 1 ? StrikelessTimerModulePrefab : TimerModulePrefab);
 		_timer.gameObject.SetActive(true);
-
 
 		Transform timerAnchor = PrepareModuleAnchor(timerAnchors, _timer.transform, ref timerFace, bombTransform, false);
 		anchors[timerFace].Remove(timerAnchor);
@@ -748,7 +753,7 @@ public class TestHarness : MonoBehaviour
 
 		_timer.OnStopEmergencyLights += delegate { _emergencyLightsActivated = false; };
 
-		fakeInfo.timerModule = _timer;
+		fakeInfo.TimerModule = _timer;
 
 		if (TwitchPlaysMode == TwitchPlaysMode.TimeMode)
 		{
@@ -864,7 +869,7 @@ public class TestHarness : MonoBehaviour
         List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
 	    PrepareBomb(modules, needyModules, ref fakeInfo.widgets);
 
-	    fakeInfo.timerModule = _timer;
+	    fakeInfo.TimerModule = _timer;
         fakeInfo.needyModules = needyModules.ToList();
         currentSelectable.Children = new TestSelectable[modules.Count + needyModules.Count];
         currentSelectable.ChildRowLength = currentSelectable.Children.Length;

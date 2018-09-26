@@ -100,7 +100,8 @@ public class TimerModule : MonoBehaviour
 		}
 
 		TimerText.text = GetFormattedTime();
-		StrikesText.text = StrikeCount.ToString();
+		if(StrikesText != null)
+			StrikesText.text = StrikeCount.ToString();
 	}
 
 	public string GetFormattedTime()
