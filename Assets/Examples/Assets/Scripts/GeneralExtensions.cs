@@ -3,7 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using UnityEngine;
+// ReSharper disable UnusedMember.Global
 
 public static class GeneralExtensions
 {
@@ -219,5 +221,24 @@ public static class GeneralExtensions
 
 		time = splitFloat.Select((t, i) => t * multiplier[split.Length - i]).Sum();
 		return true;
+	}
+
+	public static Color Color(int red, int green, int blue, int alpha = 255)
+	{
+		return new Color(red / 255f, green / 255f, blue / 255f, alpha / 255f);
+	}
+
+	public static Color Color(this string colorString)
+	{
+		Color color;
+		if (ColorUtility.TryParseHtmlString(colorString, out color)) return color;
+		ColorUtility.TryParseHtmlString("#" + colorString, out color);
+		return color;
+	}
+
+	[StringFormatMethod("message")]
+	public static void AppendLineFormat(this StringBuilder builder, string message, params object[] args)
+	{
+		builder.AppendLine(string.Format(message, args));
 	}
 }
