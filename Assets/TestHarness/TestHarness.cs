@@ -1203,11 +1203,14 @@ public class TestHarness : MonoBehaviour
 
     void EmulateDirection(Direction direction)
     {
-        TestSelectable selectable = lastSelected.GetNearestSelectable(direction);
+	    TestSelectable root = GetComponent<TestSelectable>();
+		TestSelectable selectable = lastSelected.GetNearestSelectable(direction);
         if (selectable)
         {
             lastSelected = selectable;
             currentSelectable.LastSelectedChild = lastSelected;
+	        if (root.Children.Contains(selectable))
+		        MoveCamera(selectable);
         }
     }
 
