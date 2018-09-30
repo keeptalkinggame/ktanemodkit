@@ -446,6 +446,8 @@ public class TestHarness : MonoBehaviour
 	[ReadOnlyWhenPlaying] public bool TwitchPlaysActive = true;
 	[ReadOnlyWhenPlaying] public TwitchPlaysMode TwitchPlaysMode = TwitchPlaysMode.NormalMode;
 
+	private bool _interacting;
+
 	public float turnSpeed = 128.0f;      // Speed of camera turning when mouse moves in along an axis
 	public float panSpeed = 4.0f;       // Speed of the camera when being panned
 	public float zoomSpeed = 16.0f;      // Speed of the camera going back and forth
@@ -1120,7 +1122,7 @@ public class TestHarness : MonoBehaviour
             int layerMask = 1 << 11;
             bool rayCastHitSomething = Physics.Raycast(ray, out hit, 1000, layerMask);
 
-            if (rayCastHitSomething) {
+			if (rayCastHitSomething && !_interacting) {
                 TestSelectableArea hitArea = hit.collider.GetComponent<TestSelectableArea>();
                 if (hitArea != null)
                 {
@@ -1149,7 +1151,7 @@ public class TestHarness : MonoBehaviour
                     }
                 }
             }
-            else
+            else if (!_interacting)
             {
                 if (currentSelectableArea != null)
                 {
@@ -1158,8 +1160,17 @@ public class TestHarness : MonoBehaviour
                 }
             }
 
-            if (Input.GetMouseButtonDown(0)) Interact();
-            if (Input.GetMouseButtonUp(0)) InteractEnded();
+	        if (Input.GetMouseButtonDown(0))
+	        {
+		        _interacting = true;
+		        Interact();
+	        }
+
+	        if (Input.GetMouseButtonUp(0))
+	        {
+		        _interacting = false;
+		        InteractEnded();
+	        }
 	        if (Input.GetMouseButtonDown(1))
 	        {
 		        mouseDownTIme = 0;
