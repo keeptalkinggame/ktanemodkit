@@ -232,6 +232,11 @@ public class FakeBombInfo : MonoBehaviour
         if (OnLights != null) OnLights(false);
     }
 
+	public void OnLightsChange(bool state)
+	{
+		if (OnLights != null) OnLights(state);
+	}
+
 	/// <summary>
 	/// Sets up the edgework of the FakeBombInfo according to the provided edgework configuration.
 	/// </summary>
@@ -551,7 +556,7 @@ public class TestHarness : MonoBehaviour
                     KMGameInfo component = (KMGameInfo)LogReplaceBombInfoError(f, s);
 					if (component == null || !components.Add(component)) continue;
 
-					component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(fakeInfo.OnLights);
+					component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(fakeInfo.OnLightsChange);
                     //component.OnAlarmClockChange += new KMGameInfo.KMAlarmClockChangeDelegate(fakeInfo.OnAlarm);
                     continue;
                 }
