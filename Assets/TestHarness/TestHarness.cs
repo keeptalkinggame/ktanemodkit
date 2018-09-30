@@ -505,18 +505,38 @@ public class TestHarness : MonoBehaviour
         AddSelectables();
     }
 
+	Component LogReplaceBombInfoError(FieldInfo f, MonoBehaviour s)
+	{
+		Component component = (Component)f.GetValue(s);
+		if (component == null)
+		{
+			var obj = s.transform;
+			var str = new List<string>();
+			while (obj != null)
+			{
+				str.Add(obj.gameObject.name);
+				obj = obj.parent;
+			}
+			Debug.LogErrorFormat("There is an unassigned component of type {0} on the following object: {1}", f.FieldType.Name, string.Join(" > ", str.ToArray()));
+		}
+		return component;
+	}
+
 	void ReplaceBombInfo()
     {
+		HashSet<Component> components = new HashSet<Component>();
         MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
         foreach (MonoBehaviour s in scripts)
         {
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
             foreach (FieldInfo f in fields)
             {
-                if (f.FieldType.Equals(typeof(KMBombInfo)))
+                if (f.FieldType == typeof(KMBombInfo))
                 {
-                    KMBombInfo component = (KMBombInfo)f.GetValue(s);
-                    component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
+	                KMBombInfo component = (KMBombInfo) LogReplaceBombInfoError(f, s);
+					if (component == null || !components.Add(component)) continue;
+
+					component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
                     component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
                     component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
                     component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
@@ -526,17 +546,21 @@ public class TestHarness : MonoBehaviour
                     component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
                     continue;
                 }
-                if (f.FieldType.Equals(typeof(KMGameInfo)))
+                if (f.FieldType == typeof(KMGameInfo))
                 {
-                    KMGameInfo component = (KMGameInfo)f.GetValue(s);
-                    component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(fakeInfo.OnLights);
+                    KMGameInfo component = (KMGameInfo)LogReplaceBombInfoError(f, s);
+					if (component == null || !components.Add(component)) continue;
+
+					component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(fakeInfo.OnLights);
                     //component.OnAlarmClockChange += new KMGameInfo.KMAlarmClockChangeDelegate(fakeInfo.OnAlarm);
                     continue;
                 }
-                if (f.FieldType.Equals(typeof(KMGameCommands)))
+                if (f.FieldType == typeof(KMGameCommands))
                 {
-                    KMGameCommands component = (KMGameCommands)f.GetValue(s);
-                    component.OnCauseStrike += new KMGameCommands.KMCauseStrikeDelegate(fakeInfo.HandleStrike);
+                    KMGameCommands component = (KMGameCommands)LogReplaceBombInfoError(f, s);
+					if (component == null || !components.Add(component)) continue;
+
+					component.OnCauseStrike += new KMGameCommands.KMCauseStrikeDelegate(fakeInfo.HandleStrike);
                     continue;
                 }
             }
