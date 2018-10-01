@@ -417,7 +417,7 @@ public class TestHarness : MonoBehaviour
 	public TimerModule TimerModulePrefab;
 	public TimerModule StrikelessTimerModulePrefab;
 	public Transform ModuleCoverPrefab;
-	public Transform ModuleFoamBacking;
+	public KMModuleBacking ModuleFoamBacking;
 	public TwitchPlaysID TwitchIDPrefab;
 	public NeedyTimer NeedyTimerPrefab;
 
@@ -446,6 +446,8 @@ public class TestHarness : MonoBehaviour
 
 	public int StrikeCount = 3;
 	public int TimeLimit = 600;
+	[Range(1,22)] public int BombSize = 1;
+	public bool FrontFaceOnly = false;
 
     public EdgeworkConfiguration EdgeworkConfiguration;
 	[ReadOnlyWhenPlaying] public bool TwitchPlaysActive = true;
@@ -577,7 +579,7 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-	WidgetZone CreateWidgetArea(Vector3 rot, Vector3 pos, Vector3 scale, Transform parent, string name)
+	WidgetZone CreateWidgetArea(Vector3 rot, Vector3 pos, Vector3 scale, Transform parent, List<GameObject> areaList, string name)
 	{
 		Transform widgetBase = new GameObject().transform;
 		widgetBase.name = name;
@@ -590,6 +592,7 @@ public class TestHarness : MonoBehaviour
 		widgetInner.localEulerAngles = new Vector3(rot.z, 0, 0);
 		widgetInner.localScale = scale;
 		widgetInner.SetParent(widgetBase, false);
+		areaList.Add(widgetInner.gameObject);
 
 		return WidgetZone.CreateZone(widgetInner.gameObject);
 	}
@@ -642,11 +645,11 @@ public class TestHarness : MonoBehaviour
 
 	void PrepareBomb(List<KMBombModule> bombModules, List<KMNeedyModule> needyModules, ref List<Widget> widgets)
 	{
-		Transform bombTransform;
 		List<Transform> timerSideModules = new List<Transform>();
 		List<Transform> modules = new List<Transform>();
 		List<List<Transform>> anchors = new List<List<Transform>>();
 		List<List<Transform>> timerAnchors = new List<List<Transform>>();
+		List<List<Transform>> emptyAnchors = new List<List<Transform>>();
 		List<WidgetZone> widgetZones = new List<WidgetZone>();
 
 		timerSideModules.AddRange(bombModules.Where(x => x.RequiresTimerVisibility).Select(x => x.transform));
@@ -655,12 +658,28 @@ public class TestHarness : MonoBehaviour
 		modules.AddRange(bombModules.Where(x => !x.RequiresTimerVisibility).Select(x => x.transform));
 		modules.AddRange(needyModules.Where(x => !x.RequiresTimerVisibility).Select(x => x.transform));
 
-		KMBomb bomb = FindObjectOfType<KMBomb>();
-		if (bomb != null)
+		KMBomb[] bombs = FindObjectsOfType<KMBomb>().OrderBy(x => Random.value).ToArray();
+		KMBomb bomb;
+		if (bombs.Any())
 		{
-			bombTransform = bomb.transform;
+			bomb = bombs[0];
+			foreach (KMBomb kmbomb in bombs.Skip(1))
+			{
+				kmbomb.gameObject.SetActive(false);
+			}
+
+			bomb.transform.localPosition = Vector3.zero;
+			bomb.transform.localRotation = Quaternion.identity;
+			bomb.transform.localScale = Vector3.one;
+
+			_bomb = bomb.transform;
 			foreach (KMBombFace face in bomb.Faces)
 			{
+				if (FrontFaceOnly && anchors.Any())
+				{
+					emptyAnchors.Add(face.Anchors);
+					continue;
+				}
 				anchors.Add(face.Anchors);
 				if (face.TimerAnchors.Count > 0)
 					timerAnchors.Add(face.TimerAnchors);
@@ -673,7 +692,7 @@ public class TestHarness : MonoBehaviour
 				if (Random.value < 0.5f)
 				{
 					if (timerSideModules.Count == 0) continue;
-					module = timerSideModules[Random.Range(0, timerSideModules.Capacity)];
+					module = timerSideModules[Random.Range(0, timerSideModules.Count)];
 					timerSideModules.Remove(module);
 				}
 				else
@@ -685,7 +704,7 @@ public class TestHarness : MonoBehaviour
 
 				bombModules.Remove(module.GetComponent<KMBombModule>());
 				needyModules.Remove(module.GetComponent<KMNeedyModule>());
-				Destroy(module.gameObject);
+				DestroyImmediate(module.gameObject);
 			}
 
 			widgetZones.AddRange(bomb.WidgetAreas.Select(WidgetZone.CreateZone));
@@ -693,93 +712,169 @@ public class TestHarness : MonoBehaviour
 		}
 		else
 		{
-			int square = 1;
-			while ((square * square * 2) < (modules.Count + timerSideModules.Count + 1))
+			int square = BombSize;
+			while ((square * square * (FrontFaceOnly ? 1 : 2)) < (modules.Count + timerSideModules.Count + 1))
 				square++;
 			float squaresize = 0.2f * square;
 
-			bombTransform = new GameObject("Bomb").transform;
-			bombTransform.gameObject.AddComponent<KMBomb>();
+			Transform bombTransform = new GameObject("Bomb").transform;
+			_bomb = bombTransform;
+
+			Transform visualTransform = new GameObject("Visual Transform").transform;
+			visualTransform.SetParent(bombTransform, false);
+
+			Transform highlightTransform = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			highlightTransform.name = "Highlight";
+			KMHighlightable highlightable = highlightTransform.gameObject.AddComponent<KMHighlightable>();
+			DestroyImmediate(highlightTransform.GetComponent<MeshRenderer>());
+			highlightTransform.localPosition = Vector3.zero;
+			highlightTransform.localRotation = Quaternion.identity;
+			highlightTransform.localScale = new Vector3(squaresize + 0.02f, 0.2f, squaresize + 0.02f);
+			highlightTransform.SetParent(visualTransform, false);
+
+			Rigidbody rigidBody = bombTransform.gameObject.AddComponent<Rigidbody>();
+			rigidBody.isKinematic = true;
+			rigidBody.useGravity = false;
+			bomb = bombTransform.gameObject.AddComponent<KMBomb>();
+			bomb.Faces = new List<KMBombFace>();
+			bomb.WidgetAreas = new List<GameObject>();
+			bomb.visualTransform = visualTransform;
+			bomb.Scale = (5f / 3) / square;
+
+			KMSelectable bombSelectable = bombTransform.gameObject.AddComponent<KMSelectable>();
+			bombSelectable.Children = new KMSelectable[2];
+			bombSelectable.Highlight = highlightable;
+			
+			bombTransform = visualTransform;
 
 			Transform bombFaces = new GameObject("Bomb Faces").transform;
 			bombFaces.SetParent(bombTransform);
 
 			Transform bottom = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			DestroyImmediate(bottom.GetComponent<BoxCollider>());
 			bottom.localScale = new Vector3(squaresize, 0.005f, squaresize);
 			bottom.SetParent(bombFaces, true);
+
+			Transform walls = new GameObject("Walls").transform;
+			walls.SetParent(bombTransform);
+
+			Transform wall = new GameObject("Right Wall").transform;
+			wall.localPosition = new Vector3((squaresize / 2), 0, 0);
+			wall.localEulerAngles = new Vector3(0f, -90f, 0f);
+			wall.localScale = new Vector3(squaresize, 0.2f, 0.005f);
+			wall.SetParent(walls, false);
+			Transform wallCube = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			wallCube.SetParent(wall, false);
+			DestroyImmediate(wallCube.GetComponent<BoxCollider>());
+
+			wall = new GameObject("Left Wall").transform;
+			wall.localPosition = new Vector3((-squaresize / 2), 0, 0);
+			wall.localEulerAngles = new Vector3(0f, -90f, 0f);
+			wall.localScale = new Vector3(squaresize, 0.2f, 0.005f);
+			wall.SetParent(walls, false);
+			wallCube = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			wallCube.SetParent(wall, false);
+			DestroyImmediate(wallCube.GetComponent<BoxCollider>());
+
+			wall = new GameObject("Top Wall").transform;
+			wall.localPosition = new Vector3(0, 0, (squaresize / 2));
+			wall.localEulerAngles = new Vector3(0f, -180f, 0f);
+			wall.localScale = new Vector3(squaresize, 0.2f, 0.005f);
+			wall.SetParent(walls, false);
+			wallCube = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			wallCube.transform.SetParent(wall, false);
+			DestroyImmediate(wallCube.GetComponent<BoxCollider>());
+
+			wall = new GameObject("Bottom Wall").transform;
+			wall.localPosition = new Vector3(0, 0, (-squaresize / 2));
+			wall.localEulerAngles = new Vector3(0f, 0f, 0f);
+			wall.localScale = new Vector3(squaresize, 0.2f, 0.005f);
+			wall.SetParent(walls, false);
+			wallCube = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+			wallCube.transform.SetParent(wall, false);
+			DestroyImmediate(wallCube.GetComponent<BoxCollider>());
 
 			for (int bombFace = 0; bombFace < 2; bombFace++)
 			{
 				Transform bombFaceTransform = new GameObject().transform;
+				KMBombFace kmbombFace = bombFaceTransform.gameObject.AddComponent<KMBombFace>();
+				kmbombFace.Anchors = new List<Transform>();
+				kmbombFace.TimerAnchors = new List<Transform>();
+				kmbombFace.Backings = new List<KMModuleBacking>();
+
+				KMSelectable bombFaceSelectable = bombFaceTransform.gameObject.AddComponent<KMSelectable>();
+				bombFaceSelectable.Parent = bombSelectable;
+				bombFaceSelectable.IsPassThrough = true;
+				bombSelectable.Children[bombFace] = bombFaceSelectable;
+				bombSelectable.ChildRowLength = square;
+
+				bomb.Faces.Add(kmbombFace);
+
 				bombFaceTransform.name = bombFace == 0 ? "Bottom Face" : "Top Face";
-				
+
+
 				anchors.Add(new List<Transform>());
 				timerAnchors.Add(new List<Transform>());
+				emptyAnchors.Add(new List<Transform>());
 
-				Transform walls = new GameObject("Walls").transform;
-				walls.SetParent(bombFaceTransform);
 
-				for (float i = (-squaresize / 2) + 0.1f; i < squaresize / 2; i += 0.2f)
+				for (float i = (squaresize / 2) - 0.1f; i > -squaresize / 2; i -= 0.2f)
 				{
-					Transform rightwall = new GameObject(bombFace == 0 ? "Right Wall" : "Left Wall").transform;
-					rightwall.localPosition = new Vector3((squaresize / 2), -0.1f, i);
-					rightwall.localEulerAngles = new Vector3(0f, -90f, 0f);
-					rightwall.localScale = new Vector3(0.2f, 0.2f, 0.005f);
-					rightwall.SetParent(walls, false);
-					GameObject.CreatePrimitive(PrimitiveType.Cube).transform.SetParent(rightwall, false);
-
-					Transform topwall = new GameObject(bombFace == 0 ? "Top Wall" : "Bottom Wall").transform;
-					topwall.localPosition = new Vector3(i, -0.1f, (squaresize / 2) - (squaresize * bombFace));
-					topwall.localEulerAngles = new Vector3(0f, -180f + (180f * bombFace), 0f);
-					topwall.localScale = new Vector3(0.2f, 0.2f, 0.005f);
-					topwall.SetParent(walls, false);
-					GameObject.CreatePrimitive(PrimitiveType.Cube).transform.SetParent(topwall, false);
-
 					for (float j = (-squaresize / 2) + 0.1f; j < squaresize / 2; j += 0.2f)
 					{
 						Transform anchor = new GameObject("Anchor").transform;
-						anchor.localPosition = new Vector3(i, -0.02f, j);
+						kmbombFace.Anchors.Add(anchor);
+						anchor.localPosition = new Vector3(j, -0.02f, i);
 						anchor.SetParent(bombFaceTransform, true);
-						anchors[bombFace].Add(anchor);
-						timerAnchors[bombFace].Add(anchor);
+						if (!FrontFaceOnly || bombFace == 0)
+						{
+							anchors[bombFace].Add(anchor);
+							timerAnchors[bombFace].Add(anchor);
+						}
+						else
+						{
+							emptyAnchors[bombFace].Add(anchor);
+						}
 
-						Transform backing = Instantiate(ModuleFoamBacking);
+						KMModuleBacking backing = Instantiate(ModuleFoamBacking);
+						kmbombFace.Backings.Add(backing);
 						backing.gameObject.SetActive(true);
-						backing.localPosition = Vector3.zero;
-						backing.localRotation = Quaternion.identity;
-						backing.localScale = Vector3.one;
-						backing.SetParent(anchor, false);
+						backing.transform.localPosition = Vector3.zero;
+						backing.transform.localRotation = Quaternion.identity;
+						backing.transform.localScale = Vector3.one;
+						backing.transform.SetParent(anchor, false);
 					}
 				}
 
-				bombFaceTransform.localPosition = new Vector3(0, (bombFace * 0.2f) - 0.1f, 0);
-				bombFaceTransform.localEulerAngles = new Vector3(0, 0, 180f - (bombFace * 180f));
+				bombFaceTransform.localPosition = new Vector3(0, (bombFace * -0.2f) + 0.1f, 0);
+				bombFaceTransform.localEulerAngles = new Vector3(0, 0, (bombFace * 180f));
 				bombFaceTransform.SetParent(bombFaces, true);
 			}
 
 			Transform widgetAreas = new GameObject("Widget Areas").transform;
 			widgetAreas.SetParent(bombTransform);
 
-			for (int i = 0; i < square; i++)
-			{
-				float offset = (i * 0.2f) - (squaresize / 2) + 0.1f;
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(offset, 0, (-squaresize / 2) - 0.015f), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Bottom Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Lef Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.015f, 0, offset), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Right Widget Area {0}", i)));
-				widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(offset, 0, (squaresize / 2) + 0.015f), new Vector3(0.20f, 0.03f, 0.17f), widgetAreas, string.Format("Top Widget Area {0}", i)));
-			}
+			widgetZones.Add(CreateWidgetArea(new Vector3(0, 0, -90), new Vector3(0, 0, (-squaresize / 2) - 0.0175f), new Vector3(squaresize, 0.03f, 0.17f), widgetAreas, bomb.WidgetAreas, "Bottom Widget Area"));
+			widgetZones.Add(CreateWidgetArea(new Vector3(-90, 90, 0), new Vector3((-squaresize / 2) - 0.0175f, 0, 0), new Vector3(squaresize, 0.03f, 0.17f), widgetAreas, bomb.WidgetAreas, "Lef Widget Area"));
+			widgetZones.Add(CreateWidgetArea(new Vector3(-90, -90, 0), new Vector3((squaresize / 2) + 0.0175f, 0, 0), new Vector3(squaresize, 0.03f, 0.17f), widgetAreas, bomb.WidgetAreas, "Right Widget Area"));
+			widgetZones.Add(CreateWidgetArea(new Vector3(0, -180, -90), new Vector3(0, 0, (squaresize / 2) + 0.0175f), new Vector3(squaresize, 0.03f, 0.17f), widgetAreas, bomb.WidgetAreas, "Top Widget Area"));
+
+			var dupebomb = Instantiate(_bomb);
+			dupebomb.gameObject.SetActive(false);
+			dupebomb.transform.name = string.Format("{0}x{0} Square Bomb", square);
 		}
-		_bomb = bombTransform;
 
 		for (int i = 0; i < anchors.Count; i++)
 			anchors[i] = anchors[i].OrderBy(x => Random.value).ToList();
+		for (int i = 0; i < timerAnchors.Count; i++)
+			timerAnchors[i] = timerAnchors[i].OrderBy(x => Random.value).ToList();
 
 		int timerFace = Random.Range(0, timerAnchors.Count);
 		_timer = Instantiate(fakeInfo.numStrikes == 1 ? StrikelessTimerModulePrefab : TimerModulePrefab);
 		_timer.TimeRemaining = TimeLimit;
 		_timer.gameObject.SetActive(true);
 
-		Transform timerAnchor = PrepareModuleAnchor(timerAnchors, _timer.transform, ref timerFace, bombTransform, false);
+		Transform timerAnchor = PrepareModuleAnchor(timerAnchors, _timer.transform, ref timerFace, _bomb, false);
 		anchors[timerFace].Remove(timerAnchor);
 
 		_timer.OnStartEmergencyLights += delegate 
@@ -804,7 +899,7 @@ public class TestHarness : MonoBehaviour
 		}
 
 		Transform modulesTransform = new GameObject("Modules").transform;
-		modulesTransform.SetParent(bombTransform, true);
+		modulesTransform.SetParent(_bomb, true);
 		foreach (Transform module in timerSideModules)
 		{
 			Transform anchor = PrepareModuleAnchor(anchors, module, ref timerFace, modulesTransform);
@@ -831,8 +926,15 @@ public class TestHarness : MonoBehaviour
 			PrepareModuleAnchor(anchors, cover, ref timerFace, null, false);
 		}
 
+		while (emptyAnchors.Sum(x => x.Count) > 0)
+		{
+			Transform cover = Instantiate(ModuleCoverPrefab);
+			cover.gameObject.SetActive(true);
+			PrepareModuleAnchor(emptyAnchors, cover, ref timerFace, null, false);
+		}
+
 		Transform widgetsTransform = new GameObject("Widgets").transform;
-		widgetsTransform.SetParent(bombTransform);
+		widgetsTransform.SetParent(_bomb);
 
 		SerialNumber sn = widgets.FirstOrDefault(x => x.GetType() == typeof(SerialNumber)) as SerialNumber;
 		if(sn == null) throw new Exception("Could not locate the serial number widget. Cannot continue");
@@ -869,6 +971,7 @@ public class TestHarness : MonoBehaviour
 			i--;
 		}
 
+		bomb.transform.localScale = Vector3.one * bomb.Scale;
 	}
 
 	StatusLight CreateStatusLight(Transform module)
@@ -1364,7 +1467,7 @@ public class TestHarness : MonoBehaviour
 
         foreach (KMSelectable selectable in selectables)
         {
-            TestSelectable testSelectable = selectable.gameObject.GetComponent<TestSelectable>();
+			TestSelectable testSelectable = selectable.gameObject.GetComponent<TestSelectable>();
             testSelectable.Parent = selectable.Parent ? selectable.Parent.GetComponent<TestSelectable>() : null;
             testSelectable.Children = new TestSelectable[selectable.Children.Length];
             for (int i = 0; i < selectable.Children.Length; i++)

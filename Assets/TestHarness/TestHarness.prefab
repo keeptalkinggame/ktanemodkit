@@ -3831,6 +3831,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4823327142956982}
+  - component: {fileID: 114860749976925296}
   m_Layer: 0
   m_Name: FoamBacking
   m_TagString: Untagged
@@ -19777,7 +19778,7 @@ MonoBehaviour:
   TimerModulePrefab: {fileID: 114796497321298408}
   StrikelessTimerModulePrefab: {fileID: 114173487630168412}
   ModuleCoverPrefab: {fileID: 4078797777040850}
-  ModuleFoamBacking: {fileID: 4823327142956982}
+  ModuleFoamBacking: {fileID: 114860749976925296}
   TwitchIDPrefab: {fileID: 114803159384495194}
   NeedyTimerPrefab: {fileID: 114165574428916416}
   SerialNumberWidget: {fileID: 114582273662883120}
@@ -19823,6 +19824,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - GUI/KT 3D Text
+--- !u!114 &114860749976925296
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1738063253913678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -629957798, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BackingDeep: {fileID: 1481730064286610}
+  BackingNormal: {fileID: 1882349771508936}
 --- !u!114 &114863789417878222
 MonoBehaviour:
   m_ObjectHideFlags: 1
