@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using EdgeworkConfigurator;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -26,9 +27,16 @@ public class IndicatorWidget : Widget
 
 		if (label == null)
 		{
-			int pos = Random.Range(0, possibleValues.Count);
-			widget.Val = possibleValues[pos];
-			possibleValues.RemoveAt(pos);
+			if (possibleValues.Any())
+			{
+				int pos = Random.Range(0, possibleValues.Count);
+				widget.Val = possibleValues[pos];
+				possibleValues.RemoveAt(pos);
+			}
+			else
+			{
+				widget.Val = "NLL";
+			}
 		}
 		else
 		{
