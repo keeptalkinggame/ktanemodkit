@@ -36,7 +36,7 @@ namespace EdgeworkConfigurator
                 if (serialNumberType == SerialNumberType.CUSTOM) EditorGUILayout.PropertyField(serializedObject.FindProperty("CustomSerialNumber"));
 
 	            EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
-	            if (config.Widgets.Any(x => x.Type == WidgetType.TWOFACTOR)) EditorGUILayout.PropertyField(serializedObject.FindProperty("TwoFactorResetTime"));
+	            if (config != null && config.Widgets.Any(x => x.Type == WidgetType.TWOFACTOR)) EditorGUILayout.PropertyField(serializedObject.FindProperty("TwoFactorResetTime"));
 
 				EditorGUILayout.Separator();
                 EditorGUILayout.LabelField("Widgets:");
