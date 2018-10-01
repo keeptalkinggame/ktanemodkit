@@ -510,19 +510,24 @@ public class TestHarness : MonoBehaviour
         AddSelectables();
     }
 
+	void LogErrorAtTransform(Transform obj, string unassigned)
+	{
+		var str = new List<string>();
+		while (obj != null)
+		{
+			str.Add(obj.gameObject.name);
+			obj = obj.parent;
+		}
+		Debug.LogErrorFormat("There is an unassigned {0} on the following object: {1}", unassigned, string.Join(" > ", str.ToArray()));
+	}
+
 	Component LogReplaceBombInfoError(FieldInfo f, MonoBehaviour s)
 	{
 		Component component = (Component)f.GetValue(s);
 		if (component == null)
 		{
 			var obj = s.transform;
-			var str = new List<string>();
-			while (obj != null)
-			{
-				str.Add(obj.gameObject.name);
-				obj = obj.parent;
-			}
-			Debug.LogErrorFormat("There is an unassigned component of type {0} on the following object: {1}", f.FieldType.Name, string.Join(" > ", str.ToArray()));
+			LogErrorAtTransform(obj,string.Format("component of type {0}", f.FieldType.Name));
 		}
 		return component;
 	}
@@ -1346,7 +1351,10 @@ public class TestHarness : MonoBehaviour
 	        try
 	        {
 		        TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
-		        testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
+				if(selectable.Highlight == null)
+					LogErrorAtTransform(selectable.transform, "KMSelectalbe.Highlight");
+				else
+					testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
 	        }
 	        catch (Exception ex)
 	        {
