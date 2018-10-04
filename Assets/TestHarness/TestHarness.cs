@@ -1437,7 +1437,10 @@ public class TestHarness : MonoBehaviour
 
         foreach (KMHighlightable highlightable in highlightables)
         {
-            TestHighlightable highlight = highlightable.gameObject.AddComponent<TestHighlightable>();
+	        TestHighlightable highlight = highlightable.GetComponent<TestHighlightable>();
+	        if (highlight != null) continue;
+
+			highlight = highlightable.gameObject.AddComponent<TestHighlightable>();
 
             highlight.HighlightPrefab = HighlightPrefab;
             highlight.HighlightScale = highlightable.HighlightScale;
@@ -1453,7 +1456,12 @@ public class TestHarness : MonoBehaviour
         {
 	        try
 	        {
-		        TestSelectable testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
+		        TestSelectable testSelectable = selectable.GetComponent<TestSelectable>();
+		        if (testSelectable != null) continue;
+		        testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
+
+				selectable.OnUpdateChildren += select => { AddHighlightables(); AddSelectables(); };
+
 				if(selectable.Highlight == null)
 					LogErrorAtTransform(selectable.transform, "KMSelectalbe.Highlight");
 				else
