@@ -219,7 +219,7 @@ public class TwitchPlaysID : MonoBehaviour
 		if (Module == null)
 			gameObject.SetActive(false);
 
-		Unsupported.SetActive(TwitchCommandComponent == null && (!Solved || AnarchyMode));
+		Unsupported.SetActive(ProcessTwitchCommandMethod == null && (!Solved || AnarchyMode));
 		IDNumber.SetActive(!Solved || AnarchyMode);
 	}
 
@@ -328,11 +328,12 @@ public class TwitchPlaysID : MonoBehaviour
 		{
 			System.Type type = component.GetType();
 			MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-			if (method == null) continue;
+			MethodInfo forceSolveMethod = type.GetMethod("TwitchHandleForcedSolve", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			if (method == null && forceSolveMethod == null) continue;
 
 			TwitchCommandComponent = component;
 			ProcessTwitchCommandMethod = method;
-			TwitchForcedSolveMethod = type.GetMethod("TwitchHandleForcedSolve", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			TwitchForcedSolveMethod = forceSolveMethod;
 
 			TwitchCancelField = type.GetField("TwitchShouldCancelCommand", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 			TwitchModeField = type.GetField("TwitchPlaysActive", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
