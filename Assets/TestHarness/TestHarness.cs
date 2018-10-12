@@ -1060,6 +1060,9 @@ public class TestHarness : MonoBehaviour
 
 	        StatusLight statusLight = CreateStatusLight(needyModule.transform);
 			NeedyTimer needyTimer = Instantiate(NeedyTimerPrefab);
+	        needyTimer.transform.localPosition = Vector3.zero;
+	        needyTimer.transform.localRotation = Quaternion.identity;
+	        needyTimer.transform.localScale = Vector3.one;
 	        needyTimer.ParentComponent = needyModule;
 
 	        needyModule.OnPass = delegate ()
