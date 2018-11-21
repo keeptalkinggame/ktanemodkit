@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -34,7 +35,10 @@ namespace EdgeworkConfigurator
                 SerialNumberType serialNumberType = DrawSerialNumberTypePicker();
                 if (serialNumberType == SerialNumberType.CUSTOM) EditorGUILayout.PropertyField(serializedObject.FindProperty("CustomSerialNumber"));
 
-                EditorGUILayout.Separator();
+	            EdgeworkConfiguration config = (EdgeworkConfiguration)serializedObject.targetObject;
+	            if (config != null && config.Widgets.Any(x => x.Type == WidgetType.TWOFACTOR)) EditorGUILayout.PropertyField(serializedObject.FindProperty("TwoFactorResetTime"));
+
+				EditorGUILayout.Separator();
                 EditorGUILayout.LabelField("Widgets:");
 
                 SerializedProperty widgetListProperty = serializedObject.FindProperty("Widgets");
@@ -164,9 +168,30 @@ namespace EdgeworkConfigurator
                         EditorGUILayout.EndVertical();
 
                         EditorGUILayout.EndHorizontal();
-                    }
+	                    EditorGUILayout.Space();
+						EditorGUILayout.BeginHorizontal();
+
+	                    EditorGUILayout.BeginVertical();
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("ComponentVideoPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CompositeVideoPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("HDMIPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("VGAPort"));
+						EditorGUILayout.EndVertical();
+
+	                    EditorGUILayout.BeginVertical();
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("USBPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("ACPort"));
+	                    EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("PCMCIAPort"));
+						EditorGUILayout.EndVertical();
+
+						EditorGUILayout.EndHorizontal();
+
+					}
                     EditorGUILayout.PropertyField(widgetProperty.FindPropertyRelative("CustomPorts"), true);
                     break;
+				case WidgetType.TWOFACTOR:
+					EditorGUI.indentLevel++;
+					break;
                 case WidgetType.RANDOM: //Random Widget
                     EditorGUI.indentLevel++;
                     break;

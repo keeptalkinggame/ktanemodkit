@@ -299,7 +299,7 @@ public class TestSelectable : MonoBehaviour
         TestSelectable parent = newParent;
         while (parent != null)
         {
-            if (parent == this)
+            if (parent == this && parent.GetComponent<TestHarness>() == null)
                 return;
             parent = parent.Parent;
         }
