@@ -648,7 +648,8 @@ public class AssetBundler
                                 str.Add(obj.gameObject.name);
                                 obj = obj.parent;
                             }
-                            Debug.LogErrorFormat("There is an unassigned material on the following object: {0}", string.Join(" > ", str.ToArray()));
+                            Debug.LogWarningFormat("There is an unassigned material on the following object: {0}", string.Join(" > ", str.ToArray()));
+                            continue;
                         }
                         materialInfo.ShaderNames.Add(material.shader.name);
 
