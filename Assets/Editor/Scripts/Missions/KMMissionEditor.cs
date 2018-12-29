@@ -405,8 +405,13 @@ public class KMMissionEditor : Editor
         KMComponentPool componentPool = mission.GeneratorSetting.ComponentPools[poolIndex];
         SerializedProperty componentPools = serializedObject.FindProperty("GeneratorSetting.ComponentPools");
 
-        var element = componentPools.GetArrayElementAtIndex(poolIndex);
-        EditorGUILayout.PropertyField(element.FindPropertyRelative("ModTypes"), true);
+        var modTypesElement = componentPools.GetArrayElementAtIndex(poolIndex).FindPropertyRelative("ModTypes");
+        EditorGUILayout.PropertyField(modTypesElement, true);
+
+        // Trim whitespace from mod types
+        for (int i = 0; i < modTypesElement.arraySize; i++) {
+            modTypesElement.GetArrayElementAtIndex(i).stringValue = modTypesElement.GetArrayElementAtIndex(i).stringValue.Trim();
+        }
 
         //Clear any special flags if needed
         if (componentPool.ModTypes != null && componentPool.ModTypes.Count > 0)
