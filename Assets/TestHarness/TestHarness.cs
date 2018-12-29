@@ -1466,7 +1466,7 @@ public class TestHarness : MonoBehaviour
 				selectable.OnUpdateChildren += select => { AddHighlightables(); AddSelectables(); };
 
 				if(selectable.Highlight == null)
-					LogErrorAtTransform(selectable.transform, "KMSelectalbe.Highlight");
+					LogErrorAtTransform(selectable.transform, "KMSelectable.Highlight");
 				else
 					testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
 	        }
