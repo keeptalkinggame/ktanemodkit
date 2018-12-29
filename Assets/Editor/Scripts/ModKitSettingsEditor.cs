@@ -41,11 +41,19 @@ public class ModKitSettingsEditor : Editor
     {
         //Basic Info
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("id"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("title"));
+
+        var idProperty = serializedObject.FindProperty("id");
+        EditorGUILayout.PropertyField(idProperty);
+        idProperty.stringValue = idProperty.stringValue.Trim();
+
+        var titleProperty = serializedObject.FindProperty("title");
+        EditorGUILayout.PropertyField(titleProperty);
+        titleProperty.stringValue = titleProperty.stringValue.Trim();
+
         EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("version"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFolder"));
+
         EditorGUILayout.EndVertical();
 
         //Preview Image
