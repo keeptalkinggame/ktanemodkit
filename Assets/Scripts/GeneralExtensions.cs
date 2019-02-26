@@ -226,6 +226,26 @@ public static class GeneralExtensions
         return list;
     }
 
+    /// <summary>
+    ///     Returns a random element from the specified collection.</summary>
+    /// <typeparam name="T">
+    ///     The type of the elements in the collection.</typeparam>
+    /// <param name="src">
+    ///     The collection to pick from.</param>
+    /// <param name="rnd">
+    ///     Optionally, a random number generator to use.</param>
+    /// <returns>
+    ///     The element randomly picked.</returns>
+    /// <remarks>
+    ///     This method enumerates the entire input sequence into an array.</remarks>
+    public static T PickRandom<T>(this IEnumerable<T> src)
+    {
+        var list = (src as IList<T>) ?? src.ToArray();
+        if (list.Count == 0)
+            throw new InvalidOperationException("Cannot pick an element from an empty set.");
+        return list[UnityEngine.Random.Range(0, list.Count)];
+    }
+
     public static bool TryParseTime(this string timeString, out float time)
     {
         float _;
