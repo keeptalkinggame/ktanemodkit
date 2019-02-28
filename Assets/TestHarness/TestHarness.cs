@@ -462,7 +462,6 @@ public class TestHarness : MonoBehaviour
 	private Vector3 mouseOrigin;    // Position of cursor when mouse dragging starts
 	private bool isPanning;     // Is the camera being panned?
 	private bool isRotating;    // Is the camera being rotated?
-	private bool isZooming;     // Is the camera zooming?
 	private float mouseDownTIme;
 
 	private Transform _camera;
@@ -1466,7 +1465,7 @@ public class TestHarness : MonoBehaviour
 				selectable.OnUpdateChildren += select => { AddHighlightables(); AddSelectables(); };
 
 				if(selectable.Highlight == null)
-					LogErrorAtTransform(selectable.transform, "KMSelectalbe.Highlight");
+					LogErrorAtTransform(selectable.transform, "KMSelectable.Highlight");
 				else
 					testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
 	        }
