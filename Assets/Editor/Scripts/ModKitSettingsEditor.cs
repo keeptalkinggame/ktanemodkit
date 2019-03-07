@@ -50,6 +50,10 @@ public class ModKitSettingsEditor : Editor
         EditorGUILayout.PropertyField(titleProperty);
         titleProperty.stringValue = titleProperty.stringValue.Trim();
 
+        var authorProperty = serializedObject.FindProperty("author");
+        EditorGUILayout.PropertyField(authorProperty, new GUIContent("Author", "Only shown in local mods, mods from Steam will show Steam user as author"));
+        authorProperty.stringValue = authorProperty.stringValue.Trim();
+
         EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("version"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFolder"));
