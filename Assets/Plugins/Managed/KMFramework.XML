@@ -1005,12 +1005,14 @@
         </member>
         <member name="F:KMSelectable.OnSelect">
             <summary>
-            Called whenever this selectable becomes the current selection
+            Called whenever this selectable becomes the current selectable.
+            CAUTION This behaves unintuitively, probably better to use OnHighlight or OnFocus instead
             </summary>
         </member>
         <member name="F:KMSelectable.OnDeselect">
             <summary>
             Called whenever this selectable stops being the current selectable
+            CAUTION This behaves unintuitively, probably better to use OnHighlightEnded or OnDefocus instead
             </summary>
         </member>
         <member name="F:KMSelectable.OnCancel">
@@ -1032,6 +1034,21 @@
         <member name="F:KMSelectable.OnHighlight">
             <summary>
             Called when the highlight is turned on, OnSelect is probably more appropriate for most things
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnHighlightEnded">
+            <summary>
+            Called when the highlight is turned off
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnFocus">
+            <summary>
+            Called when a module is focused, this is when it is interacted with from the bomb face level and this module's children can be selected
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnDefocus">
+            <summary>
+            Called when a module is defocused, this is when a different selectable becomes the focus or the module has been backed out of
             </summary>
         </member>
         <member name="F:KMSelectable.OnLeft">
