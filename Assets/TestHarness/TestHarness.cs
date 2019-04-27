@@ -472,7 +472,10 @@ public class TestHarness : MonoBehaviour
 
 	public static TestHarness Instance;
 
-	void Awake()
+    private List<KMBombModule> Modules;
+    private List<KMNeedyModule> NeedyModules;
+
+    void Awake()
 	{
 		Instance = this;
 
@@ -505,6 +508,12 @@ public class TestHarness : MonoBehaviour
 	        PlaySoundEffectHandler(KMSoundOverride.SoundEffect.Switch, transform);
         };
         TurnLightsOff();
+
+        Modules = FindObjectsOfType<KMBombModule>().ToList();
+        NeedyModules = FindObjectsOfType<KMNeedyModule>().ToList();
+        var allModules = Modules.ToArray().Concat<Component>(NeedyModules.ToArray());
+        foreach (Component moduleComponent in allModules)
+            Handlers(moduleComponent.GetComponent<KMBombInfo>());
 
         ReplaceBombInfo();
         AddHighlightables();
@@ -542,21 +551,6 @@ public class TestHarness : MonoBehaviour
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
             foreach (FieldInfo f in fields)
             {
-                if (f.FieldType == typeof(KMBombInfo))
-                {
-	                KMBombInfo component = (KMBombInfo) LogReplaceBombInfoError(f, s);
-					if (component == null || !components.Add(component)) continue;
-
-					component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
-                    component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
-                    component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
-                    component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
-                    component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
-                    component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
-                    component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
-                    component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
-                    continue;
-                }
                 if (f.FieldType == typeof(KMGameInfo))
                 {
                     KMGameInfo component = (KMGameInfo)LogReplaceBombInfoError(f, s);
@@ -804,7 +798,8 @@ public class TestHarness : MonoBehaviour
 				KMSelectable bombFaceSelectable = bombFaceTransform.gameObject.AddComponent<KMSelectable>();
 				bombFaceSelectable.Parent = bombSelectable;
 				bombFaceSelectable.IsPassThrough = true;
-				bombSelectable.Children[bombFace] = bombFaceSelectable;
+                bombFaceSelectable.Highlight = highlightable;
+                bombSelectable.Children[bombFace] = bombFaceSelectable;
 				bombSelectable.ChildRowLength = square;
 
 				bomb.Faces.Add(kmbombFace);
@@ -984,28 +979,26 @@ public class TestHarness : MonoBehaviour
 		statuslight.transform.localRotation = Quaternion.identity;
 		statuslight.SetInActive();
 		return statuslight;
-	}
+    }
+
+    void Handlers(KMBombInfo component)
+    {
+        component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
+        component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
+        component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
+        component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
+        component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
+        component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
+        component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
+        component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
+    }
 
     void Start()
     {
-        MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
-        foreach (MonoBehaviour s in scripts)
-        {
-            IEnumerable<FieldInfo> fields = s.GetType().GetFields();
-            foreach (FieldInfo f in fields)
-            {
-	            if (f.FieldType != typeof(KMBombInfo)) continue;
-
-	            KMBombInfo component = (KMBombInfo) f.GetValue(s);
-	            fakeInfo.Detonate += delegate { if (component.OnBombExploded != null) component.OnBombExploded(); };
-	            fakeInfo.HandleSolved += delegate { if (component.OnBombSolved != null) component.OnBombSolved(); };
-            }
-        }
-
         currentSelectable = GetComponent<TestSelectable>();
 
-		List<KMBombModule> modules = FindObjectsOfType<KMBombModule>().ToList();
-        List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
+		var modules = Modules;
+        var needyModules = NeedyModules;
 	    PrepareBomb(modules, needyModules, ref fakeInfo.widgets);
 
 	    fakeInfo.TimerModule = _timer;
@@ -1479,6 +1472,7 @@ public class TestHarness : MonoBehaviour
         {
 			TestSelectable testSelectable = selectable.gameObject.GetComponent<TestSelectable>();
             testSelectable.Parent = selectable.Parent ? selectable.Parent.GetComponent<TestSelectable>() : null;
+            if (selectable.Children == null) continue;
             testSelectable.Children = new TestSelectable[selectable.Children.Length];
             for (int i = 0; i < selectable.Children.Length; i++)
             {
