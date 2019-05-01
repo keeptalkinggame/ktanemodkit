@@ -472,6 +472,9 @@ public class TestHarness : MonoBehaviour
 
 	public static TestHarness Instance;
 
+	private List<KMBombModule> Modules;
+	private List<KMNeedyModule> NeedyModules;
+
 	void Awake()
 	{
 		Instance = this;
@@ -505,6 +508,12 @@ public class TestHarness : MonoBehaviour
 	        PlaySoundEffectHandler(KMSoundOverride.SoundEffect.Switch, transform);
         };
         TurnLightsOff();
+
+		Modules = FindObjectsOfType<KMBombModule>().ToList();
+		NeedyModules = FindObjectsOfType<KMNeedyModule>().ToList();
+		var allModules = Modules.ToArray().Concat<Component>(NeedyModules.ToArray());
+		foreach (Component moduleComponent in allModules)
+			Handlers(moduleComponent.GetComponent<KMBombInfo>());
 
         ReplaceBombInfo();
         AddHighlightables();
@@ -542,21 +551,6 @@ public class TestHarness : MonoBehaviour
             IEnumerable<FieldInfo> fields = s.GetType().GetFields();
             foreach (FieldInfo f in fields)
             {
-                if (f.FieldType == typeof(KMBombInfo))
-                {
-	                KMBombInfo component = (KMBombInfo) LogReplaceBombInfoError(f, s);
-					if (component == null || !components.Add(component)) continue;
-
-					component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
-                    component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
-                    component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
-                    component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
-                    component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
-                    component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
-                    component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
-                    component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
-                    continue;
-                }
                 if (f.FieldType == typeof(KMGameInfo))
                 {
                     KMGameInfo component = (KMGameInfo)LogReplaceBombInfoError(f, s);
@@ -986,41 +980,48 @@ public class TestHarness : MonoBehaviour
 		return statuslight;
 	}
 
+    void Handlers(KMBombInfo component)
+    {
+        component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
+        component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
+        component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
+        component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
+        component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
+        component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
+        component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
+        component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
+    }
+
+    void UpdateRoot(TestSelectable currentSelectable)
+    {
+        currentSelectable.Children = new TestSelectable[Modules.Count + NeedyModules.Count];
+        currentSelectable.ChildRowLength = currentSelectable.Children.Length;
+        var allModules = Modules.ToArray().Concat<Component>(NeedyModules.ToArray()).ToList();
+        for (int i = 0; i < allModules.Count; i++)
+        {
+            TestSelectable testSelectable = allModules[i].GetComponent<TestSelectable>();
+            currentSelectable.Children[i] = testSelectable;
+            testSelectable.Parent = currentSelectable;
+            testSelectable.x = i;
+        }
+    }
+
+
     void Start()
     {
-        MonoBehaviour[] scripts = FindObjectsOfType<MonoBehaviour>();
-        foreach (MonoBehaviour s in scripts)
-        {
-            IEnumerable<FieldInfo> fields = s.GetType().GetFields();
-            foreach (FieldInfo f in fields)
-            {
-	            if (f.FieldType != typeof(KMBombInfo)) continue;
-
-	            KMBombInfo component = (KMBombInfo) f.GetValue(s);
-	            fakeInfo.Detonate += delegate { if (component.OnBombExploded != null) component.OnBombExploded(); };
-	            fakeInfo.HandleSolved += delegate { if (component.OnBombSolved != null) component.OnBombSolved(); };
-            }
-        }
-
         currentSelectable = GetComponent<TestSelectable>();
 
-		List<KMBombModule> modules = FindObjectsOfType<KMBombModule>().ToList();
-        List<KMNeedyModule> needyModules = FindObjectsOfType<KMNeedyModule>().ToList();
+		List<KMBombModule> modules = Modules;
+        List<KMNeedyModule> needyModules = NeedyModules;
 	    PrepareBomb(modules, needyModules, ref fakeInfo.widgets);
 
 	    fakeInfo.TimerModule = _timer;
         fakeInfo.needyModules = needyModules.ToList();
-        currentSelectable.Children = new TestSelectable[modules.Count + needyModules.Count];
-        currentSelectable.ChildRowLength = currentSelectable.Children.Length;
+        UpdateRoot(GetComponent<TestSelectable>());
         for (int i = 0; i < modules.Count; i++)
         {
             KMBombModule mod = modules[i];
 	        StatusLight statuslight = CreateStatusLight(mod.transform);
-            
-            TestSelectable testSelectable = modules[i].GetComponent<TestSelectable>();
-            currentSelectable.Children[i] = testSelectable;
-            testSelectable.Parent = currentSelectable;
-            testSelectable.x = i;
 
             fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(modules[i], false));
             modules[i].OnPass = delegate ()
@@ -1051,11 +1052,6 @@ public class TestHarness : MonoBehaviour
         for (int i = 0; i < needyModules.Count; i++)
         {
 	        KMNeedyModule needyModule = needyModules[i];
-
-            TestSelectable testSelectable = needyModule.GetComponent<TestSelectable>();
-            currentSelectable.Children[modules.Count + i] = testSelectable;
-            testSelectable.Parent = currentSelectable;
-            testSelectable.x = modules.Count + i;
 
 	        StatusLight statusLight = CreateStatusLight(needyModule.transform);
 			NeedyTimer needyTimer = Instantiate(NeedyTimerPrefab);
@@ -1462,10 +1458,26 @@ public class TestHarness : MonoBehaviour
 		        if (testSelectable != null) continue;
 		        testSelectable = selectable.gameObject.AddComponent<TestSelectable>();
 
-				selectable.OnUpdateChildren += select => { AddHighlightables(); AddSelectables(); };
+				selectable.OnUpdateChildren += select => {
+					AddHighlightables();
+					AddSelectables();
 
-				if(selectable.Highlight == null)
+					if (currentSelectable == testSelectable)
+					{
+						currentSelectable.ActivateChildSelectableAreas();
+
+						if (select != null)
+							select.GetComponent<TestSelectable>().Select();
+					}
+
+				};
+
+				if (selectable.transform.name.Equals("Bottom Face") || selectable.transform.name.Equals("Top Face"))
+					continue;
+				else if (selectable.Highlight == null)
+				{
 					LogErrorAtTransform(selectable.transform, "KMSelectable.Highlight");
+				}
 				else
 					testSelectable.Highlight = selectable.Highlight.GetComponent<TestHighlightable>();
 	        }
@@ -1479,6 +1491,7 @@ public class TestHarness : MonoBehaviour
         {
 			TestSelectable testSelectable = selectable.gameObject.GetComponent<TestSelectable>();
             testSelectable.Parent = selectable.Parent ? selectable.Parent.GetComponent<TestSelectable>() : null;
+            if (selectable.Children == null) continue;
             testSelectable.Children = new TestSelectable[selectable.Children.Length];
             for (int i = 0; i < selectable.Children.Length; i++)
             {
@@ -1488,6 +1501,7 @@ public class TestHarness : MonoBehaviour
                 }
             }
         }
+        UpdateRoot(GetComponent<TestSelectable>());
     }
 
     
