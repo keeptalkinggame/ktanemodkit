@@ -311,7 +311,8 @@
         </member>
         <member name="F:KMNeedyModule.ModuleType">
             <summary>
-            The identifier for the module as referenced in missions. e.g. "BigButton"
+            The identifier for the module as referenced in missions. e.g. "BigButton". 
+            Also known as a "Module ID".
             </summary>
         </member>
         <member name="F:KMNeedyModule.ModuleDisplayName">
@@ -511,6 +512,15 @@
         <member name="M:KMBombInfo.GetSolvedModuleNames">
             <returns>A list of the solved module names on the current bomb.</returns>
         </member>
+        <member name="M:KMBombInfo.GetModuleIDs">
+            <returns>A list of the module IDs on the current bomb. A module ID is "ModuleType" for mod modules and a ComponentType string for base game modules.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetSolvableModuleIDs">
+            <returns>A list of the solvable module IDs on the current bomb. A module ID is "ModuleType" for mod modules and a ComponentType string for base game modules.</returns>
+        </member>
+        <member name="M:KMBombInfo.GetSolvedModuleIDs">
+            <returns>A list of the solved module IDs on the current bomb. A module ID is "ModuleType" for mod modules and a ComponentType string for base game modules.</returns>
+        </member>
         <member name="M:KMBombInfo.QueryWidgets(System.String,System.String)">
             <summary>
             Query all widgets on the bomb using the given queryKey. Use this to get information about things like battery count, indicator labels, or
@@ -534,6 +544,7 @@
         <member name="F:KMBombModule.ModuleType">
             <summary>
             The identifier for the module as referenced in missions. e.g. "BigButton"
+            Also known as a "Module ID".
             </summary>
         </member>
         <member name="F:KMBombModule.ModuleDisplayName">
@@ -740,7 +751,7 @@
         </member>
         <member name="F:KMGameInfo.KMModuleInfo.ModuleId">
             <summary>
-            The id of the module
+            The ModuleType of the module (for mod modules) or the ComponentType (for base game modules)
             </summary>
         </member>
         <member name="F:KMGameInfo.KMModuleInfo.IsMod">
@@ -1105,6 +1116,11 @@
             </summary>
         </member>
         <member name="F:KMSelectable.OnInteractionPunch">
+            <summary>
+            DO NOT USE IN MOD. Used by the game to hook into the selectable.
+            </summary>
+        </member>
+        <member name="F:KMSelectable.OnUpdateChildren">
             <summary>
             DO NOT USE IN MOD. Used by the game to hook into the selectable.
             </summary>
