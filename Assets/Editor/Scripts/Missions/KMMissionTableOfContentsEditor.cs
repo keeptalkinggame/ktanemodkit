@@ -47,12 +47,6 @@ public class KMMissionTableOfContentsEditor : Editor
         AssetImporter.GetAtPath(path).assetBundleName = AssetBundler.BUNDLE_FILENAME;
 
         EditorGUIUtility.PingObject(tableOfContents);
-
-        int numToCs = AssetDatabase.FindAssets("t:KMMissionTableOfContents").Length;
-        if (numToCs > 1)
-        {
-            Debug.LogWarningFormat("Project has {0} KMMissionTableOfContents. Only one table of contents per mod is supported!", numToCs);
-        }
     }
 
     public override void OnInspectorGUI()
