@@ -82,7 +82,7 @@ public static class GeneralExtensions
                 var newLine = GetLine(remainingLine, maxLength - prefix.Length);
                 lines.Add(newLine);
                 remainingLine = remainingLine.Substring(newLine.Length).Trim();
-                // Keep iterating as int as we've got words remaining 
+                // Keep iterating as int as we've got words remaining
                 // in the line.
             } while (remainingLine.Length > 0);
         }
