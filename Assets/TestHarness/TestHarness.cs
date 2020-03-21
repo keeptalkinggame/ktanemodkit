@@ -144,6 +144,40 @@ public class FakeBombInfo : MonoBehaviour
         return moduleList;
     }
 
+    public List<string> GetModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleType);
+        }
+        foreach (KMNeedyModule m in needyModules)
+        {
+            moduleList.Add(m.ModuleType);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvableModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleType);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvedModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            if (m.Value) moduleList.Add(m.Key.ModuleType);
+        }
+        return moduleList;
+    }
+
     public List<string> GetWidgetQueryResponses(string queryKey, string queryInfo)
     {
         List<string> responses = new List<string>();
@@ -989,6 +1023,9 @@ public class TestHarness : MonoBehaviour
         component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
         component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
         component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
+        component.ModuleIDsHandler += new KMBombInfo.GetModuleIDsHandler(fakeInfo.GetModuleIDs);
+        component.SolvableModuleIDsHandler += new KMBombInfo.GetSolvableModuleIDsHandler(fakeInfo.GetSolvableModuleIDs);
+        component.SolvedModuleIDsHandler += new KMBombInfo.GetSolvedModuleIDsHandler(fakeInfo.GetSolvedModuleIDs);
         component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
         component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
     }
