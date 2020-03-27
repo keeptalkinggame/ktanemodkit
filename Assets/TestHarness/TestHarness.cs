@@ -1564,7 +1564,7 @@ public class TestHarness : MonoBehaviour
         {
             foreach (NeedyTimer needyModule in fakeInfo.needyModuleTimers)
             {
-                needyModule.StopTimer(NeedyTimer.NeedyState.InitialSetup);
+                needyModule.StopTimer(NeedyTimer.NeedyState.Terminated);
             }
         }
 
