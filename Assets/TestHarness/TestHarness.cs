@@ -1432,19 +1432,31 @@ public class TestHarness : MonoBehaviour
     {
         TestSelectable root = GetComponent<TestSelectable>();
 
-        if (currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
+        if (currentSelectableArea != null)
         {
-            MoveCamera(currentSelectableArea.Selectable);
-            currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
-            currentSelectable = currentSelectableArea.Selectable;
-            if (root.Children.Contains(currentSelectable))
-                currentModule = currentSelectable;
+            if ((currentSelectableArea.Selectable.GetComponent<KMBombModule>() != null || currentSelectableArea.Selectable.GetComponent<KMNeedyModule>() != null) &&
+                currentSelectableArea.Selectable.ModSelectable.OnFocus != null)
+            {
+                currentSelectableArea.Selectable.ModSelectable.OnFocus();
+            }
+            if (currentSelectableArea.Selectable.Interact())
+            {
+                if (currentSelectable != null && currentSelectable.ModSelectable != null && currentSelectable.ModSelectable.OnDefocus != null)
+                {
+                    currentSelectable.ModSelectable.OnDefocus();
+                }
+                MoveCamera(currentSelectableArea.Selectable);
+                currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
+                currentSelectable = currentSelectableArea.Selectable;
+                if (root.Children.Contains(currentSelectable))
+                    currentModule = currentSelectable;
 
-            GetComponent<TestSelectable>().ActivateChildSelectableAreas();
-            if (currentModule != null) currentModule.SelectableArea.DeactivateSelectableArea();
+                GetComponent<TestSelectable>().ActivateChildSelectableAreas();
+                if (currentModule != null) currentModule.SelectableArea.DeactivateSelectableArea();
 
-            currentSelectable.ActivateChildSelectableAreas();
-            lastSelected = currentSelectable.GetCurrentChild();
+                currentSelectable.ActivateChildSelectableAreas();
+                lastSelected = currentSelectable.GetCurrentChild();
+            }
         }
     }
 
@@ -1460,6 +1472,10 @@ public class TestHarness : MonoBehaviour
     {
         if (currentSelectable.Parent != null && currentSelectable.Cancel())
         {
+            if (currentSelectable != null && currentSelectable.ModSelectable != null && currentSelectable.ModSelectable.OnDefocus != null)
+            {
+                currentSelectable.ModSelectable.OnDefocus();
+            }
             MoveCamera(currentSelectable.Parent);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectable.Parent);
             currentSelectable = currentSelectable.Parent;
