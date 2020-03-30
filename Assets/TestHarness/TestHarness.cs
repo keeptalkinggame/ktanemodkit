@@ -144,6 +144,40 @@ public class FakeBombInfo : MonoBehaviour
         return moduleList;
     }
 
+    public List<string> GetModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleType);
+        }
+        foreach (KMNeedyModule m in needyModules)
+        {
+            moduleList.Add(m.ModuleType);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvableModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleType);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvedModuleIDs()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            if (m.Value) moduleList.Add(m.Key.ModuleType);
+        }
+        return moduleList;
+    }
+
     public List<string> GetWidgetQueryResponses(string queryKey, string queryInfo)
     {
         List<string> responses = new List<string>();
@@ -989,6 +1023,9 @@ public class TestHarness : MonoBehaviour
         component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
         component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
         component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
+        component.ModuleIDsHandler += new KMBombInfo.GetModuleIDsHandler(fakeInfo.GetModuleIDs);
+        component.SolvableModuleIDsHandler += new KMBombInfo.GetSolvableModuleIDsHandler(fakeInfo.GetSolvableModuleIDs);
+        component.SolvedModuleIDsHandler += new KMBombInfo.GetSolvedModuleIDsHandler(fakeInfo.GetSolvedModuleIDs);
         component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
         component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
     }
@@ -1395,19 +1432,31 @@ public class TestHarness : MonoBehaviour
     {
         TestSelectable root = GetComponent<TestSelectable>();
 
-        if (currentSelectableArea != null && currentSelectableArea.Selectable.Interact())
+        if (currentSelectableArea != null)
         {
-            MoveCamera(currentSelectableArea.Selectable);
-            currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
-            currentSelectable = currentSelectableArea.Selectable;
-            if (root.Children.Contains(currentSelectable))
-                currentModule = currentSelectable;
+            if ((currentSelectableArea.Selectable.GetComponent<KMBombModule>() != null || currentSelectableArea.Selectable.GetComponent<KMNeedyModule>() != null) &&
+                currentSelectableArea.Selectable.ModSelectable.OnFocus != null)
+            {
+                currentSelectableArea.Selectable.ModSelectable.OnFocus();
+            }
+            if (currentSelectableArea.Selectable.Interact())
+            {
+                if (currentSelectable != null && currentSelectable.ModSelectable != null && currentSelectable.ModSelectable.OnDefocus != null)
+                {
+                    currentSelectable.ModSelectable.OnDefocus();
+                }
+                MoveCamera(currentSelectableArea.Selectable);
+                currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
+                currentSelectable = currentSelectableArea.Selectable;
+                if (root.Children.Contains(currentSelectable))
+                    currentModule = currentSelectable;
 
-            GetComponent<TestSelectable>().ActivateChildSelectableAreas();
-            if (currentModule != null) currentModule.SelectableArea.DeactivateSelectableArea();
+                GetComponent<TestSelectable>().ActivateChildSelectableAreas();
+                if (currentModule != null) currentModule.SelectableArea.DeactivateSelectableArea();
 
-            currentSelectable.ActivateChildSelectableAreas();
-            lastSelected = currentSelectable.GetCurrentChild();
+                currentSelectable.ActivateChildSelectableAreas();
+                lastSelected = currentSelectable.GetCurrentChild();
+            }
         }
     }
 
@@ -1423,6 +1472,10 @@ public class TestHarness : MonoBehaviour
     {
         if (currentSelectable.Parent != null && currentSelectable.Cancel())
         {
+            if (currentSelectable != null && currentSelectable.ModSelectable != null && currentSelectable.ModSelectable.OnDefocus != null)
+            {
+                currentSelectable.ModSelectable.OnDefocus();
+            }
             MoveCamera(currentSelectable.Parent);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectable.Parent);
             currentSelectable = currentSelectable.Parent;
@@ -1527,7 +1580,7 @@ public class TestHarness : MonoBehaviour
         {
             foreach (NeedyTimer needyModule in fakeInfo.needyModuleTimers)
             {
-                needyModule.StopTimer(NeedyTimer.NeedyState.InitialSetup);
+                needyModule.StopTimer(NeedyTimer.NeedyState.Terminated);
             }
         }
 
