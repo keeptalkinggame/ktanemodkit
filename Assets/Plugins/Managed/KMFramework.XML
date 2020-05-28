@@ -309,6 +309,16 @@
             The amount of time on the needy timer whenever this module is activated.
             </summary>
         </member>
+        <member name="F:KMNeedyModule.ResetDelayMin">
+            <summary>
+            The minimum amount of time before the needy module will reset
+            </summary>
+        </member>
+        <member name="F:KMNeedyModule.ResetDelayMax">
+            <summary>
+            The maximum amount of time before the needy module will reset
+            </summary>
+        </member>
         <member name="F:KMNeedyModule.ModuleType">
             <summary>
             The identifier for the module as referenced in missions. e.g. "BigButton". 
