@@ -508,6 +508,8 @@ public class TestHarness : MonoBehaviour
     private List<KMBombModule> Modules;
     private List<KMNeedyModule> NeedyModules;
 
+    private bool Arduino = true;
+
     void Awake()
     {
         Instance = this;
@@ -1159,6 +1161,7 @@ public class TestHarness : MonoBehaviour
                 GameSoundEffects[effect].AddRange(kmSoundOverride.AdditionalVariants.Where(x => x != null));
             }
         }
+        StartCoroutine(ArduinoController());
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
@@ -1348,6 +1351,7 @@ public class TestHarness : MonoBehaviour
             if (Input.GetMouseButtonDown(1))
             {
                 mouseDownTIme = 0;
+                currentModule=null;
             }
 
             if (Input.GetMouseButtonUp(1) && mouseDownTIme < 0.25f)
@@ -1641,6 +1645,8 @@ public class TestHarness : MonoBehaviour
                 command = "";
             }
         }
+
+        Arduino = GUILayout.Toggle(Arduino, "Arduino RGB");
     }
 
     private Light _emergencyLight;
@@ -1714,5 +1720,33 @@ public class TestHarness : MonoBehaviour
         lightsOn = false;
         UpdateAmbientIntensity();
     }
-}
 
+    private IEnumerator ArduinoController()
+    {
+        Camera.main.clearFlags = CameraClearFlags.SolidColor;
+        Camera.main.backgroundColor = Color.Lerp(new Color32(104,97,91, 255), Camera.main.backgroundColor, 0);
+        while(true)
+        {
+            if(Arduino) 
+            {
+                if(currentModule!=null)
+                {
+                    List<int> outputValue = new List<int>() { 104, 97, 91 };;
+                    foreach (var component in currentModule.GetComponentsInChildren<Component>(true))
+                    {
+                        var type = component.GetType();
+                        FieldInfo outputValueField = type.GetField("arduinoRGBValues", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                        try { outputValue = (List<int>)outputValueField.GetValue(component); break; } catch { outputValue = new List<int>() { 104, 97, 91 }; }
+                    }
+                    if (outputValue != null && outputValue.Count >= 3) Camera.main.backgroundColor = Color.Lerp(new Color32((byte)(outputValue[0]%256), (byte)(outputValue[1]%256), (byte)(outputValue[2]%256), 255), Camera.main.backgroundColor, 0);
+                }
+                else
+                {
+                    Camera.main.backgroundColor = Color.Lerp(new Color32(104,97,91, 255), Camera.main.backgroundColor, 0);
+                }
+            }
+            else{Camera.main.backgroundColor = Color.Lerp(new Color32(104,97,91, 255), Camera.main.backgroundColor, 0);}
+            yield return null;
+        }
+    }
+}
