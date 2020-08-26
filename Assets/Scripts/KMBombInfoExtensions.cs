@@ -7,12 +7,8 @@ namespace KModkit
 {
     public enum Battery
     {
-        Unknown = 0,
-        Empty = 0,
-        D = 1,
-        AA = 2,
-        AAx3 = 3,
-        AAx4 = 4
+        AA,
+        D
     }
 
     public enum Port
@@ -277,13 +273,12 @@ namespace KModkit
 
         public static int GetBatteryCount(this KMBombInfo bombInfo, Battery batteryType)
         {
-            return GetBatteryCount(bombInfo, (int) batteryType);
-        }
-
-        public static int GetBatteryCount(this KMBombInfo bombInfo, int batteryType)
-        {
-            return GetBatteryEntries(bombInfo).Where((x) => x.numbatteries == batteryType)
-                .Sum((x) => x.numbatteries);
+            int[][] Holders =
+            {
+                new int[] { 2, 3, 4 },
+                new int[] { 1 }
+            };
+            return GetBatteryEntries(bombInfo).Where((x) => Holders[(int)batteryType].Contains(x.numbatteries)).Sum((x) => x.numbatteries);
         }
 
         public static int GetBatteryHolderCount(this KMBombInfo bombInfo)
@@ -291,14 +286,9 @@ namespace KModkit
             return GetBatteryEntries(bombInfo).Count();
         }
 
-        public static int GetBatteryHolderCount(this KMBombInfo bombInfo, Battery batteryType)
+        public static int GetBatteryHolderCount(this KMBombInfo bombInfo, int batteryCount)
         {
-            return GetBatteryHolderCount(bombInfo, (int) batteryType);
-        }
-
-        public static int GetBatteryHolderCount(this KMBombInfo bombInfo, int batteryType)
-        {
-            return GetBatteryEntries(bombInfo).Count(x => x.numbatteries == batteryType);
+            return GetBatteryEntries(bombInfo).Count((x) => x.numbatteries == batteryCount);
         }
 
         public static int GetPortCount(this KMBombInfo bombInfo)
