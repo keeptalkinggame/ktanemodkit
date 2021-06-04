@@ -3,6 +3,7 @@ using Steamworks;
 using UnityEngine;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 
 public class WorkshopEditorWindow : EditorWindow
@@ -96,13 +97,15 @@ public class WorkshopEditorWindow : EditorWindow
             GUI.backgroundColor = new Color(0.1f, 0.1f, 0.5f, 0.7f);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUI.backgroundColor = oldBGColor;
+            
+            string folder = GetContentPath();
 
             EditorGUILayout.LabelField("Publishing Tools", EditorStyles.largeLabel);
             EditorGUILayout.Separator();
             EditorGUILayout.LabelField("User:", userName);
-            EditorGUILayout.LabelField("Content Folder:", GetContentPath());
+            EditorGUILayout.LabelField("Content Folder:", folder);
 
-            DirectoryInfo dir = new DirectoryInfo(GetContentPath());
+            DirectoryInfo dir = new DirectoryInfo(folder);
 
             if (dir.Exists)
             {
@@ -139,6 +142,11 @@ public class WorkshopEditorWindow : EditorWindow
             {
                 EditorGUILayout.HelpBox("Change notes must be entered before publishing to Workshop", MessageType.Warning);
             }
+            
+            if(dir.GetFiles("modInfo_Harmony.json").Length > 0)
+			{
+				EditorGUILayout.HelpBox("Your mod uses the Harmony library. This means it won't work without the Harmony mod, so on the Workshop, please either add the Harmony mod as a dependency or mention it in the description!", MessageType.Warning);
+			}
 
 
             //Publishing changes
@@ -162,7 +170,7 @@ public class WorkshopEditorWindow : EditorWindow
                 {
                     PublishWorkshopChanges();
                 }
-
+				
                 if (!string.IsNullOrEmpty(ugcUpdateStatus))
                 {
                     EditorGUILayout.LabelField(ugcUpdateStatus);
@@ -170,6 +178,7 @@ public class WorkshopEditorWindow : EditorWindow
 
                 GUI.enabled = true;
             }
+            
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
